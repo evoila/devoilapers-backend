@@ -1,0 +1,25 @@
+basePath: /api/v1
+host: 127.0.0.1:8080
+info:
+  contact: {}
+  description: Operator Automation Backend API overview.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Operator Automation Backend API
+  version: "1.0"
+paths:
+  /:
+    get:
+      description: Get hello message
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Show a hello message
+swagger: "2.0"
+x-extension-openapi:
+  example: value on a json format
