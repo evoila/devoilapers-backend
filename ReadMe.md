@@ -1,6 +1,8 @@
 # Operator Automation Backend (OPA-Backend)
 Operator Automation golang Backend
 
+![Go](https://github.com/evoila/devoilapers-backend/workflows/Go/badge.svg)
+
 ## Project structure
 The project structure will probably change during the project.
 The current structure is based on https://github.com/golang-standards/project-layout
