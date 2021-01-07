@@ -2,12 +2,13 @@ package main
 
 import (
 	_ "OperatorAutomation/api" //Indirect use for swagger
+	"OperatorAutomation/cmd/service/controller"
 	"OperatorAutomation/pkg/demolib"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"github.com/swaggo/files"
-	"github.com/swaggo/gin-swagger"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/toorop/gin-logrus"
+	"github.com/swaggo/files"
 )
 
 
@@ -18,6 +19,8 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 // @host 127.0.0.1:8080
+//
+// @securityDefinitions.basic BasicAuth
 //
 // @BasePath /api/v1
 // @query.collection.format multi
@@ -35,12 +38,31 @@ func main() {
 	// Logging and recovery middleware
 	router.Use(ginlogrus.Logger(log), gin.Recovery())
 
+	// Basic authentication users
+	auth := gin.BasicAuth(gin.Accounts{
+		"admin": "masterkey",
+	})
+
 	// Define routes
 	v1 := router.Group("/api/v1")
 	{
-		root := v1.Group("/")
+		accounts := v1.Group("/accounts")
 		{
-			root.GET("", ShowHello)
+			accounts.POST("/login", controller.HandlePostLogin)
+		}
+		servicestore := v1.Group("/servicestore", auth)
+		{
+			servicestore.GET("/info", controller.HandleGetServiceStoreOverview)
+			servicestore.GET("/yaml/:servicetype", controller.HandleGetServiceStoreItemYaml)
+		}
+		services := v1.Group("/services", auth)
+		{
+			services.POST("/create/:servicetype", controller.HandlePostCreateServiceInstance)
+			services.POST("/update/:serviceid", controller.HandlePostUpdateServiceInstance)
+			services.DELETE("/:serviceid", controller.HandlePostDeleteServiceInstance)
+			services.GET("/info", controller.HandleGetServiceInstanceDetailsForAllInstances)
+			services.GET("/info/:serviceid", controller.HandleGetServiceInstanceDetails)
+			services.GET("/yaml/:serviceid", controller.HandleGetServiceInstanceYaml)
 		}
 	}
 
