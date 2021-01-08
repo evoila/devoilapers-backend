@@ -1,4 +1,7 @@
 {
+    "schemes": [
+        "https"
+    ],
     "swagger": "2.0",
     "info": {
         "description": "Operator Automation Backend API overview.",
@@ -42,6 +45,12 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dtos.AuthenticationResponseDataDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
                         }
                     },
                     "401": {

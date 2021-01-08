@@ -2,12 +2,15 @@ package main
 
 import (
 	_ "OperatorAutomation/api" //Indirect use for swagger
+	"OperatorAutomation/cmd/service/config"
 	"OperatorAutomation/cmd/service/controller"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	ginlogrus "github.com/toorop/gin-logrus"
+	"strconv"
 )
 
 // @title Operator Automation Backend API
@@ -19,12 +22,12 @@ import (
 // @host 127.0.0.1:8080
 //
 // @securityDefinitions.basic BasicAuth
-//
+// @Schemes https
 // @BasePath /api/v1
 // @query.collection.format multi
 //
 // @x-extension-openapi {"example": "value on a json format"}
-func StartWebserver()  {
+func StartWebserver(config config.RawConfig) error {
 	log := logrus.New()
 	// Set to global log level
 	log.SetLevel(logrus.GetLevel())
@@ -34,18 +37,25 @@ func StartWebserver()  {
 
 	// Logging and recovery middleware
 	router.Use(ginlogrus.Logger(log), gin.Recovery())
+	// Allow cross origins
+	router.Use(cors.Default())
 
 	// Basic authentication users
-	auth := gin.BasicAuth(gin.Accounts{
-		"admin": "masterkey",
-	})
+	// Import them from the given config
+	validAccounts := gin.Accounts{}
+	for _, user := range config.User {
+		validAccounts[user.Name] = user.Password
+	}
+	auth := gin.BasicAuth(validAccounts)
 
 	// Define routes
 	v1 := router.Group("/api/v1")
 	{
 		accounts := v1.Group("/accounts")
 		{
-			accounts.POST("/login", controller.HandlePostLogin)
+			accounts.POST("/login", func(context *gin.Context) {
+				controller.HandlePostLogin(context, validAccounts)
+			})
 		}
 		servicestore := v1.Group("/servicestore", auth)
 		{
@@ -67,8 +77,11 @@ func StartWebserver()  {
 	// Define swagger endpoint
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	log.Debug("Visit http://127.0.0.1:8080/swagger/index.html to see the swagger document")
+	log.Debugf("Visit https://127.0.0.1:%d/swagger/index.html to see the swagger document", config.Port)
 
-	// Start server on 127.0.0.1:8080
-	router.Run(":8080")
+	// Start server
+	return router.RunTLS(
+		":"+strconv.Itoa(config.Port),
+		config.WebserverSllCertificate.PublicKeyFilePath,
+		config.WebserverSllCertificate.PrivateKeyFilePath)
 }

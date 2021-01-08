@@ -1,0 +1,29 @@
+{
+  "log_level": "trace",
+  "port": 8080,
+  "webserver_sll_certificate": {
+    "private_key_file_path": "configs/webserver_ssl_certificates/server.key",
+    "public_key_file_path": "configs/webserver_ssl_certificates/server.crt"
+  },
+  "kubernetes": {
+    "server": "https://127.0.0.1:32768",
+    "certificate-authority": "C:\\Users\\Chris\\.minikube\\ca.crt",
+    "name": "minikube"
+  },
+  "user": [
+    {
+      "name": "admin",
+      "password": "masterkey",
+      "kubernetes_access_token": "MYKUBTOKEN",
+      "kubernetes_namespace": "User1Namespace",
+      "role": "user"
+    },
+    {
+      "name": "guest",
+      "password": "guest",
+      "kubernetes_access_token": "MYKUBTOKEN",
+      "kubernetes_namespace": "User2Namespace",
+      "role": "user"
+    }
+  ]
+}

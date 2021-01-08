@@ -42,12 +42,20 @@ Ensure you have Go **1.15.5** installed.
     - Kind: Directory
     - Directory: set directory to `<ProjectRoot>\cmd\service`
     - Working directory: `<ProjectRoot>`
-    - Add the first script as a precondition
+    - Program arguments `start -c "configs/appconfig.json"`
+    - Add the first script as a precondition to automatically generate swagger files
 4. Download dependencies. GoLand should offer you to sync dependencies. If not you can try to execute `go get ./...` in `<ProjectRoot>`
-5. Run your Go build config. The webserver should start. You should be able to navigate to http://127.0.0.1:8080/swagger/index.html
+5. Run your Go build config. The webserver should start. You should be able to navigate to https://127.0.0.1:8080/swagger/index.html
+
+### Build and run without IDE
+1. Navigate to cmd/service
+2. Execute `go build`
+3. Navigate back to the `<ProjectRoot>` s.t. this directory is the current working directory
+4. On Linux: Run `./cmd/service/service start -c "configs/appconfig.json"`
+5. On Windows: Run `cmd\service\service.exe start -c "configs/appconfig.json"`
 
 ### Navigate to swagger
-If the webserver has been started the swagger page is available at http://127.0.0.1:8080/swagger/index.html.
+If the webserver has been started the swagger page is available at https://127.0.0.1:8080/swagger/index.html.
 
 ## Conventions
 Follow the common Go conventions. 
