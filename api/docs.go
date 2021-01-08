@@ -59,6 +59,12 @@ var doc = `{
                             "$ref": "#/definitions/dtos.AuthenticationResponseDataDto"
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -588,7 +594,7 @@ var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
 	Host:        "127.0.0.1:8080",
 	BasePath:    "/api/v1",
-	Schemes:     []string{},
+	Schemes:     []string{"https"},
 	Title:       "Operator Automation Backend API",
 	Description: "Operator Automation Backend API overview.",
 }

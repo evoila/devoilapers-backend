@@ -63,7 +63,6 @@ func HandlePostUpdateServiceInstance(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
 
-
 // Apply a service specific action godoc
 // @Summary Apply a service specific action to a service instance
 // @Description Apply a service specific action to a service instance
@@ -86,7 +85,6 @@ func HandlePostServiceInstanceAction(ctx *gin.Context) {
 
 	ctx.Status(http.StatusOK)
 }
-
 
 // Delete service instance godoc
 // @Summary Delete a service instance
@@ -138,12 +136,12 @@ func HandleGetServiceInstanceDetails(ctx *gin.Context) {
 				Type:      "kibana",
 				Status:    "ok",
 				Namespace: "user_namespace_42",
-				ActionGroups: []dtos.ServiceInstanceActionGroupDto {
+				ActionGroups: []dtos.ServiceInstanceActionGroupDto{
 					dtos.ServiceInstanceActionGroupDto{
 						GroupName: "Security",
 						Actions: []dtos.ServiceInstanceActionDto{
 							dtos.ServiceInstanceActionDto{
-								Name: "Expose",
+								Name:    "Expose",
 								Command: "cmd_expose",
 							},
 						},
@@ -184,12 +182,12 @@ func HandleGetServiceInstanceDetailsForAllInstances(ctx *gin.Context) {
 				Type:      "kibana",
 				Status:    "ok",
 				Namespace: "user_namespace_42",
-				ActionGroups: []dtos.ServiceInstanceActionGroupDto {
+				ActionGroups: []dtos.ServiceInstanceActionGroupDto{
 					dtos.ServiceInstanceActionGroupDto{
 						GroupName: "Security",
 						Actions: []dtos.ServiceInstanceActionDto{
 							dtos.ServiceInstanceActionDto{
-								Name: "Expose",
+								Name:    "Expose",
 								Command: "cmd_expose",
 							},
 						},
@@ -202,16 +200,16 @@ func HandleGetServiceInstanceDetailsForAllInstances(ctx *gin.Context) {
 				Type:      "elasticsearch",
 				Status:    "warning",
 				Namespace: "user_namespace_42",
-				ActionGroups: []dtos.ServiceInstanceActionGroupDto {
+				ActionGroups: []dtos.ServiceInstanceActionGroupDto{
 					dtos.ServiceInstanceActionGroupDto{
 						GroupName: "Backup and Restore",
 						Actions: []dtos.ServiceInstanceActionDto{
 							dtos.ServiceInstanceActionDto{
-								Name: "Backup",
+								Name:    "Backup",
 								Command: "cmd_backup_elasticsearch",
 							},
 							dtos.ServiceInstanceActionDto{
-								Name: "Restore",
+								Name:    "Restore",
 								Command: "cmd_restore_elasticsearch",
 							},
 						},
@@ -220,7 +218,7 @@ func HandleGetServiceInstanceDetailsForAllInstances(ctx *gin.Context) {
 						GroupName: "Security",
 						Actions: []dtos.ServiceInstanceActionDto{
 							dtos.ServiceInstanceActionDto{
-								Name: "Expose",
+								Name:    "Expose",
 								Command: "cmd_expose",
 							},
 						},
@@ -233,12 +231,12 @@ func HandleGetServiceInstanceDetailsForAllInstances(ctx *gin.Context) {
 				Type:      "logstash",
 				Status:    "error",
 				Namespace: "user_namespace_42",
-				ActionGroups: []dtos.ServiceInstanceActionGroupDto {
+				ActionGroups: []dtos.ServiceInstanceActionGroupDto{
 					dtos.ServiceInstanceActionGroupDto{
 						GroupName: "Security",
 						Actions: []dtos.ServiceInstanceActionDto{
 							dtos.ServiceInstanceActionDto{
-								Name: "Expose",
+								Name:    "Expose",
 								Command: "cmd_expose",
 							},
 						},
@@ -251,7 +249,6 @@ func HandleGetServiceInstanceDetailsForAllInstances(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, instanceDetailsOverview)
 	return
 }
-
 
 // Get service instance yaml godoc
 // @Summary Get the yaml file for an instance

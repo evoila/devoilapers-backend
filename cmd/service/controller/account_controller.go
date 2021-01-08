@@ -20,9 +20,10 @@ import (
 //
 // @Success 200 {object} dtos.AuthenticationResponseDataDto
 // @Failure 401 {object} dtos.HTTPErrorDto
+// @Failure 400 {object} dtos.HTTPErrorDto
 //
 // @Router /accounts/login [post]
-func HandlePostLogin(ctx *gin.Context) {
+func HandlePostLogin(ctx *gin.Context, accounts gin.Accounts) {
 	var accountCredentials dtos.AccountCredentialsDto
 
 	if err := ctx.ShouldBindJSON(&accountCredentials); err != nil {
@@ -30,8 +31,14 @@ func HandlePostLogin(ctx *gin.Context) {
 		return
 	}
 
+	password, userCouldBeFound := accounts[accountCredentials.Username]
+	if !userCouldBeFound || password != accountCredentials.Password {
+		ctx.Status(http.StatusUnauthorized)
+		return
+	}
+
 	authData := dtos.AuthenticationResponseDataDto{
-		Role: "admin",
+		Role:    "admin",
 		IsValid: true,
 	}
 
