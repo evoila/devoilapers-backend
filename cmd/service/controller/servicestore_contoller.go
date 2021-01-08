@@ -10,8 +10,12 @@ import (
 // @Summary Lists all possible deployable services
 // @Description Lists all possible deployable services
 //
+// @tags Servicestore
+//
 // @Accept json
 // @Produce json
+//
+// @Security BasicAuth
 //
 // @Success 200 {object} dtos.ServiceStoreOverviewDto
 // @Failure 401 {object} dtos.HTTPErrorDto
@@ -41,8 +45,12 @@ func HandleGetServiceStoreOverview(ctx *gin.Context) {
 // @Summary Get the default yaml for a service-template
 // @Description Get the default yaml file for a service-template
 //
+// @tags Servicestore
+//
 // @Accept json
 // @Produce json
+//
+// @Security BasicAuth
 //
 // @Param servicetype path string true "Type of service"
 //

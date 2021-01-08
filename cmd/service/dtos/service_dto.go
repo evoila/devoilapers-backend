@@ -15,5 +15,15 @@ type ServiceInstanceDetailsDto struct {
 	Type string `json:"type" example:"kibana"`
 	Status string `json:"status" example:"ok"`
 	Namespace string `json:"namespace" example:"user_namespace_42"`
+	ActionGroups []ServiceInstanceActionGroupDto `json:"action_groups"`
 }
 
+type ServiceInstanceActionGroupDto struct {
+	GroupName string `json:"name" example:"Security"`
+	Actions []ServiceInstanceActionDto `json:"actions"`
+}
+
+type ServiceInstanceActionDto struct {
+	Name string `json:"name" example:"Expose service"`
+	Command string `json:"command" example:"cmd_expose"`
+}

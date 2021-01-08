@@ -27,8 +27,31 @@ definitions:
         example: status bad request
         type: string
     type: object
+  dtos.ServiceInstanceActionDto:
+    properties:
+      command:
+        example: cmd_expose
+        type: string
+      name:
+        example: Expose service
+        type: string
+    type: object
+  dtos.ServiceInstanceActionGroupDto:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/dtos.ServiceInstanceActionDto'
+        type: array
+      name:
+        example: Security
+        type: string
+    type: object
   dtos.ServiceInstanceDetailsDto:
     properties:
+      action_groups:
+        items:
+          $ref: '#/definitions/dtos.ServiceInstanceActionGroupDto'
+        type: array
       id:
         example: 936DA01F-9ABD-4D9D-80C7-02AF85C822A8
         type: string
@@ -116,6 +139,8 @@ paths:
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       summary: User login
+      tags:
+      - Account
   /services/{serviceid}:
     delete:
       consumes:
@@ -136,7 +161,41 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
+      security:
+      - BasicAuth: []
       summary: Delete a service instance
+      tags:
+      - Service
+  /services/action/{serviceid}/{actioncommand}:
+    post:
+      consumes:
+      - application/json
+      description: Apply a service specific action to a service instance
+      parameters:
+      - description: Id of service
+        in: path
+        name: serviceid
+        required: true
+        type: string
+      - description: action command
+        in: path
+        name: actioncommand
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
+      security:
+      - BasicAuth: []
+      summary: Apply a service specific action to a service instance
+      tags:
+      - Service
   /services/create/{servicetype}:
     post:
       consumes:
@@ -163,7 +222,11 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
+      security:
+      - BasicAuth: []
       summary: Create service instance from yaml
+      tags:
+      - Service
   /services/info:
     get:
       consumes:
@@ -180,7 +243,11 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
+      security:
+      - BasicAuth: []
       summary: Get an overview over all service instances
+      tags:
+      - Service
   /services/info/{serviceid}:
     get:
       consumes:
@@ -204,7 +271,11 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
+      security:
+      - BasicAuth: []
       summary: Get the yaml file for an instance
+      tags:
+      - Service
   /services/update/{serviceid}:
     post:
       consumes:
@@ -231,7 +302,11 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
+      security:
+      - BasicAuth: []
       summary: Update service instance from yaml
+      tags:
+      - Service
   /servicestore/info:
     get:
       consumes:
@@ -248,7 +323,11 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
+      security:
+      - BasicAuth: []
       summary: Lists all possible deployable services
+      tags:
+      - Servicestore
   /servicestore/yaml/{servicetype}:
     get:
       consumes:
@@ -271,7 +350,11 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
+      security:
+      - BasicAuth: []
       summary: Get the default yaml for a service-template
+      tags:
+      - Servicestore
 securityDefinitions:
   BasicAuth:
     type: basic

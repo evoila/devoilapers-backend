@@ -11,6 +11,8 @@ import (
 // @Summary User login
 // @Description Get login token and role by providing username and password
 //
+// @tags Account
+//
 // @Accept json
 // @Produce json
 //

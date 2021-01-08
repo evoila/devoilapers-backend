@@ -37,6 +37,9 @@ var doc = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Account"
+                ],
                 "summary": "User login",
                 "parameters": [
                     {
@@ -65,14 +68,69 @@ var doc = `{
                 }
             }
         },
+        "/services/action/{serviceid}/{actioncommand}": {
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Apply a service specific action to a service instance",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Service"
+                ],
+                "summary": "Apply a service specific action to a service instance",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Id of service",
+                        "name": "serviceid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "action command",
+                        "name": "actioncommand",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
+                        }
+                    }
+                }
+            }
+        },
         "/services/create/{servicetype}": {
             "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "Create an instance of a service from yaml",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Service"
                 ],
                 "summary": "Create service instance from yaml",
                 "parameters": [
@@ -108,12 +166,20 @@ var doc = `{
         },
         "/services/info": {
             "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "Get an overview over all service instances",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Service"
                 ],
                 "summary": "Get an overview over all service instances",
                 "responses": {
@@ -134,12 +200,20 @@ var doc = `{
         },
         "/services/info/{serviceid}": {
             "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "Get the yaml file for an specific service instance. Parameter serviceid has to be supplied.",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Service"
                 ],
                 "summary": "Get the yaml file for an instance",
                 "parameters": [
@@ -169,12 +243,20 @@ var doc = `{
         },
         "/services/update/{serviceid}": {
             "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "Update an instance of a service from yaml",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Service"
                 ],
                 "summary": "Update service instance from yaml",
                 "parameters": [
@@ -210,12 +292,20 @@ var doc = `{
         },
         "/services/{serviceid}": {
             "delete": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "Delete an instance of a service",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Service"
                 ],
                 "summary": "Delete a service instance",
                 "parameters": [
@@ -242,12 +332,20 @@ var doc = `{
         },
         "/servicestore/info": {
             "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "Lists all possible deployable services",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Servicestore"
                 ],
                 "summary": "Lists all possible deployable services",
                 "responses": {
@@ -268,12 +366,20 @@ var doc = `{
         },
         "/servicestore/yaml/{servicetype}": {
             "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "Get the default yaml file for a service-template",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Servicestore"
                 ],
                 "summary": "Get the default yaml for a service-template",
                 "parameters": [
@@ -342,9 +448,43 @@ var doc = `{
                 }
             }
         },
+        "dtos.ServiceInstanceActionDto": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "string",
+                    "example": "cmd_expose"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Expose service"
+                }
+            }
+        },
+        "dtos.ServiceInstanceActionGroupDto": {
+            "type": "object",
+            "properties": {
+                "actions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.ServiceInstanceActionDto"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Security"
+                }
+            }
+        },
         "dtos.ServiceInstanceDetailsDto": {
             "type": "object",
             "properties": {
+                "action_groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.ServiceInstanceActionGroupDto"
+                    }
+                },
                 "id": {
                     "type": "string",
                     "example": "936DA01F-9ABD-4D9D-80C7-02AF85C822A8"

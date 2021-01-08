@@ -11,8 +11,12 @@ import (
 // @Summary Create service instance from yaml
 // @Description Create an instance of a service from yaml
 //
+// @tags Service
+//
 // @Accept json
 // @Produce json
+//
+// @Security BasicAuth
 //
 // @Param serviceyaml body dtos.ServiceYamlDto true "Service-Yaml"
 // @Param servicetype path string true "Type of service"
@@ -35,8 +39,12 @@ func HandlePostCreateServiceInstance(ctx *gin.Context) {
 // @Summary Update service instance from yaml
 // @Description Update an instance of a service from yaml
 //
+// @tags Service
+//
 // @Accept json
 // @Produce json
+//
+// @Security BasicAuth
 //
 // @Param serviceyaml body dtos.ServiceYamlDto true "Service-Yaml"
 // @Param serviceid path string true "Id of service"
@@ -55,12 +63,41 @@ func HandlePostUpdateServiceInstance(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
 
+
+// Apply a service specific action godoc
+// @Summary Apply a service specific action to a service instance
+// @Description Apply a service specific action to a service instance
+//
+// @tags Service
+//
+// @Accept json
+// @Produce json
+//
+// @Security BasicAuth
+//
+// @Param serviceid path string true "Id of service"
+// @Param actioncommand path string true "action command"
+//
+// @Success 200
+// @Failure 401 {object} dtos.HTTPErrorDto
+//
+// @Router /services/action/{serviceid}/{actioncommand}  [post]
+func HandlePostServiceInstanceAction(ctx *gin.Context) {
+
+	ctx.Status(http.StatusOK)
+}
+
+
 // Delete service instance godoc
 // @Summary Delete a service instance
 // @Description Delete an instance of a service
 //
+// @tags Service
+//
 // @Accept json
 // @Produce json
+//
+// @Security BasicAuth
 //
 // @Param serviceid path string true "Id of service"
 //
@@ -68,7 +105,7 @@ func HandlePostUpdateServiceInstance(ctx *gin.Context) {
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
 // @Router /services/{serviceid} [delete]
-func HandlePostDeleteServiceInstance(ctx *gin.Context) {
+func HandleDeleteServiceInstance(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
 
@@ -76,8 +113,12 @@ func HandlePostDeleteServiceInstance(ctx *gin.Context) {
 // @Summary Get details over a single service instance
 // @Description Get details over a single service instance
 //
+// @tags Service
+//
 // @Accept json
 // @Produce json
+//
+// @Security BasicAuth
 //
 // @Param serviceid path string true "Id of service"
 //
@@ -97,6 +138,17 @@ func HandleGetServiceInstanceDetails(ctx *gin.Context) {
 				Type:      "kibana",
 				Status:    "ok",
 				Namespace: "user_namespace_42",
+				ActionGroups: []dtos.ServiceInstanceActionGroupDto {
+					dtos.ServiceInstanceActionGroupDto{
+						GroupName: "Security",
+						Actions: []dtos.ServiceInstanceActionDto{
+							dtos.ServiceInstanceActionDto{
+								Name: "Expose",
+								Command: "cmd_expose",
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -110,8 +162,12 @@ func HandleGetServiceInstanceDetails(ctx *gin.Context) {
 // @Summary Get an overview over all service instances
 // @Description Get an overview over all service instances
 //
+// @tags Service
+//
 // @Accept json
 // @Produce json
+//
+// @Security BasicAuth
 //
 // @Success 200 {object} dtos.ServiceInstanceDetailsOverviewDto
 // @Failure 401 {object} dtos.HTTPErrorDto
@@ -128,20 +184,66 @@ func HandleGetServiceInstanceDetailsForAllInstances(ctx *gin.Context) {
 				Type:      "kibana",
 				Status:    "ok",
 				Namespace: "user_namespace_42",
+				ActionGroups: []dtos.ServiceInstanceActionGroupDto {
+					dtos.ServiceInstanceActionGroupDto{
+						GroupName: "Security",
+						Actions: []dtos.ServiceInstanceActionDto{
+							dtos.ServiceInstanceActionDto{
+								Name: "Expose",
+								Command: "cmd_expose",
+							},
+						},
+					},
+				},
 			},
 			dtos.ServiceInstanceDetailsDto{
 				Name:      "Instance 2",
 				Id:        "22222222-XXXX-4DDD-80C7-02AF85999999",
-				Type:      "kibana",
+				Type:      "elasticsearch",
 				Status:    "warning",
 				Namespace: "user_namespace_42",
+				ActionGroups: []dtos.ServiceInstanceActionGroupDto {
+					dtos.ServiceInstanceActionGroupDto{
+						GroupName: "Backup and Restore",
+						Actions: []dtos.ServiceInstanceActionDto{
+							dtos.ServiceInstanceActionDto{
+								Name: "Backup",
+								Command: "cmd_backup_elasticsearch",
+							},
+							dtos.ServiceInstanceActionDto{
+								Name: "Restore",
+								Command: "cmd_restore_elasticsearch",
+							},
+						},
+					},
+					dtos.ServiceInstanceActionGroupDto{
+						GroupName: "Security",
+						Actions: []dtos.ServiceInstanceActionDto{
+							dtos.ServiceInstanceActionDto{
+								Name: "Expose",
+								Command: "cmd_expose",
+							},
+						},
+					},
+				},
 			},
 			dtos.ServiceInstanceDetailsDto{
 				Name:      "Instance 3",
 				Id:        "33333333-XXXX-4DDD-80C7-02AF85999999",
-				Type:      "kibana",
+				Type:      "logstash",
 				Status:    "error",
 				Namespace: "user_namespace_42",
+				ActionGroups: []dtos.ServiceInstanceActionGroupDto {
+					dtos.ServiceInstanceActionGroupDto{
+						GroupName: "Security",
+						Actions: []dtos.ServiceInstanceActionDto{
+							dtos.ServiceInstanceActionDto{
+								Name: "Expose",
+								Command: "cmd_expose",
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -155,8 +257,12 @@ func HandleGetServiceInstanceDetailsForAllInstances(ctx *gin.Context) {
 // @Summary Get the yaml file for an instance
 // @Description Get the yaml file for an specific service instance. Parameter serviceid has to be supplied.
 //
+// @tags Service
+//
 // @Accept json
 // @Produce json
+//
+// @Security BasicAuth
 //
 // @Param serviceid path string true "Id of service"
 //
