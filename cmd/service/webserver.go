@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "OperatorAutomation/api" //Indirect use for swagger
 	"OperatorAutomation/cmd/service/controller"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"

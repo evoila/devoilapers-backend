@@ -27,7 +27,7 @@ The current structure is based on https://github.com/golang-standards/project-la
     - Details: https://github.com/swaggo/swag
     
 
-## Getting Started
+## Getting started
 Ensure you have Go **1.15.5** installed.
 
 ### GoLand configurations 
@@ -46,6 +46,8 @@ Ensure you have Go **1.15.5** installed.
 4. Download dependencies. GoLand should offer you to sync dependencies. If not you can try to execute `go get ./...` in `<ProjectRoot>`
 5. Run your Go build config. The webserver should start. You should be able to navigate to http://127.0.0.1:8080/swagger/index.html
 
+### Navigate to swagger
+If the webserver has been started the swagger page is available at http://127.0.0.1:8080/swagger/index.html.
 
 ## Conventions
 Follow the common Go conventions. 

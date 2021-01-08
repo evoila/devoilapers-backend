@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "OperatorAutomation/api" //Indirect use for swagger
 	"OperatorAutomation/pkg/demolib"
 	log "github.com/sirupsen/logrus"
 )
