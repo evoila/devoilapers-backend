@@ -4,13 +4,14 @@ import (
 	_ "OperatorAutomation/api" //Indirect use for swagger
 	"OperatorAutomation/cmd/service/config"
 	"OperatorAutomation/cmd/service/controller"
+	"strconv"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	ginlogrus "github.com/toorop/gin-logrus"
-	"strconv"
 )
 
 // @title Operator Automation Backend API
@@ -37,8 +38,13 @@ func StartWebserver(config config.RawConfig) error {
 
 	// Logging and recovery middleware
 	router.Use(ginlogrus.Logger(log), gin.Recovery())
+
 	// Allow cross origins
-	router.Use(cors.Default())
+	c := cors.DefaultConfig()
+	c.AllowAllOrigins = true
+	c.AllowCredentials = true
+	c.AddAllowHeaders("authorization")
+	router.Use(cors.New(c))
 
 	// Basic authentication users
 	// Import them from the given config
