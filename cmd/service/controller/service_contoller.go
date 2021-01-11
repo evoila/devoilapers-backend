@@ -3,10 +3,13 @@ package controller
 import (
 	"OperatorAutomation/cmd/service/dtos"
 	"OperatorAutomation/cmd/service/utils"
-	"OperatorAutomation/pkg/core"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
+
+type ServiceController struct {
+	BaseController
+}
 
 // Create service instance godoc
 // @Summary Create service instance from yaml
@@ -26,12 +29,22 @@ import (
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
 // @Router /services/create/{servicetype} [post]
-func HandlePostCreateServiceInstance(ctx *gin.Context, core *core.Core) {
+func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Context) {
 	var yamlData dtos.ServiceYamlDto
 	if err := ctx.ShouldBindJSON(&yamlData); err != nil {
 		utils.NewError(ctx, http.StatusBadRequest, err)
 		return
 	}
+
+	userInfos, found := controller.UserManagement.GetUserInformation("", "")
+	if !found {
+		ctx.Status(http.StatusUnauthorized)
+		return
+	}
+
+	print(userInfos)
+	// Like this
+	//controller.Core.CrateUserContext(userInfos).CreateServices()
 
 	ctx.Status(http.StatusOK)
 }
@@ -54,7 +67,7 @@ func HandlePostCreateServiceInstance(ctx *gin.Context, core *core.Core) {
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
 // @Router /services/update/{serviceid} [post]
-func HandlePostUpdateServiceInstance(ctx *gin.Context, c *core.Core) {
+func (controller ServiceController) HandlePostUpdateServiceInstance(ctx *gin.Context) {
 	var yamlData dtos.ServiceYamlDto
 	if err := ctx.ShouldBindJSON(&yamlData); err != nil {
 		utils.NewError(ctx, http.StatusBadRequest, err)
@@ -82,7 +95,7 @@ func HandlePostUpdateServiceInstance(ctx *gin.Context, c *core.Core) {
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
 // @Router /services/action/{serviceid}/{actioncommand}  [post]
-func HandlePostServiceInstanceAction(ctx *gin.Context, c *core.Core) {
+func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Context) {
 
 	ctx.Status(http.StatusOK)
 }
@@ -104,7 +117,7 @@ func HandlePostServiceInstanceAction(ctx *gin.Context, c *core.Core) {
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
 // @Router /services/{serviceid} [delete]
-func HandleDeleteServiceInstance(ctx *gin.Context, c *core.Core) {
+func (controller ServiceController) HandleDeleteServiceInstance(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
 
@@ -125,7 +138,7 @@ func HandleDeleteServiceInstance(ctx *gin.Context, c *core.Core) {
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
 // @Router /services/info/{serviceid} [get]
-func HandleGetServiceInstanceDetails(ctx *gin.Context, c *core.Core) {
+func (controller ServiceController) HandleGetServiceInstanceDetails(ctx *gin.Context) {
 	serviceId := ctx.Param("serviceid")
 
 	//Return single instance
@@ -172,7 +185,7 @@ func HandleGetServiceInstanceDetails(ctx *gin.Context, c *core.Core) {
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
 // @Router /services/info [get]
-func HandleGetServiceInstanceDetailsForAllInstances(ctx *gin.Context, c *core.Core) {
+func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstances(ctx *gin.Context) {
 
 	// Return all instances
 	instanceDetailsOverview := dtos.ServiceInstanceDetailsOverviewDto{
@@ -268,7 +281,7 @@ func HandleGetServiceInstanceDetailsForAllInstances(ctx *gin.Context, c *core.Co
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
 // @Router /services/info/{serviceid} [get]
-func HandleGetServiceInstanceYaml(ctx *gin.Context, c *core.Core) {
+func (controller ServiceController) HandleGetServiceInstanceYaml(ctx *gin.Context) {
 	serviceId := ctx.Param("serviceid")
 
 	yamlData := dtos.ServiceYamlDto{

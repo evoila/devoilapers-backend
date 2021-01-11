@@ -1,20 +1,14 @@
 package users
 
 import (
+	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/kubernetes"
 )
 
-type IUserInformation interface {
-	GetName() string
-	GetPassword() string
-	GetKubernetesAccessToken() string
-	GetKubernetesNamespace() string
-	GetRole() string
-}
-
+// Created by core instance. Do not create by yourself
 type UserContext struct {
-	IUserInformation
+	common.IKubernetesAuthInformation
 	*kubernetes.KubernetesWrapper
 }
 

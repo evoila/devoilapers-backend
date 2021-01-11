@@ -1,11 +1,13 @@
 package kubernetes
 
-import "OperatorAutomation/pkg/core/users"
+import (
+	"OperatorAutomation/pkg/core/common"
+)
 
 type KubernetesWrapper struct {
 
 }
 
-func CreateKubernetesWrapper(userInformation users.IUserInformation) *KubernetesWrapper  {
+func CreateKubernetesWrapper(userInformation common.IKubernetesAuthInformation) *KubernetesWrapper  {
 	return &KubernetesWrapper{}
 }

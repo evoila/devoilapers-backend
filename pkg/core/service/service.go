@@ -1,5 +1,6 @@
 package service
 
-type Service struct {
-
+type Service interface {
+	GetServiceTemplate() (ServiceTemplate)
+	ExecuteCustomAction(actionName string, commandDataJson string) (string)
 }

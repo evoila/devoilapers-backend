@@ -5,7 +5,7 @@ type RawConfig struct {
 	Port                    int                     `json:"port"`
 	WebserverSllCertificate WebserverSllCertificate `json:"webserver_sll_certificate"`
 	Kubernetes              Kubernetes              `json:"kubernetes"`
-	User                    []User                  `json:"user"`
+	Users                   []User                  `json:"users"`
 }
 
 type WebserverSllCertificate struct {

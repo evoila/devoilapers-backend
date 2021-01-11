@@ -10,7 +10,7 @@
     "certificate-authority": "C:\\Users\\Chris\\.minikube\\ca.crt",
     "name": "minikube"
   },
-  "user": [
+  "users": [
     {
       "name": "admin",
       "password": "masterkey",

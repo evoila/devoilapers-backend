@@ -4,6 +4,7 @@ import (
 	_ "OperatorAutomation/api" //Indirect use for swagger
 	"OperatorAutomation/cmd/service/config"
 	"OperatorAutomation/cmd/service/controller"
+	"OperatorAutomation/cmd/service/user"
 	"OperatorAutomation/pkg/core"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -41,55 +42,43 @@ func StartWebserver(appconfig config.RawConfig, core *core.Core) error {
 	// Allow cross origins
 	router.Use(cors.Default())
 
+
+
 	// Basic authentication users
 	// Import them from the given config
 	validAccounts := gin.Accounts{}
-	for _, user := range core.UserContextManagement.Users {
+	for _, user := range appconfig.Users {
 		validAccounts[user.GetName()] = user.GetPassword()
 	}
 	auth := gin.BasicAuth(validAccounts)
+
+	// Define controller with access to the core component
+	baseController := controller.BaseController{Core: core, UserManagement: user.CreateUserManagement(appconfig.Users)}
+	serviceStoreController := controller.ServiceStoreController{BaseController: baseController}
+	serviceController := controller.ServiceController{BaseController: baseController}
+	accountController := controller.AccountController{BaseController: baseController}
 
 	// Define routes
 	v1 := router.Group("/api/v1")
 	{
 		accounts := v1.Group("/accounts")
 		{
-			accounts.POST("/login", func(context *gin.Context) {
-				controller.HandlePostLogin(context, core)
-			})
+			accounts.POST("/login", accountController.HandlePostLogin)
 		}
 		servicestore := v1.Group("/servicestore", auth)
 		{
-			servicestore.GET("/info", func(context *gin.Context) {
-				controller.HandleGetServiceStoreOverview(context, core)
-			})
-			servicestore.GET("/yaml/:servicetype", func(context *gin.Context) {
-				controller.HandleGetServiceStoreItemYaml(context, core)
-			})
+			servicestore.GET("/info", serviceStoreController.HandleGetServiceStoreOverview)
+			servicestore.GET("/yaml/:servicetype", serviceStoreController.HandleGetServiceStoreItemYaml)
 		}
 		services := v1.Group("/services", auth)
 		{
-			services.POST("/create/:servicetype", func(context *gin.Context) {
-				controller.HandlePostCreateServiceInstance(context, core)
-			})
-			services.POST("/update/:serviceid", func(context *gin.Context) {
-				controller.HandlePostUpdateServiceInstance(context, core)
-			})
-			services.POST("/action/:serviceid/:actioncommand", func(context *gin.Context) {
-				controller.HandlePostServiceInstanceAction(context, core)
-			})
-			services.DELETE("/:serviceid", func(context *gin.Context) {
-				controller.HandleDeleteServiceInstance(context, core)
-			})
-			services.GET("/info", func(context *gin.Context) {
-				controller.HandleGetServiceInstanceDetailsForAllInstances(context, core)
-			})
-			services.GET("/info/:serviceid", func(context *gin.Context) {
-				controller.HandleGetServiceInstanceDetails(context, core)
-			})
-			services.GET("/yaml/:serviceid", func(context *gin.Context) {
-				controller.HandleGetServiceInstanceYaml(context, core)
-			})
+			services.POST("/create/:servicetype", serviceController.HandlePostCreateServiceInstance)
+			services.POST("/update/:serviceid", serviceController.HandlePostUpdateServiceInstance)
+			services.POST("/action/:serviceid/:actioncommand", serviceController.HandlePostServiceInstanceAction)
+			services.DELETE("/:serviceid", serviceController.HandleDeleteServiceInstance)
+			services.GET("/info", serviceController.HandleGetServiceInstanceDetailsForAllInstances)
+			services.GET("/info/:serviceid", serviceController.HandleGetServiceInstanceDetails)
+			services.GET("/yaml/:serviceid", serviceController.HandleGetServiceInstanceYaml)
 		}
 	}
 
