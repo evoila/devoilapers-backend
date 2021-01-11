@@ -3,6 +3,7 @@ package controller
 import (
 	"OperatorAutomation/cmd/service/dtos"
 	"OperatorAutomation/cmd/service/utils"
+	"OperatorAutomation/pkg/core"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -23,7 +24,7 @@ import (
 // @Failure 400 {object} dtos.HTTPErrorDto
 //
 // @Router /accounts/login [post]
-func HandlePostLogin(ctx *gin.Context, accounts gin.Accounts) {
+func HandlePostLogin(ctx *gin.Context, core *core.Core) {
 	var accountCredentials dtos.AccountCredentialsDto
 
 	if err := ctx.ShouldBindJSON(&accountCredentials); err != nil {
@@ -31,14 +32,18 @@ func HandlePostLogin(ctx *gin.Context, accounts gin.Accounts) {
 		return
 	}
 
-	password, userCouldBeFound := accounts[accountCredentials.Username]
-	if !userCouldBeFound || password != accountCredentials.Password {
+	user, userCouldBeFound := core.UserContextManagement.GetUserInformation(
+		accountCredentials.Username,
+		accountCredentials.Password,
+	)
+
+	if !userCouldBeFound {
 		ctx.Status(http.StatusUnauthorized)
 		return
 	}
 
 	authData := dtos.AuthenticationResponseDataDto{
-		Role:    "admin",
+		Role:    (*user).GetRole(),
 		IsValid: true,
 	}
 

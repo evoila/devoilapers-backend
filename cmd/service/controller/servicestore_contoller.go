@@ -2,6 +2,7 @@ package controller
 
 import (
 	"OperatorAutomation/cmd/service/dtos"
+	"OperatorAutomation/pkg/core"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -21,7 +22,7 @@ import (
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
 // @Router /servicestore/info [get]
-func HandleGetServiceStoreOverview(ctx *gin.Context) {
+func HandleGetServiceStoreOverview(ctx *gin.Context, management *core.Core) {
 
 	serviceStoreOverviewData := dtos.ServiceStoreOverviewDto{
 		ServiceStoreItems: []dtos.ServiceStoreItemDto{
@@ -58,7 +59,7 @@ func HandleGetServiceStoreOverview(ctx *gin.Context) {
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
 // @Router /servicestore/yaml/{servicetype} [get]
-func HandleGetServiceStoreItemYaml(ctx *gin.Context) {
+func HandleGetServiceStoreItemYaml(ctx *gin.Context, c *core.Core) {
 	serviceName := ctx.Param("name")
 
 	serviceYaml := dtos.ServiceStoreItemYamlDto{

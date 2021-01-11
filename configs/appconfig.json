@@ -16,7 +16,7 @@
       "password": "masterkey",
       "kubernetes_access_token": "MYKUBTOKEN",
       "kubernetes_namespace": "User1Namespace",
-      "role": "user"
+      "role": "admin"
     },
     {
       "name": "guest",

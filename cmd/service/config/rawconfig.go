@@ -26,3 +26,19 @@ type User struct {
 	KubernetesNamespace   string `json:"kubernetes_namespace"`
 	Role                  string `json:"role"`
 }
+
+func (user User) GetName() string {
+	return user.Name
+}
+func (user User) GetPassword() string {
+	return user.Password
+}
+func (user User) GetKubernetesAccessToken() string {
+	return user.KubernetesAccessToken
+}
+func (user User) GetKubernetesNamespace() string {
+	return user.KubernetesNamespace
+}
+func (user User) GetRole() string {
+	return user.Role
+}

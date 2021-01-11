@@ -4,6 +4,7 @@ import (
 	_ "OperatorAutomation/api" //Indirect use for swagger
 	"OperatorAutomation/cmd/service/config"
 	"OperatorAutomation/cmd/service/controller"
+	"OperatorAutomation/pkg/core"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -27,7 +28,7 @@ import (
 // @query.collection.format multi
 //
 // @x-extension-openapi {"example": "value on a json format"}
-func StartWebserver(config config.RawConfig) error {
+func StartWebserver(appconfig config.RawConfig, core *core.Core) error {
 	log := logrus.New()
 	// Set to global log level
 	log.SetLevel(logrus.GetLevel())
@@ -43,8 +44,8 @@ func StartWebserver(config config.RawConfig) error {
 	// Basic authentication users
 	// Import them from the given config
 	validAccounts := gin.Accounts{}
-	for _, user := range config.User {
-		validAccounts[user.Name] = user.Password
+	for _, user := range core.UserContextManagement.Users {
+		validAccounts[user.GetName()] = user.GetPassword()
 	}
 	auth := gin.BasicAuth(validAccounts)
 
@@ -54,34 +55,52 @@ func StartWebserver(config config.RawConfig) error {
 		accounts := v1.Group("/accounts")
 		{
 			accounts.POST("/login", func(context *gin.Context) {
-				controller.HandlePostLogin(context, validAccounts)
+				controller.HandlePostLogin(context, core)
 			})
 		}
 		servicestore := v1.Group("/servicestore", auth)
 		{
-			servicestore.GET("/info", controller.HandleGetServiceStoreOverview)
-			servicestore.GET("/yaml/:servicetype", controller.HandleGetServiceStoreItemYaml)
+			servicestore.GET("/info", func(context *gin.Context) {
+				controller.HandleGetServiceStoreOverview(context, core)
+			})
+			servicestore.GET("/yaml/:servicetype", func(context *gin.Context) {
+				controller.HandleGetServiceStoreItemYaml(context, core)
+			})
 		}
 		services := v1.Group("/services", auth)
 		{
-			services.POST("/create/:servicetype", controller.HandlePostCreateServiceInstance)
-			services.POST("/update/:serviceid", controller.HandlePostUpdateServiceInstance)
-			services.POST("/action/:serviceid/:actioncommand", controller.HandlePostServiceInstanceAction)
-			services.DELETE("/:serviceid", controller.HandleDeleteServiceInstance)
-			services.GET("/info", controller.HandleGetServiceInstanceDetailsForAllInstances)
-			services.GET("/info/:serviceid", controller.HandleGetServiceInstanceDetails)
-			services.GET("/yaml/:serviceid", controller.HandleGetServiceInstanceYaml)
+			services.POST("/create/:servicetype", func(context *gin.Context) {
+				controller.HandlePostCreateServiceInstance(context, core)
+			})
+			services.POST("/update/:serviceid", func(context *gin.Context) {
+				controller.HandlePostUpdateServiceInstance(context, core)
+			})
+			services.POST("/action/:serviceid/:actioncommand", func(context *gin.Context) {
+				controller.HandlePostServiceInstanceAction(context, core)
+			})
+			services.DELETE("/:serviceid", func(context *gin.Context) {
+				controller.HandleDeleteServiceInstance(context, core)
+			})
+			services.GET("/info", func(context *gin.Context) {
+				controller.HandleGetServiceInstanceDetailsForAllInstances(context, core)
+			})
+			services.GET("/info/:serviceid", func(context *gin.Context) {
+				controller.HandleGetServiceInstanceDetails(context, core)
+			})
+			services.GET("/yaml/:serviceid", func(context *gin.Context) {
+				controller.HandleGetServiceInstanceYaml(context, core)
+			})
 		}
 	}
 
 	// Define swagger endpoint
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	log.Debugf("Visit https://127.0.0.1:%d/swagger/index.html to see the swagger document", config.Port)
+	log.Debugf("Visit https://127.0.0.1:%d/swagger/index.html to see the swagger document", appconfig.Port)
 
 	// Start server
 	return router.RunTLS(
-		":"+strconv.Itoa(config.Port),
-		config.WebserverSllCertificate.PublicKeyFilePath,
-		config.WebserverSllCertificate.PrivateKeyFilePath)
+		":"+strconv.Itoa(appconfig.Port),
+		appconfig.WebserverSllCertificate.PublicKeyFilePath,
+		appconfig.WebserverSllCertificate.PrivateKeyFilePath)
 }

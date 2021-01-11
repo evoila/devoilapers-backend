@@ -2,12 +2,16 @@ package main
 
 import (
 	"OperatorAutomation/cmd/service/config"
+	"OperatorAutomation/cmd/service/utils"
+	"OperatorAutomation/pkg/core"
+	"OperatorAutomation/pkg/core/users"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"os"
 )
 
-func ApplyGlobalConfigurations(rawConfig config.RawConfig) {
+// Set the loglevel from the config globally
+func ApplyGlobalLogConfigurations(rawConfig config.RawConfig) {
 	switch rawConfig.LogLevel {
 	case "trace":
 		log.SetLevel(log.TraceLevel)
@@ -23,9 +27,16 @@ func ApplyGlobalConfigurations(rawConfig config.RawConfig) {
 		break
 	default:
 		log.SetLevel(log.DebugLevel)
-		log.Warn("Invalid loglevel found. Valid values are: trace, debug, warning, error")
+		log.Warn("Invalid log level found. Valid values are: trace, debug, warning, error. Fallback to debug level")
 		break
 	}
+}
+
+// Create the core object that the service is interacting with
+func InitializeCore(appconfig config.RawConfig) *core.Core {
+	// Convert users to core system users
+	userManagement := users.CreateUserContextManagement(utils.ToInterface(appconfig.User))
+	return core.CreateCore(&userManagement)
 }
 
 func main() {
@@ -55,12 +66,16 @@ func main() {
 					log.Fatal(err)
 					return err
 				}
+
 				//Apply loglevel
-				ApplyGlobalConfigurations(parsedConfig)
+				ApplyGlobalLogConfigurations(parsedConfig)
+
+				// Create the core of the app
+				appCore := InitializeCore(parsedConfig)
 
 				// Start webserver
 				log.Info("Starting the webserver")
-				err = StartWebserver(parsedConfig)
+				err = StartWebserver(parsedConfig, appCore)
 				if err != nil {
 					log.Error("Webserver start failed")
 					log.Fatal(err)
