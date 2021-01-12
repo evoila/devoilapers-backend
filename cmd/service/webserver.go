@@ -1,10 +1,10 @@
 package main
 
 import (
-	_ "OperatorAutomation/api" //Indirect use for swagger
+	_ "OperatorAutomation/api" //Indirect use for swagger -- DO NOT REMOVE --
 	"OperatorAutomation/cmd/service/config"
 	"OperatorAutomation/cmd/service/controller"
-	"OperatorAutomation/cmd/service/user"
+	"OperatorAutomation/cmd/service/management"
 	"OperatorAutomation/pkg/core"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -42,13 +42,11 @@ func StartWebserver(appconfig config.RawConfig, core *core.Core) error {
 	// Allow cross origins
 	router.Use(cors.Default())
 
-
-
-	// Basic authentication users
-	// Import them from the given config
+	// Import users from the given config
+	// the data is used for basic authentication in gin
 	validAccounts := gin.Accounts{}
 	for _, user := range appconfig.Users {
-		validAccounts[user.GetName()] = user.GetPassword()
+		validAccounts[user.Name] = user.Password
 	}
 	auth := gin.BasicAuth(validAccounts)
 
@@ -84,7 +82,6 @@ func StartWebserver(appconfig config.RawConfig, core *core.Core) error {
 
 	// Define swagger endpoint
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
 	log.Debugf("Visit https://127.0.0.1:%d/swagger/index.html to see the swagger document", appconfig.Port)
 
 	// Start server

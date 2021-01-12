@@ -17,6 +17,7 @@ func CreateCore() *Core {
 	return &Core{}
 }
 
-func (core Core) CrateUserContext(userInformation common.IKubernetesAuthInformation) *users.UserContext  {
+// Creates a new user context based on the given authentifcation data
+func (core Core) CrateUserContext(userInformation common.IKubernetesAuthInformation) *users.UserContext {
 	return &users.UserContext{}
 }

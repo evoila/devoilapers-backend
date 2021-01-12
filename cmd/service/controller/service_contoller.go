@@ -144,24 +144,24 @@ func (controller ServiceController) HandleGetServiceInstanceDetails(ctx *gin.Con
 	//Return single instance
 	instanceDetailsOverview := dtos.ServiceInstanceDetailsOverviewDto{
 		Instances: []dtos.ServiceInstanceDetailsDto{
-			dtos.ServiceInstanceDetailsDto{
+			{
 				Name:      "Instance 1",
 				Id:        serviceId,
 				Type:      "kibana",
 				Status:    "ok",
 				Namespace: "user_namespace_42",
 				ActionGroups: []dtos.ServiceInstanceActionGroupDto{
-					dtos.ServiceInstanceActionGroupDto{
+					{
 						GroupName: "Security",
 						Actions: []dtos.ServiceInstanceActionDto{
-							dtos.ServiceInstanceActionDto{
+							{
 								Name:    "Expose",
 								Command: "cmd_expose",
 							},
+														},
+													},
+							},
 						},
-					},
-				},
-			},
 		},
 	}
 
@@ -190,73 +190,73 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 	// Return all instances
 	instanceDetailsOverview := dtos.ServiceInstanceDetailsOverviewDto{
 		Instances: []dtos.ServiceInstanceDetailsDto{
-			dtos.ServiceInstanceDetailsDto{
+			{
 				Name:      "Instance 1",
 				Id:        "111111111-1111-4D9D-80C7-02AF85C822A8",
 				Type:      "kibana",
 				Status:    "ok",
 				Namespace: "user_namespace_42",
 				ActionGroups: []dtos.ServiceInstanceActionGroupDto{
-					dtos.ServiceInstanceActionGroupDto{
+					{
 						GroupName: "Security",
 						Actions: []dtos.ServiceInstanceActionDto{
-							dtos.ServiceInstanceActionDto{
+							{
 								Name:    "Expose",
 								Command: "cmd_expose",
 							},
+														},
+													},
+							},
 						},
-					},
-				},
-			},
-			dtos.ServiceInstanceDetailsDto{
+			{
 				Name:      "Instance 2",
 				Id:        "22222222-XXXX-4DDD-80C7-02AF85999999",
 				Type:      "elasticsearch",
 				Status:    "warning",
 				Namespace: "user_namespace_42",
 				ActionGroups: []dtos.ServiceInstanceActionGroupDto{
-					dtos.ServiceInstanceActionGroupDto{
+					{
 						GroupName: "Backup and Restore",
 						Actions: []dtos.ServiceInstanceActionDto{
-							dtos.ServiceInstanceActionDto{
+							{
 								Name:    "Backup",
 								Command: "cmd_backup_elasticsearch",
 							},
-							dtos.ServiceInstanceActionDto{
+							{
 								Name:    "Restore",
 								Command: "cmd_restore_elasticsearch",
 							},
 						},
 					},
-					dtos.ServiceInstanceActionGroupDto{
+					{
 						GroupName: "Security",
 						Actions: []dtos.ServiceInstanceActionDto{
-							dtos.ServiceInstanceActionDto{
-								Name:    "Expose",
+							{
+								Name: "Expose",
 								Command: "cmd_expose",
+										},
+														},
+													},
 							},
 						},
-					},
-				},
-			},
-			dtos.ServiceInstanceDetailsDto{
+			{
 				Name:      "Instance 3",
 				Id:        "33333333-XXXX-4DDD-80C7-02AF85999999",
 				Type:      "logstash",
 				Status:    "error",
 				Namespace: "user_namespace_42",
 				ActionGroups: []dtos.ServiceInstanceActionGroupDto{
-					dtos.ServiceInstanceActionGroupDto{
+					{
 						GroupName: "Security",
 						Actions: []dtos.ServiceInstanceActionDto{
-							dtos.ServiceInstanceActionDto{
+							{
 								Name:    "Expose",
 								Command: "cmd_expose",
 							},
+														},
+													},
+							},
 						},
-					},
-				},
-			},
 		},
 	}
 

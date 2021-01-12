@@ -5,9 +5,8 @@ import (
 )
 
 type KubernetesWrapper struct {
-
 }
 
-func CreateKubernetesWrapper(userInformation common.IKubernetesAuthInformation) *KubernetesWrapper  {
+func CreateKubernetesWrapper(userInformation common.IKubernetesAuthInformation) *KubernetesWrapper {
 	return &KubernetesWrapper{}
 }

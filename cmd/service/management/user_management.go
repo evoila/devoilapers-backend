@@ -14,10 +14,10 @@ func CreateUserManagement(users []config.User) UserManagement {
 	}
 
 	// Loop all users
-	for _, userInformation := range users{
+	for _, userInformation := range users {
 		// Create user-context objects which combine the given user information with advanced
 		// functionally that requires kubernetes access
-		userManagement.users[userInformation.GetName()] = &userInformation
+		userManagement.users[userInformation.Name] = &userInformation
 	}
 
 	return userManagement
@@ -26,7 +26,7 @@ func CreateUserManagement(users []config.User) UserManagement {
 // Delivers user information by username and password
 func (ctx UserManagement) GetUserInformation(username string, password string) (*config.User, bool) {
 	user, userCouldBeFound := ctx.users[username]
-	if !userCouldBeFound || user.GetPassword() != password {
+	if !userCouldBeFound || user.Password != password {
 		return nil, false
 	}
 

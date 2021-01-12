@@ -1,17 +1,21 @@
 package service
 
+// Registry which holds all service providers.
+// From outside an app i.e the webserver can register the different providers.
+// Therefore the service-store knows which provider it has.
 type ServiceProviderRegistry struct {
-	// Provdider name -> ServiceProvider
+	// Provider name -> ServiceProvider
 	provider map[string]ServiceProvider
 }
 
 // Add a new service provider
-func (registry ServiceProviderRegistry) RegisterServiceProvider(provider ServiceProvider)  {
-
+func (registry ServiceProviderRegistry) RegisterServiceProvider(provider ServiceProvider) {
+	// TODO
 }
 
 // Find an existing service provider
-func (registry ServiceProviderRegistry) GetProviderByName(name string) *ServiceProvider  {
+func (registry ServiceProviderRegistry) GetProviderByName(name string) *ServiceProvider {
+	// TODO
 	return nil
 }
 

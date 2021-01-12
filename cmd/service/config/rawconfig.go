@@ -27,18 +27,12 @@ type User struct {
 	Role                  string `json:"role"`
 }
 
-func (user User) GetName() string {
-	return user.Name
-}
-func (user User) GetPassword() string {
-	return user.Password
-}
+// Interface IKubernetesAuthInformation
 func (user User) GetKubernetesAccessToken() string {
 	return user.KubernetesAccessToken
 }
+
+// Interface IKubernetesAuthInformation
 func (user User) GetKubernetesNamespace() string {
 	return user.KubernetesNamespace
-}
-func (user User) GetRole() string {
-	return user.Role
 }

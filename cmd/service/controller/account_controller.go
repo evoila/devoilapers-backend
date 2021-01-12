@@ -35,19 +35,21 @@ func (controller AccountController) HandlePostLogin(ctx *gin.Context) {
 		return
 	}
 
+	// Get user information from the user management
 	user, userCouldBeFound := controller.UserManagement.GetUserInformation(
 		accountCredentials.Username,
 		accountCredentials.Password,
 	)
 
-
+	// If the user could not be found, access should be not granted
 	if !userCouldBeFound {
 		ctx.Status(http.StatusUnauthorized)
 		return
 	}
 
+	// Otherwise, return the role
 	authData := dtos.AuthenticationResponseDataDto{
-		Role:    (*user).GetRole(),
+		Role:    (*user).Role,
 		IsValid: true,
 	}
 

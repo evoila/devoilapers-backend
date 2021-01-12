@@ -8,8 +8,6 @@ import (
 	"os"
 )
 
-
-
 func main() {
 	log.SetLevel(log.TraceLevel)
 
@@ -64,7 +62,6 @@ func main() {
 		log.Info("Exit application")
 	}
 }
-
 
 // Create the core object that the service is interacting with
 func InitializeCore(appconfig config.RawConfig) *core.Core {
