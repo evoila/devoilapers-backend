@@ -7,6 +7,10 @@ import (
 	"net/http"
 )
 
+type AccountController struct {
+	BaseController
+}
+
 // Login godoc
 // @Summary User login
 // @Description Get login token and role by providing username and password
@@ -23,7 +27,7 @@ import (
 // @Failure 400 {object} dtos.HTTPErrorDto
 //
 // @Router /accounts/login [post]
-func HandlePostLogin(ctx *gin.Context, accounts gin.Accounts) {
+func (controller AccountController) HandlePostLogin(ctx *gin.Context) {
 	var accountCredentials dtos.AccountCredentialsDto
 
 	if err := ctx.ShouldBindJSON(&accountCredentials); err != nil {
@@ -31,14 +35,21 @@ func HandlePostLogin(ctx *gin.Context, accounts gin.Accounts) {
 		return
 	}
 
-	password, userCouldBeFound := accounts[accountCredentials.Username]
-	if !userCouldBeFound || password != accountCredentials.Password {
+	// Get user information from the user management
+	user, userCouldBeFound := controller.UserManagement.GetUserInformation(
+		accountCredentials.Username,
+		accountCredentials.Password,
+	)
+
+	// If the user could not be found, access should be not granted
+	if !userCouldBeFound {
 		ctx.Status(http.StatusUnauthorized)
 		return
 	}
 
+	// Otherwise, return the role
 	authData := dtos.AuthenticationResponseDataDto{
-		Role:    "admin",
+		Role:    user.Role,
 		IsValid: true,
 	}
 

@@ -10,13 +10,13 @@
     "certificate-authority": "C:\\Users\\Chris\\.minikube\\ca.crt",
     "name": "minikube"
   },
-  "user": [
+  "users": [
     {
       "name": "admin",
       "password": "masterkey",
       "kubernetes_access_token": "MYKUBTOKEN",
       "kubernetes_namespace": "User1Namespace",
-      "role": "user"
+      "role": "admin"
     },
     {
       "name": "guest",

@@ -5,7 +5,7 @@ type RawConfig struct {
 	Port                    int                     `json:"port"`
 	WebserverSllCertificate WebserverSllCertificate `json:"webserver_sll_certificate"`
 	Kubernetes              Kubernetes              `json:"kubernetes"`
-	User                    []User                  `json:"user"`
+	Users                   []User                  `json:"users"`
 }
 
 type WebserverSllCertificate struct {
@@ -25,4 +25,14 @@ type User struct {
 	KubernetesAccessToken string `json:"kubernetes_access_token"`
 	KubernetesNamespace   string `json:"kubernetes_namespace"`
 	Role                  string `json:"role"`
+}
+
+// Interface IKubernetesAuthInformation
+func (user User) GetKubernetesAccessToken() string {
+	return user.KubernetesAccessToken
+}
+
+// Interface IKubernetesAuthInformation
+func (user User) GetKubernetesNamespace() string {
+	return user.KubernetesNamespace
 }

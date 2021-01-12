@@ -1,17 +1,18 @@
 package main
 
 import (
-	_ "OperatorAutomation/api" //Indirect use for swagger
+	_ "OperatorAutomation/api" //Indirect use for swagger -- DO NOT REMOVE --
 	"OperatorAutomation/cmd/service/config"
 	"OperatorAutomation/cmd/service/controller"
-	"strconv"
-
+	"OperatorAutomation/cmd/service/management"
+	"OperatorAutomation/pkg/core"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	ginlogrus "github.com/toorop/gin-logrus"
+	"strconv"
 )
 
 // @title Operator Automation Backend API
@@ -28,7 +29,7 @@ import (
 // @query.collection.format multi
 //
 // @x-extension-openapi {"example": "value on a json format"}
-func StartWebserver(config config.RawConfig) error {
+func StartWebserver(appconfig config.RawConfig, core *core.Core) error {
 	log := logrus.New()
 	// Set to global log level
 	log.SetLevel(logrus.GetLevel())
@@ -38,56 +39,54 @@ func StartWebserver(config config.RawConfig) error {
 
 	// Logging and recovery middleware
 	router.Use(ginlogrus.Logger(log), gin.Recovery())
-
 	// Allow cross origins
-	c := cors.DefaultConfig()
-	c.AllowAllOrigins = true
-	c.AllowCredentials = true
-	c.AddAllowHeaders("authorization")
-	router.Use(cors.New(c))
+	router.Use(cors.Default())
 
-	// Basic authentication users
-	// Import them from the given config
+	// Import users from the given config
+	// the data is used for basic authentication in gin
 	validAccounts := gin.Accounts{}
-	for _, user := range config.User {
+	for _, user := range appconfig.Users {
 		validAccounts[user.Name] = user.Password
 	}
 	auth := gin.BasicAuth(validAccounts)
+
+	// Define controller with access to the core component
+	baseController := controller.BaseController{Core: core, UserManagement: user.CreateUserManagement(appconfig.Users)}
+	serviceStoreController := controller.ServiceStoreController{BaseController: baseController}
+	serviceController := controller.ServiceController{BaseController: baseController}
+	accountController := controller.AccountController{BaseController: baseController}
 
 	// Define routes
 	v1 := router.Group("/api/v1")
 	{
 		accounts := v1.Group("/accounts")
 		{
-			accounts.POST("/login", func(context *gin.Context) {
-				controller.HandlePostLogin(context, validAccounts)
-			})
+			accounts.POST("/login", accountController.HandlePostLogin)
 		}
 		servicestore := v1.Group("/servicestore", auth)
 		{
-			servicestore.GET("/info", controller.HandleGetServiceStoreOverview)
-			servicestore.GET("/yaml/:servicetype", controller.HandleGetServiceStoreItemYaml)
+			servicestore.GET("/info", serviceStoreController.HandleGetServiceStoreOverview)
+			servicestore.GET("/yaml/:servicetype", serviceStoreController.HandleGetServiceStoreItemYaml)
 		}
 		services := v1.Group("/services", auth)
 		{
-			services.POST("/create/:servicetype", controller.HandlePostCreateServiceInstance)
-			services.POST("/update/:serviceid", controller.HandlePostUpdateServiceInstance)
-			services.POST("/action/:serviceid/:actioncommand", controller.HandlePostServiceInstanceAction)
-			services.DELETE("/:serviceid", controller.HandleDeleteServiceInstance)
-			services.GET("/info", controller.HandleGetServiceInstanceDetailsForAllInstances)
-			services.GET("/info/:serviceid", controller.HandleGetServiceInstanceDetails)
-			services.GET("/yaml/:serviceid", controller.HandleGetServiceInstanceYaml)
+			services.POST("/create/:servicetype", serviceController.HandlePostCreateServiceInstance)
+			services.POST("/update/:serviceid", serviceController.HandlePostUpdateServiceInstance)
+			services.POST("/action/:serviceid/:actioncommand", serviceController.HandlePostServiceInstanceAction)
+			services.DELETE("/:serviceid", serviceController.HandleDeleteServiceInstance)
+			services.GET("/info", serviceController.HandleGetServiceInstanceDetailsForAllInstances)
+			services.GET("/info/:serviceid", serviceController.HandleGetServiceInstanceDetails)
+			services.GET("/yaml/:serviceid", serviceController.HandleGetServiceInstanceYaml)
 		}
 	}
 
 	// Define swagger endpoint
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	log.Debugf("Visit https://127.0.0.1:%d/swagger/index.html to see the swagger document", config.Port)
+	log.Debugf("Visit https://127.0.0.1:%d/swagger/index.html to see the swagger document", appconfig.Port)
 
 	// Start server
 	return router.RunTLS(
-		":"+strconv.Itoa(config.Port),
-		config.WebserverSllCertificate.PublicKeyFilePath,
-		config.WebserverSllCertificate.PrivateKeyFilePath)
+		":"+strconv.Itoa(appconfig.Port),
+		appconfig.WebserverSllCertificate.PublicKeyFilePath,
+		appconfig.WebserverSllCertificate.PrivateKeyFilePath)
 }
