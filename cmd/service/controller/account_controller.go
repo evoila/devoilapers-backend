@@ -49,7 +49,7 @@ func (controller AccountController) HandlePostLogin(ctx *gin.Context) {
 
 	// Otherwise, return the role
 	authData := dtos.AuthenticationResponseDataDto{
-		Role:    (*user).Role,
+		Role:    user.Role,
 		IsValid: true,
 	}
 

@@ -42,7 +42,7 @@ func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Con
 		return
 	}
 
-	print(userInfos)
+	print(userInfos.Name)
 	// Like this
 	//controller.Core.CrateUserContext(userInfos).CreateServices()
 
