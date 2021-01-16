@@ -40,7 +40,11 @@ func StartWebserver(appconfig config.RawConfig, core *core.Core) error {
 	// Logging and recovery middleware
 	router.Use(ginlogrus.Logger(log), gin.Recovery())
 	// Allow cross origins
-	router.Use(cors.Default())
+	c := cors.DefaultConfig()
+	c.AllowAllOrigins = true
+	c.AllowCredentials = true
+	c.AddAllowHeaders("authorization")
+	router.Use(cors.New(c))
 
 	// Import users from the given config
 	// the data is used for basic authentication in gin

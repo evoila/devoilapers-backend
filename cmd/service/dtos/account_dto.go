@@ -6,6 +6,6 @@ type AccountCredentialsDto struct {
 }
 
 type AuthenticationResponseDataDto struct {
-	IsValid bool   `json:"is_valid" example:"true"`
+	IsValid bool   `json:"isValid" example:"true"`
 	Role    string `json:"role" example:"admin"`
 }

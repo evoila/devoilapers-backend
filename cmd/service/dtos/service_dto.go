@@ -14,7 +14,7 @@ type ServiceInstanceDetailsDto struct {
 	Type         string                          `json:"type" example:"kibana"`
 	Status       string                          `json:"status" example:"ok"`
 	Namespace    string                          `json:"namespace" example:"user_namespace_42"`
-	ActionGroups []ServiceInstanceActionGroupDto `json:"action_groups"`
+	ActionGroups []ServiceInstanceActionGroupDto `json:"actionGroups"`
 }
 
 type ServiceInstanceActionGroupDto struct {
@@ -24,5 +24,5 @@ type ServiceInstanceActionGroupDto struct {
 
 type ServiceInstanceActionDto struct {
 	Name    string `json:"name" example:"Expose service"`
-	Command string `json:"command" example:"cmd_expose"`
+	Command string `json:"command" example:"cmdExpose"`
 }
