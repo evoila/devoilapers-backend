@@ -280,7 +280,7 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 // @Success 200 {object} dtos.ServiceYamlDto
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
-// @Router /services/info/{serviceid} [get]
+// @Router /services/yaml/{serviceid} [get]
 func (controller ServiceController) HandleGetServiceInstanceYaml(ctx *gin.Context) {
 	serviceId := ctx.Param("serviceid")
 

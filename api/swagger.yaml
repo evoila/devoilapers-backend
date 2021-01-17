@@ -30,7 +30,7 @@ definitions:
   dtos.ServiceInstanceActionDto:
     properties:
       command:
-        example: cmd_expose
+        example: cmdExpose
         type: string
       name:
         example: Expose service
@@ -48,7 +48,7 @@ definitions:
     type: object
   dtos.ServiceInstanceDetailsDto:
     properties:
-      action_groups:
+      actionGroups:
         items:
           $ref: '#/definitions/dtos.ServiceInstanceActionGroupDto'
         type: array
@@ -159,8 +159,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: ""
+        "200": {}
         "401":
           description: Unauthorized
           schema:
@@ -189,8 +188,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: ""
+        "200": {}
         "401":
           description: Unauthorized
           schema:
@@ -220,8 +218,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: ""
+        "200": {}
         "401":
           description: Unauthorized
           schema:
@@ -256,8 +253,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get the yaml file for an specific service instance. Parameter serviceid
-        has to be supplied.
+      description: Get details over a single service instance
       parameters:
       - description: Id of service
         in: path
@@ -270,14 +266,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dtos.ServiceYamlDto'
+            $ref: '#/definitions/dtos.ServiceInstanceDetailsOverviewDto'
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
       - BasicAuth: []
-      summary: Get the yaml file for an instance
+      summary: Get details over a single service instance
       tags:
       - Service
   /services/update/{serviceid}:
@@ -300,8 +296,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: ""
+        "200": {}
         "401":
           description: Unauthorized
           schema:
@@ -309,6 +304,34 @@ paths:
       security:
       - BasicAuth: []
       summary: Update service instance from yaml
+      tags:
+      - Service
+  /services/yaml/{serviceid}:
+    get:
+      consumes:
+      - application/json
+      description: Get the yaml file for an specific service instance. Parameter serviceid
+        has to be supplied.
+      parameters:
+      - description: Id of service
+        in: path
+        name: serviceid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.ServiceYamlDto'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
+      security:
+      - BasicAuth: []
+      summary: Get the yaml file for an instance
       tags:
       - Service
   /servicestore/info:

@@ -109,9 +109,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": ""
-                    },
+                    "200": {},
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -158,9 +156,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": ""
-                    },
+                    "200": {},
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -211,7 +207,7 @@ var doc = `{
                         "BasicAuth": []
                     }
                 ],
-                "description": "Get the yaml file for an specific service instance. Parameter serviceid has to be supplied.",
+                "description": "Get details over a single service instance",
                 "consumes": [
                     "application/json"
                 ],
@@ -221,7 +217,7 @@ var doc = `{
                 "tags": [
                     "Service"
                 ],
-                "summary": "Get the yaml file for an instance",
+                "summary": "Get details over a single service instance",
                 "parameters": [
                     {
                         "type": "string",
@@ -235,7 +231,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dtos.ServiceYamlDto"
+                            "$ref": "#/definitions/dtos.ServiceInstanceDetailsOverviewDto"
                         }
                     },
                     "401": {
@@ -284,8 +280,49 @@ var doc = `{
                     }
                 ],
                 "responses": {
+                    "200": {},
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
+                        }
+                    }
+                }
+            }
+        },
+        "/services/yaml/{serviceid}": {
+            "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Get the yaml file for an specific service instance. Parameter serviceid has to be supplied.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Service"
+                ],
+                "summary": "Get the yaml file for an instance",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Id of service",
+                        "name": "serviceid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
                     "200": {
-                        "description": ""
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ServiceYamlDto"
+                        }
                     },
                     "401": {
                         "description": "Unauthorized",
@@ -324,9 +361,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": ""
-                    },
+                    "200": {},
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -459,7 +494,7 @@ var doc = `{
             "properties": {
                 "command": {
                     "type": "string",
-                    "example": "cmd_expose"
+                    "example": "cmdExpose"
                 },
                 "name": {
                     "type": "string",
@@ -485,7 +520,7 @@ var doc = `{
         "dtos.ServiceInstanceDetailsDto": {
             "type": "object",
             "properties": {
-                "action_groups": {
+                "actionGroups": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dtos.ServiceInstanceActionGroupDto"
