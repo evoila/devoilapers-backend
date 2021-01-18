@@ -28,3 +28,5 @@
 /build/
 /dist/
 /out/
+
+cmd/service/service
