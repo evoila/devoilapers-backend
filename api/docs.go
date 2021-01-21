@@ -94,7 +94,7 @@ var doc = `{
                 "summary": "Apply a service specific action to a service instance",
                 "parameters": [
                     {
-                        "description": "Type of service",
+                        "description": "Payload",
                         "name": "payload",
                         "in": "body",
                         "required": true,

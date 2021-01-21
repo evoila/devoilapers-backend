@@ -69,7 +69,7 @@ func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Con
 //
 // @Security BasicAuth
 //
-// @Param payload body string true "Type of service"
+// @Param payload body string true "Payload"
 // @Param servicetype path string true "Type of service"
 // @Param servicename path string true "Id of service"
 // @Param actioncommand path string true "action command"

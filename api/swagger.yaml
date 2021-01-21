@@ -181,7 +181,7 @@ paths:
       - application/json
       description: Apply a service specific action to a service instance
       parameters:
-      - description: Type of service
+      - description: Payload
         in: body
         name: payload
         required: true
