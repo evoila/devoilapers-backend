@@ -18,7 +18,7 @@ type Core struct {
 func CreateCore(providers []*service.IServiceProvider) *Core {
 	core := Core{}
 	for _,provider := range providers {
-		core.Providers[(*provider).GetName()] = provider
+		core.Providers[(*provider).GetServiceType()] = provider
 	}
 	return &core
 }
