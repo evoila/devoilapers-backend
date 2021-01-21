@@ -3,6 +3,10 @@ Operator Automation golang Backend
 
 ![Go](https://github.com/evoila/devoilapers-backend/workflows/Go/badge.svg)
 
+## Backend architecture UML diagram
+https://lucid.app/documents/view/a73a136b-4166-4417-8550-073922da4a47
+
+
 ## Project structure
 The project structure will probably change during the project.
 The current structure is based on https://github.com/golang-standards/project-layout
