@@ -31,7 +31,7 @@ func (controller ServiceStoreController) HandleGetServiceStoreOverview(ctx *gin.
 
 	for _, provider := range controller.Core.Providers {
 		serviceStoreItem := dtos.ServiceStoreItemDto{
-			Type:        (*provider).GetName(),
+			Type:        (*provider).GetServiceType(),
 			Description: (*provider).GetServiceDescription(),
 			ImageBase64: (*provider).GetServiceImage(),
 		}

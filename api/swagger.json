@@ -82,6 +82,15 @@
                 "summary": "Apply a service specific action to a service instance",
                 "parameters": [
                     {
+                        "description": "Type of service",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "type": "string",
                         "description": "Type of service",
                         "name": "servicetype",
@@ -474,6 +483,10 @@
                 "name": {
                     "type": "string",
                     "example": "Expose service"
+                },
+                "placeholder": {
+                    "type": "string",
+                    "example": "any object"
                 }
             }
         },

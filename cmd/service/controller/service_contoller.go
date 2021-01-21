@@ -69,6 +69,7 @@ func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Con
 //
 // @Security BasicAuth
 //
+// @Param payload body string true "Type of service"
 // @Param servicetype path string true "Type of service"
 // @Param servicename path string true "Id of service"
 // @Param actioncommand path string true "action command"
@@ -228,10 +229,13 @@ func serviceGroupToDto(servicePtr *service.IService) []dtos.ServiceInstanceActio
 		groupDto.GroupName = group.GetName()
 
 		for _, action := range group.GetActions() {
+
+			jsonPlaceholder, _ := json.Marshal(action.GetPlaceholder())
+
 			actionDto := dtos.ServiceInstanceActionDto{
 				Name: action.GetName(),
 				Command: action.GetUniqueCommand(),
-				Placeholder: action.GetPlaceholder(),
+				Placeholder: string(jsonPlaceholder),
 			}
 
 			groupDto.Actions = append(groupDto.Actions, actionDto)
