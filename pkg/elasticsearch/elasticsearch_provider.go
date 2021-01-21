@@ -10,6 +10,14 @@ type ElasticSearchProvider struct {
 
 }
 
+func (es ElasticSearchProvider) GetServiceDescription() string {
+	return "Elastic search description"
+}
+
+func (es ElasticSearchProvider) GetServiceImage() string {
+	return "Base64 img"
+}
+
 func (es ElasticSearchProvider) GetServiceType() string {
 	return "ElasticSearch"
 }
@@ -23,7 +31,7 @@ func (es ElasticSearchProvider) GetServices(auth common.IKubernetesAuthInformati
 }
 
 func (es ElasticSearchProvider) GetService(auth common.IKubernetesAuthInformation, id string) *service.IService {
-	var els service.IService = ElasticSearchService{auth: auth}
+	var els service.IService = ElasticSearchService{auth: auth, serviceType: es.GetServiceType()}
 	return &els
 }
 

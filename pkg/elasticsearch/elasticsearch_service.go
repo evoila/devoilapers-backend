@@ -8,7 +8,16 @@ import (
 )
 
 type ElasticSearchService struct {
+	serviceType string
 	auth common.IKubernetesAuthInformation
+}
+
+func (es ElasticSearchService) GetType() string {
+	return es.serviceType
+}
+
+func (es ElasticSearchService) GetName() string {
+	return "DummyService"
 }
 
 func (es ElasticSearchService) GetActions() []action.IActionGroup {
@@ -21,7 +30,8 @@ func (es ElasticSearchService) GetActions() []action.IActionGroup {
 			Actions: []action.IAction{
 				action.Action{
 					Name:        "Backup",
-					Placeholder: &dtos.BackupActionDto{AwsS3Path: "<PATH>"},
+					UniqueCommand: "cmd_elasticsearch_backup",
+					Placeholder: &dtos.BackupActionDto{},
 					ActionExecuteCallback: func(i interface{}) (string, error) {
 						return es.ExecuteBackup(i.(*dtos.BackupActionDto))
 					},
@@ -43,5 +53,5 @@ func (es ElasticSearchService) GetTemplate() service.IServiceTemplate {
 }
 
 func (es ElasticSearchService) GetStatus() int {
-	panic("implement me")
+	return 3
 }

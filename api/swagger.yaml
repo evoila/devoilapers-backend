@@ -35,6 +35,9 @@ definitions:
       name:
         example: Expose service
         type: string
+      placeholder:
+        example: any object
+        type: string
     type: object
   dtos.ServiceInstanceActionGroupDto:
     properties:
@@ -178,6 +181,12 @@ paths:
       - application/json
       description: Apply a service specific action to a service instance
       parameters:
+      - description: Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          type: string
       - description: Type of service
         in: path
         name: servicetype

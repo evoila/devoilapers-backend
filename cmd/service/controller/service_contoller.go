@@ -3,7 +3,10 @@ package controller
 import (
 	"OperatorAutomation/cmd/service/dtos"
 	"OperatorAutomation/cmd/service/utils"
+	"OperatorAutomation/pkg/core/service"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -36,6 +39,22 @@ func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Con
 		return
 	}
 
+	user, password, _ := ctx.Request.BasicAuth()
+	userInfos, foundUser := controller.UserManagement.GetUserInformation(user, password)
+	if !foundUser {
+		ctx.Status(http.StatusUnauthorized)
+		return
+	}
+
+	serviceType := ctx.Param("servicetype")
+	userCtx := controller.Core.CrateUserContext(userInfos)
+	err := userCtx.CreateServices(serviceType, yamlData.Yaml)
+
+	if err != nil {
+		utils.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
 	ctx.Status(http.StatusOK)
 }
 
@@ -50,6 +69,7 @@ func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Con
 //
 // @Security BasicAuth
 //
+// @Param payload body string true "Payload"
 // @Param servicetype path string true "Type of service"
 // @Param servicename path string true "Id of service"
 // @Param actioncommand path string true "action command"
@@ -59,6 +79,50 @@ func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Con
 //
 // @Router /services/action/{servicetype}/{servicename}/{actioncommand}  [post]
 func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Context) {
+
+	user, password, _ := ctx.Request.BasicAuth()
+	userInfos, foundUser := controller.UserManagement.GetUserInformation(user, password)
+	if !foundUser {
+		ctx.Status(http.StatusUnauthorized)
+		return
+	}
+
+	serviceType := ctx.Param("servicetype")
+	serviceName := ctx.Param("servicename")
+	serviceActionCommand := ctx.Param("actioncommand")
+
+	userCtx := controller.Core.CrateUserContext(userInfos)
+	service, err := userCtx.GetService(serviceType, serviceName)
+
+	if err != nil {
+		utils.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	jsonData, err := ioutil.ReadAll(ctx.Request.Body)
+
+	for _, group := range (*service).GetActions() {
+		for _, action := range group.GetActions() {
+			if action.GetUniqueCommand() != serviceActionCommand {
+				continue
+			}
+
+			placeholder := action.GetPlaceholder()
+			if err := json.Unmarshal(jsonData, placeholder); err != nil {
+				utils.NewError(ctx, http.StatusBadRequest, err)
+				return
+			}
+
+			val, err := action.GetActionExecuteCallback()(placeholder)
+			if err != nil {
+				utils.NewError(ctx, http.StatusBadRequest, err)
+				return
+			}
+
+			ctx.JSON(http.StatusOK, val)
+			return
+		}
+	}
 
 	ctx.Status(http.StatusOK)
 }
@@ -82,6 +146,24 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 //
 // @Router /services/{servicetype}/{servicename} [delete]
 func (controller ServiceController) HandleDeleteServiceInstance(ctx *gin.Context) {
+	user, password, _ := ctx.Request.BasicAuth()
+	userInfos, foundUser := controller.UserManagement.GetUserInformation(user, password)
+	if !foundUser {
+		ctx.Status(http.StatusUnauthorized)
+		return
+	}
+
+	serviceType := ctx.Param("servicetype")
+	serviceName := ctx.Param("servicetype")
+
+	userCtx := controller.Core.CrateUserContext(userInfos)
+	err := userCtx.DeleteService(serviceType, serviceName)
+
+	if err != nil {
+		utils.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
 	ctx.Status(http.StatusOK)
 }
 
@@ -106,30 +188,76 @@ func (controller ServiceController) HandleDeleteServiceInstance(ctx *gin.Context
 func (controller ServiceController) HandleGetServiceInstanceDetails(ctx *gin.Context) {
 	//Return single instance
 	instanceDetailsOverview := dtos.ServiceInstanceDetailsOverviewDto{
-		Instances: []dtos.ServiceInstanceDetailsDto{
-			{
-				Name:      "Instance 1",
-				Type:      "kibana",
-				Status:    "ok",
-				Namespace: "user_namespace_42",
-				ActionGroups: []dtos.ServiceInstanceActionGroupDto{
-					{
-						GroupName: "Security",
-						Actions: []dtos.ServiceInstanceActionDto{
-							{
-								Name:    "Expose",
-								Command: "cmd_expose",
-							},
-						},
-					},
-				},
-			},
-		},
+		Instances: []dtos.ServiceInstanceDetailsDto{},
 	}
 
-	ctx.JSON(http.StatusOK, instanceDetailsOverview)
-	return
+	user, password, _ := ctx.Request.BasicAuth()
+	userInfos, foundUser := controller.UserManagement.GetUserInformation(user, password)
+	if !foundUser {
+		ctx.Status(http.StatusUnauthorized)
+		return
+	}
 
+	serviceType := ctx.Param("servicetype")
+	serviceName := ctx.Param("servicename")
+
+	userCtx := controller.Core.CrateUserContext(userInfos)
+	servicePtr, err := userCtx.GetService(serviceType, serviceName)
+
+	if err != nil {
+		utils.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	service := *servicePtr
+	serviceDto := dtos.ServiceInstanceDetailsDto{}
+	serviceDto.Status = serviceStatusToString(service.GetStatus())
+	serviceDto.Type = serviceType
+	serviceDto.Name = service.GetName()
+	serviceDto.ActionGroups = serviceGroupToDto(servicePtr)
+	instanceDetailsOverview.Instances = append(instanceDetailsOverview.Instances, serviceDto)
+
+	ctx.JSON(http.StatusOK, instanceDetailsOverview)
+}
+
+func serviceGroupToDto(servicePtr *service.IService) []dtos.ServiceInstanceActionGroupDto {
+	actionGroups := []dtos.ServiceInstanceActionGroupDto{}
+	service := *servicePtr
+
+	for _, group := range service.GetActions() {
+		groupDto := dtos.ServiceInstanceActionGroupDto{Actions: []dtos.ServiceInstanceActionDto{}}
+		groupDto.GroupName = group.GetName()
+
+		for _, action := range group.GetActions() {
+
+			jsonPlaceholder, _ := json.Marshal(action.GetPlaceholder())
+
+			actionDto := dtos.ServiceInstanceActionDto{
+				Name: action.GetName(),
+				Command: action.GetUniqueCommand(),
+				Placeholder: string(jsonPlaceholder),
+			}
+
+			groupDto.Actions = append(groupDto.Actions, actionDto)
+		}
+
+		actionGroups = append(actionGroups, groupDto)
+	}
+
+	return actionGroups
+}
+
+func serviceStatusToString(status int) string {
+	switch status {
+	case 0:
+		return "Error"
+	case 1:
+		return "Warning"
+	case 2:
+		return "Ok"
+	default:
+		return "Unkown"
+	}
 }
 
 // Get service instance overview godoc
@@ -148,76 +276,31 @@ func (controller ServiceController) HandleGetServiceInstanceDetails(ctx *gin.Con
 //
 // @Router /services/info [get]
 func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstances(ctx *gin.Context) {
-
-	// Return all instances
+	//Return single instance
 	instanceDetailsOverview := dtos.ServiceInstanceDetailsOverviewDto{
-		Instances: []dtos.ServiceInstanceDetailsDto{
-			{
-				Name:      "Instance 1",
-				Type:      "kibana",
-				Status:    "ok",
-				Namespace: "user_namespace_42",
-				ActionGroups: []dtos.ServiceInstanceActionGroupDto{
-					{
-						GroupName: "Security",
-						Actions: []dtos.ServiceInstanceActionDto{
-							{
-								Name:    "Expose",
-								Command: "cmd_expose",
-							},
-						},
-					},
-				},
-			},
-			{
-				Name:      "Instance 2",
-				Type:      "elasticsearch",
-				Status:    "warning",
-				Namespace: "user_namespace_42",
-				ActionGroups: []dtos.ServiceInstanceActionGroupDto{
-					{
-						GroupName: "Backup and Restore",
-						Actions: []dtos.ServiceInstanceActionDto{
-							{
-								Name:    "Backup",
-								Command: "cmd_backup_elasticsearch",
-							},
-							{
-								Name:    "Restore",
-								Command: "cmd_restore_elasticsearch",
-							},
-						},
-					},
-					{
-						GroupName: "Security",
-						Actions: []dtos.ServiceInstanceActionDto{
-							{
-								Name:    "Expose",
-								Command: "cmd_expose",
-							},
-						},
-					},
-				},
-			},
-			{
-				Name:      "Instance 3",
-				Type:      "logstash",
-				Status:    "error",
-				Namespace: "user_namespace_42",
-				ActionGroups: []dtos.ServiceInstanceActionGroupDto{
-					{
-						GroupName: "Security",
-						Actions: []dtos.ServiceInstanceActionDto{
-							{
-								Name:    "Expose",
-								Command: "cmd_expose",
-							},
-						},
-					},
-				},
-			},
-		},
+		Instances: []dtos.ServiceInstanceDetailsDto{},
 	}
+
+	user, password, _ := ctx.Request.BasicAuth()
+	userInfos, foundUser := controller.UserManagement.GetUserInformation(user, password)
+	if !foundUser {
+		ctx.Status(http.StatusUnauthorized)
+		return
+	}
+
+	userCtx := controller.Core.CrateUserContext(userInfos)
+	services := userCtx.GetServices()
+
+	for _, servicePtr := range services {
+		service := *servicePtr
+		serviceDto := dtos.ServiceInstanceDetailsDto{}
+		serviceDto.Status = serviceStatusToString(service.GetStatus())
+		serviceDto.Type = service.GetType()
+		serviceDto.Name = service.GetName()
+		serviceDto.ActionGroups = serviceGroupToDto(servicePtr)
+		instanceDetailsOverview.Instances = append(instanceDetailsOverview.Instances, serviceDto)
+	}
+
 
 	ctx.JSON(http.StatusOK, instanceDetailsOverview)
 	return
@@ -243,9 +326,24 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 // @Router /services/yaml/{servicetype}/{servicename} [get]
 func (controller ServiceController) HandleGetServiceInstanceYaml(ctx *gin.Context) {
 	servicename := ctx.Param("servicename")
+	servicetype := ctx.Param("servicetype")
+
+	user, password, _ := ctx.Request.BasicAuth()
+	userInfos, foundUser := controller.UserManagement.GetUserInformation(user, password)
+	if !foundUser {
+		ctx.Status(http.StatusUnauthorized)
+		return
+	}
+
+	userCtx := controller.Core.CrateUserContext(userInfos)
+	service, err := userCtx.GetService(servicetype, servicename)
+	if err != nil {
+		utils.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
 
 	yamlData := dtos.ServiceYamlDto{
-		Yaml: "item: " + servicename,
+		Yaml: (*service).GetTemplate().GetYAML(),
 	}
 
 	ctx.JSON(http.StatusOK, yamlData)

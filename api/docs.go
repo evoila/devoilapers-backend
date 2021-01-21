@@ -94,6 +94,15 @@ var doc = `{
                 "summary": "Apply a service specific action to a service instance",
                 "parameters": [
                     {
+                        "description": "Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "type": "string",
                         "description": "Type of service",
                         "name": "servicetype",
@@ -486,6 +495,10 @@ var doc = `{
                 "name": {
                     "type": "string",
                     "example": "Expose service"
+                },
+                "placeholder": {
+                    "type": "string",
+                    "example": "any object"
                 }
             }
         },
