@@ -7,8 +7,8 @@ import (
 
 // Created by core instance. Do not create by yourself
 type UserContext struct {
-	serviceProviderRegistry *service.ServiceProviderRegistry
-	auth common.IKubernetesAuthInformation
+	ServiceProviderRegistry *service.ServiceProviderRegistry
+	Auth                    common.IKubernetesAuthInformation
 }
 
 // Shut return the service instance with the given id.
@@ -16,11 +16,11 @@ type UserContext struct {
 // To ensure this, we probably need a factory pattern.
 // Try not to hardcode if trees if possible.
 func (ctx UserContext) GetService(serviceType string, id string) (*service.IService,error) {
-	provider,err := ctx.serviceProviderRegistry.GetProviderByName(serviceType)
+	provider,err := ctx.ServiceProviderRegistry.GetProviderByName(serviceType)
 	if err != nil {
 		return nil, err
 	}
-	return (*provider).GetService(ctx.auth,id),nil
+	return (*provider).GetService(ctx.Auth,id),nil
 }
 
 // Shut return the all service instances.
@@ -29,8 +29,8 @@ func (ctx UserContext) GetService(serviceType string, id string) (*service.IServ
 // Try not to hardcode if trees if possible.
 func (ctx UserContext) GetServices() []*service.IService {
 	var services []*service.IService
-	for _,provider := range ctx.serviceProviderRegistry.Providers{
-		for _,ser := range (*provider).GetServices(ctx.auth){
+	for _,provider := range ctx.ServiceProviderRegistry.Providers{
+		for _,ser := range (*provider).GetServices(ctx.Auth){
 			services = append(services, ser)
 		}
 	}
@@ -42,19 +42,19 @@ func (ctx UserContext) GetServices() []*service.IService {
 // To ensure this, we probably need a factory pattern.
 // Try not to hardcode if trees if possible.
 func (ctx UserContext) DeleteService(serviceType string, id string) error {
-	provider,err := ctx.serviceProviderRegistry.GetProviderByName(serviceType)
+	provider,err := ctx.ServiceProviderRegistry.GetProviderByName(serviceType)
 	if err != nil {
 		return err
 	}
-	return (*provider).DeleteService(ctx.auth,id)
+	return (*provider).DeleteService(ctx.Auth,id)
 }
 
 // Shout create all necessary stuff in the cluster from the given service template.
 // Ensure that the type can be identified later on.
 func (ctx UserContext) CreateServices(serviceType string, yaml string) error {
-	provider,err := ctx.serviceProviderRegistry.GetProviderByName(serviceType)
+	provider,err := ctx.ServiceProviderRegistry.GetProviderByName(serviceType)
 	if err != nil {
 		return err
 	}
-	return (*provider).CreateService(ctx.auth,yaml)
+	return (*provider).CreateService(ctx.Auth,yaml)
 }

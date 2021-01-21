@@ -25,6 +25,6 @@ func CreateCore(providers []*service.IServiceProvider) *Core {
 
 // Creates a new user context based on the given authentifcation data
 func (core Core) CrateUserContext(userInformation common.IKubernetesAuthInformation) *users.UserContext {
-	return &users.UserContext{}
+	return &users.UserContext{ServiceProviderRegistry: &core.ServiceProviderRegistry, Auth: userInformation}
 }
 
