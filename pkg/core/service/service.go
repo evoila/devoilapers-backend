@@ -1,9 +1,13 @@
 package service
 
+import "OperatorAutomation/pkg/core/action"
+
 // Defines an abstraction for an service-instance
-type Service interface {
+type IService interface {
+	// Get actions provided by this service
+	GetActions() []action.IActionGroup
 	// Get the template on which the service depends
-	GetServiceTemplate() ServiceTemplate
-	// Execute a custom command. Like cmd_backup, with the s3 path as a data payload
-	ExecuteCustomAction(actionName string, commandDataJson string) string
+	GetTemplate() IServiceTemplate
+	// Get IService Status
+    GetStatus() int
 }
