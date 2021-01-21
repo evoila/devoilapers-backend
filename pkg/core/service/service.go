@@ -10,4 +10,8 @@ type IService interface {
 	GetTemplate() IServiceTemplate
 	// Get IService Status
     GetStatus() int
+
+	GetType() string
+
+	GetName() string
 }

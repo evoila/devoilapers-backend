@@ -24,4 +24,6 @@ type ServiceInstanceActionGroupDto struct {
 type ServiceInstanceActionDto struct {
 	Name    string `json:"name" example:"Expose service"`
 	Command string `json:"command" example:"cmdExpose"`
+	Placeholder interface{} `json:"placeholder" example:"any object"`
 }
+
