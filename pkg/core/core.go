@@ -16,7 +16,7 @@ type Core struct {
 // Creates an instance of the core struct holding the references for
 // the user-context-management and services
 func CreateCore(providers []*service.IServiceProvider) *Core {
-	core := Core{}
+	core := Core{service.ServiceProviderRegistry{Providers: map[string]*service.IServiceProvider{}}}
 	for _,provider := range providers {
 		core.Providers[(*provider).GetServiceType()] = provider
 	}

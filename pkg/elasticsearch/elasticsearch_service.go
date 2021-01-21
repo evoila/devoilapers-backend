@@ -35,7 +35,7 @@ func (es ElasticSearchService) GetActions() []action.IActionGroup {
 func (es ElasticSearchService) ExecuteBackup(dto *dtos.BackupActionDto) (string, error) {
 	// part to add a function
     // return service.Comm.CreateSnapshot(dto)
-	return "", nil
+	return "Its OK", nil
 }
 
 func (es ElasticSearchService) GetTemplate() service.IServiceTemplate {
