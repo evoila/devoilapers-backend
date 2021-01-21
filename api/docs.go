@@ -74,7 +74,7 @@ var doc = `{
                 }
             }
         },
-        "/services/action/{serviceid}/{actioncommand}": {
+        "/services/action/{servicetype}/{servicename}/{actioncommand}": {
             "post": {
                 "security": [
                     {
@@ -95,8 +95,15 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Type of service",
+                        "name": "servicetype",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Id of service",
-                        "name": "serviceid",
+                        "name": "servicename",
                         "in": "path",
                         "required": true
                     },
@@ -109,7 +116,9 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {},
+                    "200": {
+                        "description": ""
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -156,7 +165,9 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {},
+                    "200": {
+                        "description": ""
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -200,7 +211,7 @@ var doc = `{
                 }
             }
         },
-        "/services/info/{serviceid}": {
+        "/services/info/{servicetype}/{servicename}": {
             "get": {
                 "security": [
                     {
@@ -221,8 +232,15 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Type of service",
+                        "name": "servicetype",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Id of service",
-                        "name": "serviceid",
+                        "name": "servicename",
                         "in": "path",
                         "required": true
                     }
@@ -243,61 +261,14 @@ var doc = `{
                 }
             }
         },
-        "/services/update/{serviceid}": {
-            "post": {
-                "security": [
-                    {
-                        "BasicAuth": []
-                    }
-                ],
-                "description": "Update an instance of a service from yaml",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Service"
-                ],
-                "summary": "Update service instance from yaml",
-                "parameters": [
-                    {
-                        "description": "Service-Yaml",
-                        "name": "serviceyaml",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dtos.ServiceYamlDto"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Id of service",
-                        "name": "serviceid",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {},
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dtos.HTTPErrorDto"
-                        }
-                    }
-                }
-            }
-        },
-        "/services/yaml/{serviceid}": {
+        "/services/yaml/{servicetype}/{servicename}": {
             "get": {
                 "security": [
                     {
                         "BasicAuth": []
                     }
                 ],
-                "description": "Get the yaml file for an specific service instance. Parameter serviceid has to be supplied.",
+                "description": "Get the yaml file for an specific service instance. Parameter servicename has to be supplied.",
                 "consumes": [
                     "application/json"
                 ],
@@ -311,8 +282,15 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Type of service",
+                        "name": "servicetype",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Id of service",
-                        "name": "serviceid",
+                        "name": "servicename",
                         "in": "path",
                         "required": true
                     }
@@ -333,7 +311,7 @@ var doc = `{
                 }
             }
         },
-        "/services/{serviceid}": {
+        "/services/{servicetype}/{servicename}": {
             "delete": {
                 "security": [
                     {
@@ -354,14 +332,23 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Type of service",
+                        "name": "servicetype",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Id of service",
-                        "name": "serviceid",
+                        "name": "servicename",
                         "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
-                    "200": {},
+                    "200": {
+                        "description": ""
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -525,10 +512,6 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/dtos.ServiceInstanceActionGroupDto"
                     }
-                },
-                "id": {
-                    "type": "string",
-                    "example": "936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
                 },
                 "name": {
                     "type": "string",

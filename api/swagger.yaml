@@ -52,9 +52,6 @@ definitions:
         items:
           $ref: '#/definitions/dtos.ServiceInstanceActionGroupDto'
         type: array
-      id:
-        example: 936DA01F-9ABD-4D9D-80C7-02AF85C822A8
-        type: string
       name:
         example: my_kibana_instance_1
         type: string
@@ -107,7 +104,7 @@ definitions:
     type: object
 host: 127.0.0.1:8080
 info:
-  contact: {}
+  contact: { }
   description: Operator Automation Backend API overview.
   license:
     name: Apache 2.0
@@ -118,17 +115,17 @@ paths:
   /accounts/login:
     post:
       consumes:
-      - application/json
+        - application/json
       description: Get login token and role by providing username and password
       parameters:
-      - description: Account credentials
-        in: body
-        name: account
-        required: true
-        schema:
-          $ref: '#/definitions/dtos.AccountCredentialsDto'
+        - description: Account credentials
+          in: body
+          name: account
+          required: true
+          schema:
+            $ref: '#/definitions/dtos.AccountCredentialsDto'
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
@@ -144,97 +141,110 @@ paths:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       summary: User login
       tags:
-      - Account
-  /services/{serviceid}:
+        - Account
+  /services/{servicetype}/{servicename}:
     delete:
       consumes:
-      - application/json
+        - application/json
       description: Delete an instance of a service
       parameters:
-      - description: Id of service
-        in: path
-        name: serviceid
-        required: true
-        type: string
+        - description: Type of service
+          in: path
+          name: servicetype
+          required: true
+          type: string
+        - description: Id of service
+          in: path
+          name: servicename
+          required: true
+          type: string
       produces:
-      - application/json
+        - application/json
       responses:
-        "200": {}
+        "200":
+          description: ""
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
-      - BasicAuth: []
+        - BasicAuth: [ ]
       summary: Delete a service instance
       tags:
-      - Service
-  /services/action/{serviceid}/{actioncommand}:
+        - Service
+  /services/action/{servicetype}/{servicename}/{actioncommand}:
     post:
       consumes:
-      - application/json
+        - application/json
       description: Apply a service specific action to a service instance
       parameters:
-      - description: Id of service
-        in: path
-        name: serviceid
-        required: true
-        type: string
-      - description: action command
-        in: path
-        name: actioncommand
-        required: true
-        type: string
+        - description: Type of service
+          in: path
+          name: servicetype
+          required: true
+          type: string
+        - description: Id of service
+          in: path
+          name: servicename
+          required: true
+          type: string
+        - description: action command
+          in: path
+          name: actioncommand
+          required: true
+          type: string
       produces:
-      - application/json
+        - application/json
       responses:
-        "200": {}
+        "200":
+          description: ""
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
-      - BasicAuth: []
+        - BasicAuth: [ ]
       summary: Apply a service specific action to a service instance
       tags:
-      - Service
+        - Service
   /services/create/{servicetype}:
     post:
       consumes:
-      - application/json
+        - application/json
       description: Create an instance of a service from yaml
       parameters:
-      - description: Service-Yaml
-        in: body
-        name: serviceyaml
-        required: true
-        schema:
-          $ref: '#/definitions/dtos.ServiceYamlDto'
-      - description: Type of service
-        in: path
-        name: servicetype
-        required: true
-        type: string
+        - description: Service-Yaml
+          in: body
+          name: serviceyaml
+          required: true
+          schema:
+            $ref: '#/definitions/dtos.ServiceYamlDto'
+        - description: Type of service
+          in: path
+          name: servicetype
+          required: true
+          type: string
       produces:
-      - application/json
+        - application/json
       responses:
-        "200": {}
+        "200":
+          description: ""
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
-      - BasicAuth: []
+        - BasicAuth: [ ]
       summary: Create service instance from yaml
       tags:
-      - Service
+        - Service
   /services/info:
     get:
       consumes:
-      - application/json
+        - application/json
       description: Get an overview over all service instances
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
@@ -245,23 +255,28 @@ paths:
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
-      - BasicAuth: []
+        - BasicAuth: [ ]
       summary: Get an overview over all service instances
       tags:
-      - Service
-  /services/info/{serviceid}:
+        - Service
+  /services/info/{servicetype}/{servicename}:
     get:
       consumes:
-      - application/json
+        - application/json
       description: Get details over a single service instance
       parameters:
-      - description: Id of service
-        in: path
-        name: serviceid
-        required: true
-        type: string
+        - description: Type of service
+          in: path
+          name: servicetype
+          required: true
+          type: string
+        - description: Id of service
+          in: path
+          name: servicename
+          required: true
+          type: string
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
@@ -272,54 +287,29 @@ paths:
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
-      - BasicAuth: []
+        - BasicAuth: [ ]
       summary: Get details over a single service instance
       tags:
-      - Service
-  /services/update/{serviceid}:
-    post:
-      consumes:
-      - application/json
-      description: Update an instance of a service from yaml
-      parameters:
-      - description: Service-Yaml
-        in: body
-        name: serviceyaml
-        required: true
-        schema:
-          $ref: '#/definitions/dtos.ServiceYamlDto'
-      - description: Id of service
-        in: path
-        name: serviceid
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200": {}
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/dtos.HTTPErrorDto'
-      security:
-      - BasicAuth: []
-      summary: Update service instance from yaml
-      tags:
-      - Service
-  /services/yaml/{serviceid}:
+        - Service
+  /services/yaml/{servicetype}/{servicename}:
     get:
       consumes:
-      - application/json
-      description: Get the yaml file for an specific service instance. Parameter serviceid
+        - application/json
+      description: Get the yaml file for an specific service instance. Parameter servicename
         has to be supplied.
       parameters:
-      - description: Id of service
-        in: path
-        name: serviceid
-        required: true
-        type: string
+        - description: Type of service
+          in: path
+          name: servicetype
+          required: true
+          type: string
+        - description: Id of service
+          in: path
+          name: servicename
+          required: true
+          type: string
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
@@ -330,17 +320,17 @@ paths:
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
-      - BasicAuth: []
+        - BasicAuth: [ ]
       summary: Get the yaml file for an instance
       tags:
-      - Service
+        - Service
   /servicestore/info:
     get:
       consumes:
-      - application/json
+        - application/json
       description: Lists all possible deployable services
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
@@ -351,23 +341,23 @@ paths:
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
-      - BasicAuth: []
+        - BasicAuth: [ ]
       summary: Lists all possible deployable services
       tags:
-      - Servicestore
+        - Servicestore
   /servicestore/yaml/{servicetype}:
     get:
       consumes:
-      - application/json
+        - application/json
       description: Get the default yaml file for a service-template
       parameters:
-      - description: Type of service
-        in: path
-        name: servicetype
-        required: true
-        type: string
+        - description: Type of service
+          in: path
+          name: servicetype
+          required: true
+          type: string
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
@@ -378,12 +368,12 @@ paths:
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
-      - BasicAuth: []
+        - BasicAuth: [ ]
       summary: Get the default yaml for a service-template
       tags:
-      - Servicestore
+        - Servicestore
 schemes:
-- https
+  - https
 securityDefinitions:
   BasicAuth:
     type: basic

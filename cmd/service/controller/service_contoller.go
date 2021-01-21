@@ -36,44 +36,6 @@ func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Con
 		return
 	}
 
-	userInfos, found := controller.UserManagement.GetUserInformation("", "")
-	if !found {
-		ctx.Status(http.StatusUnauthorized)
-		return
-	}
-
-	print(userInfos.Name)
-	// Like this
-	//controller.Core.CrateUserContext(userInfos).CreateServices()
-
-	ctx.Status(http.StatusOK)
-}
-
-// Update service instance godoc
-// @Summary Update service instance from yaml
-// @Description Update an instance of a service from yaml
-//
-// @tags Service
-//
-// @Accept json
-// @Produce json
-//
-// @Security BasicAuth
-//
-// @Param serviceyaml body dtos.ServiceYamlDto true "Service-Yaml"
-// @Param serviceid path string true "Id of service"
-//
-// @Success 200
-// @Failure 401 {object} dtos.HTTPErrorDto
-//
-// @Router /services/update/{serviceid} [post]
-func (controller ServiceController) HandlePostUpdateServiceInstance(ctx *gin.Context) {
-	var yamlData dtos.ServiceYamlDto
-	if err := ctx.ShouldBindJSON(&yamlData); err != nil {
-		utils.NewError(ctx, http.StatusBadRequest, err)
-		return
-	}
-
 	ctx.Status(http.StatusOK)
 }
 
@@ -88,13 +50,14 @@ func (controller ServiceController) HandlePostUpdateServiceInstance(ctx *gin.Con
 //
 // @Security BasicAuth
 //
-// @Param serviceid path string true "Id of service"
+// @Param servicetype path string true "Type of service"
+// @Param servicename path string true "Id of service"
 // @Param actioncommand path string true "action command"
 //
 // @Success 200
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
-// @Router /services/action/{serviceid}/{actioncommand}  [post]
+// @Router /services/action/{servicetype}/{servicename}/{actioncommand}  [post]
 func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Context) {
 
 	ctx.Status(http.StatusOK)
@@ -111,12 +74,13 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 //
 // @Security BasicAuth
 //
-// @Param serviceid path string true "Id of service"
+// @Param servicetype path string true "Type of service"
+// @Param servicename path string true "Id of service"
 //
 // @Success 200
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
-// @Router /services/{serviceid} [delete]
+// @Router /services/{servicetype}/{servicename} [delete]
 func (controller ServiceController) HandleDeleteServiceInstance(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
@@ -132,21 +96,19 @@ func (controller ServiceController) HandleDeleteServiceInstance(ctx *gin.Context
 //
 // @Security BasicAuth
 //
-// @Param serviceid path string true "Id of service"
+// @Param servicetype path string true "Type of service"
+// @Param servicename path string true "Id of service"
 //
 // @Success 200 {object} dtos.ServiceInstanceDetailsOverviewDto
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
-// @Router /services/info/{serviceid} [get]
+// @Router /services/info/{servicetype}/{servicename} [get]
 func (controller ServiceController) HandleGetServiceInstanceDetails(ctx *gin.Context) {
-	serviceId := ctx.Param("serviceid")
-
 	//Return single instance
 	instanceDetailsOverview := dtos.ServiceInstanceDetailsOverviewDto{
 		Instances: []dtos.ServiceInstanceDetailsDto{
 			{
 				Name:      "Instance 1",
-				Id:        serviceId,
 				Type:      "kibana",
 				Status:    "ok",
 				Namespace: "user_namespace_42",
@@ -158,10 +120,10 @@ func (controller ServiceController) HandleGetServiceInstanceDetails(ctx *gin.Con
 								Name:    "Expose",
 								Command: "cmd_expose",
 							},
-														},
-													},
-							},
 						},
+					},
+				},
+			},
 		},
 	}
 
@@ -192,7 +154,6 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 		Instances: []dtos.ServiceInstanceDetailsDto{
 			{
 				Name:      "Instance 1",
-				Id:        "111111111-1111-4D9D-80C7-02AF85C822A8",
 				Type:      "kibana",
 				Status:    "ok",
 				Namespace: "user_namespace_42",
@@ -204,13 +165,12 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 								Name:    "Expose",
 								Command: "cmd_expose",
 							},
-														},
-													},
-							},
 						},
+					},
+				},
+			},
 			{
 				Name:      "Instance 2",
-				Id:        "22222222-XXXX-4DDD-80C7-02AF85999999",
 				Type:      "elasticsearch",
 				Status:    "warning",
 				Namespace: "user_namespace_42",
@@ -232,16 +192,15 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 						GroupName: "Security",
 						Actions: []dtos.ServiceInstanceActionDto{
 							{
-								Name: "Expose",
+								Name:    "Expose",
 								Command: "cmd_expose",
-										},
-														},
-													},
 							},
 						},
+					},
+				},
+			},
 			{
 				Name:      "Instance 3",
-				Id:        "33333333-XXXX-4DDD-80C7-02AF85999999",
 				Type:      "logstash",
 				Status:    "error",
 				Namespace: "user_namespace_42",
@@ -253,10 +212,10 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 								Name:    "Expose",
 								Command: "cmd_expose",
 							},
-														},
-													},
-							},
 						},
+					},
+				},
+			},
 		},
 	}
 
@@ -266,7 +225,7 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 
 // Get service instance yaml godoc
 // @Summary Get the yaml file for an instance
-// @Description Get the yaml file for an specific service instance. Parameter serviceid has to be supplied.
+// @Description Get the yaml file for an specific service instance. Parameter servicename has to be supplied.
 //
 // @tags Service
 //
@@ -275,17 +234,18 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 //
 // @Security BasicAuth
 //
-// @Param serviceid path string true "Id of service"
+// @Param servicetype path string true "Type of service"
+// @Param servicename path string true "Id of service"
 //
 // @Success 200 {object} dtos.ServiceYamlDto
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
-// @Router /services/yaml/{serviceid} [get]
+// @Router /services/yaml/{servicetype}/{servicename} [get]
 func (controller ServiceController) HandleGetServiceInstanceYaml(ctx *gin.Context) {
-	serviceId := ctx.Param("serviceid")
+	servicename := ctx.Param("servicename")
 
 	yamlData := dtos.ServiceYamlDto{
-		Yaml: "item: " + serviceId,
+		Yaml: "item: " + servicename,
 	}
 
 	ctx.JSON(http.StatusOK, yamlData)
