@@ -4,8 +4,8 @@ import "OperatorAutomation/pkg/core/common"
 
 // Provider of an service like kibana
 type IServiceProvider interface {
-	// Name of the provider/service i.e. postgres
-	GetName() string
+	// Get Type of the service i.e. postgres
+	GetServiceType() string
 
 	// Template to create an instance
 	GetTemplate() *IServiceTemplate
