@@ -4,6 +4,7 @@ import (
 	"OperatorAutomation/cmd/service/config"
 	"OperatorAutomation/pkg/core"
 	"OperatorAutomation/pkg/core/service"
+	"OperatorAutomation/pkg/elasticsearch"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"os"
@@ -66,8 +67,13 @@ func main() {
 
 // Create the core object that the service is interacting with
 func InitializeCore(appconfig config.RawConfig) *core.Core {
-	// TODO: Add concrete service providers here
-	return core.CreateCore([]*service.IServiceProvider{})
+
+	// TODO: Add concrete just like here service providers here
+	var esp service.IServiceProvider = elasticsearch.ElasticSearchProvider{}
+
+	return core.CreateCore([]*service.IServiceProvider{
+		&esp,
+	})
 }
 
 // Set the loglevel from the config globally
