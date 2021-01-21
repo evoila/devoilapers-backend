@@ -3,6 +3,7 @@ package main
 import (
 	"OperatorAutomation/cmd/service/config"
 	"OperatorAutomation/pkg/core"
+	"OperatorAutomation/pkg/core/service"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"os"
@@ -65,7 +66,8 @@ func main() {
 
 // Create the core object that the service is interacting with
 func InitializeCore(appconfig config.RawConfig) *core.Core {
-	return core.CreateCore()
+	// TODO: Add concrete service providers here
+	return core.CreateCore([]*service.IServiceProvider{})
 }
 
 // Set the loglevel from the config globally
