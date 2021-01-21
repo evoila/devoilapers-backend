@@ -75,12 +75,11 @@ func StartWebserver(appconfig config.RawConfig, core *core.Core) error {
 		services := v1.Group("/services", auth)
 		{
 			services.POST("/create/:servicetype", serviceController.HandlePostCreateServiceInstance)
-			services.POST("/update/:serviceid", serviceController.HandlePostUpdateServiceInstance)
-			services.POST("/action/:serviceid/:actioncommand", serviceController.HandlePostServiceInstanceAction)
-			services.DELETE("/:serviceid", serviceController.HandleDeleteServiceInstance)
+			services.POST("/action/:servicetype/:servicename/:actioncommand", serviceController.HandlePostServiceInstanceAction)
+			services.DELETE("/:servicetype/:servicename", serviceController.HandleDeleteServiceInstance)
 			services.GET("/info", serviceController.HandleGetServiceInstanceDetailsForAllInstances)
-			services.GET("/info/:serviceid", serviceController.HandleGetServiceInstanceDetails)
-			services.GET("/yaml/:serviceid", serviceController.HandleGetServiceInstanceYaml)
+			services.GET("/info/:servicetype/:servicename", serviceController.HandleGetServiceInstanceDetails)
+			services.GET("/yaml/:servicetype/:servicename", serviceController.HandleGetServiceInstanceYaml)
 		}
 	}
 
