@@ -56,7 +56,9 @@ Ensure you have Go **1.15.5** installed.
 2. Execute `go build`
 3. Navigate back to the `<ProjectRoot>` s.t. this directory is the current working directory
 4. On Linux: Run `./cmd/service/service start -c "configs/appconfig.json"`
+             Run Demo `./cmd/service/service demo -c "configs/appconfig.json"`
 5. On Windows: Run `cmd\service\service.exe start -c "configs/appconfig.json"`
+               Run Demo `cmd\service\service.exe demo -c "configs/appconfig.json"`
 
 ### Navigate to swagger
 If the webserver has been started the swagger page is available at https://127.0.0.1:8080/swagger/index.html.
