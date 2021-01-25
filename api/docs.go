@@ -125,9 +125,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": ""
-                    },
+                    "200": {},
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -174,9 +172,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": ""
-                    },
+                    "200": {},
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -355,9 +351,7 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": ""
-                    },
+                    "200": {},
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -529,10 +523,6 @@ var doc = `{
                 "name": {
                     "type": "string",
                     "example": "my_kibana_instance_1"
-                },
-                "namespace": {
-                    "type": "string",
-                    "example": "user_namespace_42"
                 },
                 "status": {
                     "type": "string",

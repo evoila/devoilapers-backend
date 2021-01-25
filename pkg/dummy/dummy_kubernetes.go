@@ -3,6 +3,7 @@ package dummy
 import (
 	"errors"
 	"math/rand"
+	"strconv"
 )
 
 // Fake Kubernetes information
@@ -15,7 +16,7 @@ type DummyKubernetesData struct {
 }
 
 func (dk DummyKubernetes) Create(yaml string) error {
-	dk.data[string(rune(rand.Int()))] = DummyKubernetesData{
+	dk.data[strconv.Itoa(rand.Int())] = DummyKubernetesData{
 		status: 1,
 		yaml:   yaml,
 	}

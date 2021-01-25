@@ -58,9 +58,6 @@ definitions:
       name:
         example: my_kibana_instance_1
         type: string
-      namespace:
-        example: user_namespace_42
-        type: string
       status:
         example: ok
         type: string
@@ -164,8 +161,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: ""
+        "200": {}
         "401":
           description: Unauthorized
           schema:
@@ -205,8 +201,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: ""
+        "200": {}
         "401":
           description: Unauthorized
           schema:
@@ -236,8 +231,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: ""
+        "200": {}
         "401":
           description: Unauthorized
           schema:
