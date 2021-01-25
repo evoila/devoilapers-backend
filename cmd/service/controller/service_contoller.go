@@ -154,7 +154,7 @@ func (controller ServiceController) HandleDeleteServiceInstance(ctx *gin.Context
 	}
 
 	serviceType := ctx.Param("servicetype")
-	serviceName := ctx.Param("servicetype")
+	serviceName := ctx.Param("servicename")
 
 	userCtx := controller.Core.CrateUserContext(userInfos)
 	err := userCtx.DeleteService(serviceType, serviceName)

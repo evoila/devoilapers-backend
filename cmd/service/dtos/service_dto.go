@@ -12,7 +12,6 @@ type ServiceInstanceDetailsDto struct {
 	Name         string                          `json:"name" example:"my_kibana_instance_1"`
 	Type         string                          `json:"type" example:"kibana"`
 	Status       string                          `json:"status" example:"ok"`
-	Namespace    string                          `json:"namespace" example:"user_namespace_42"`
 	ActionGroups []ServiceInstanceActionGroupDto `json:"actionGroups"`
 }
 
