@@ -3,6 +3,7 @@ package dummy
 import (
 	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/service"
+	"math/rand"
 )
 
 // Do not initialize use provided CreateDummyProvider function
@@ -11,6 +12,7 @@ type DummyProvider struct {
 }
 
 func CreateDummyProvider() DummyProvider {
+	rand.Seed(42)
 	return DummyProvider{DummyKubernetes: DummyKubernetes{map[string]DummyKubernetesData{}}}
 }
 
