@@ -4,6 +4,7 @@ import (
 	"OperatorAutomation/cmd/service/config"
 	"OperatorAutomation/pkg/core"
 	"OperatorAutomation/pkg/core/service"
+	"OperatorAutomation/pkg/dummy"
 	"OperatorAutomation/pkg/elasticsearch"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -28,31 +29,23 @@ func main() {
 			},
 			Aliases: []string{"s"},
 			Usage:   "Start webserver",
-			Action: func(c *cli.Context) error {
-				// Import config file
-				filepath := c.String("configfile")
-				parsedConfig, err := config.LoadConfigurationFromFile(filepath)
-				if err != nil {
-					log.Error("Config file in path could not be found or parsed. Ensure file exists and is valid json")
-					log.Fatal(err)
-					return err
-				}
-
-				//Apply loglevel
-				ApplyGlobalLogConfigurations(parsedConfig)
-
-				// Create the core of the app
-				appCore := InitializeCore(parsedConfig)
-
-				// Start webserver
-				log.Info("Starting the webserver")
-				err = StartWebserver(parsedConfig, appCore)
-				if err != nil {
-					log.Error("Webserver start failed")
-					log.Fatal(err)
-				}
-
-				return err
+			Action: func(context *cli.Context) error {
+				return initialize(context,false)
+			},
+		},{
+			Name: "demo",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "configfile",
+					Aliases: []string{"c"},
+					Value:   "appconfig.json",
+					Usage:   "Application configuration file. Includes port, certifcates, users etc...",
+				},
+			},
+			Aliases: []string{"s"},
+			Usage:   "Start webserver demo",
+			Action: func(context *cli.Context) error {
+				return initialize(context,true)
 			},
 		},
 	}
@@ -65,6 +58,40 @@ func main() {
 	}
 }
 
+func initialize(c *cli.Context, demoMode bool) error {
+		// Import config file
+		filepath := c.String("configfile")
+		parsedConfig, err := config.LoadConfigurationFromFile(filepath)
+		if err != nil {
+			log.Error("Config file in path could not be found or parsed. Ensure file exists and is valid json")
+			log.Fatal(err)
+			return err
+		}
+
+		//Apply loglevel
+		ApplyGlobalLogConfigurations(parsedConfig)
+
+		var appCore *core.Core
+
+		if demoMode {
+			log.Info("App launched in demo mode")
+			appCore = InitializeDemoCore(parsedConfig)
+		} else {
+			// Create the core of the app
+			appCore = InitializeCore(parsedConfig)
+		}
+
+		// Start webserver
+		log.Info("Starting the webserver")
+		err = StartWebserver(parsedConfig, appCore)
+		if err != nil {
+			log.Error("Webserver start failed")
+			log.Fatal(err)
+		}
+
+		return err
+}
+
 // Create the core object that the service is interacting with
 func InitializeCore(appconfig config.RawConfig) *core.Core {
 
@@ -74,6 +101,14 @@ func InitializeCore(appconfig config.RawConfig) *core.Core {
 	return core.CreateCore([]*service.IServiceProvider{
 		&esp,
 	})
+}
+func InitializeDemoCore(appconfig config.RawConfig) *core.Core {
+	var dp service.IServiceProvider = dummy.CreateDummyProvider()
+
+	return core.CreateCore([]*service.IServiceProvider{
+		&dp,
+	})
+
 }
 
 // Set the loglevel from the config globally
