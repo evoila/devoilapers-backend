@@ -3,12 +3,23 @@ package internal
 import (
 	"errors"
 	"fmt"
+	"goclient/Communication"
 	"goclient/K8s"
 )
 
+type IService interface {
+	ExecuteCustomAction(action, namespace, name string, body []byte) (string, error)
+	GetActions() []string
+	GetPlaceHolder(action string) interface{}
+}
+
 type Service struct {
+	Name          string
+	Namespace     string
+	Comm          *Communication.Comm
 	K8sApi        *K8s.K8sApi
 	ActionHandler map[string]func([]byte) (string, error)
+	PlaceHolders  map[string]interface{}
 }
 
 func (service *Service) ExecuteCustomAction(action string, body []byte) (string, error) {
@@ -19,7 +30,7 @@ func (service *Service) ExecuteCustomAction(action string, body []byte) (string,
 	}
 }
 
-func (service *Service) GetActions(svc string) []string {
+func (service *Service) GetActions() []string {
 	actions := make([]string, len(service.ActionHandler))
 	for k := range service.ActionHandler {
 		actions = append(actions, k)
@@ -27,4 +38,6 @@ func (service *Service) GetActions(svc string) []string {
 	return actions
 }
 
-//func (service *Service) GetTemplate(service, action string) interface{}
+func (service *Service) GetPlaceHolder(action string) interface{} {
+	return service.PlaceHolders[action]
+}

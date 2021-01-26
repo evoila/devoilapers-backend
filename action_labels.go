@@ -6,4 +6,5 @@ var (
 
 	// test action
 	GET_CONNECTION string = "ACTION_GET_CONNECTION"
+	GET_FEATURES   string = "ACTION_GET_FEATURES"
 )

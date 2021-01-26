@@ -2,17 +2,8 @@ package postgres
 
 import (
 	"encoding/json"
-	"goclient/Communication"
 	form "goclient/RequestForms/Postgresql"
-	"goclient/crd/Postgresql"
-	"goclient/internal"
 )
-
-type PostgresService struct {
-	Comm        *Communication.Comm
-	postgresApi *Postgresql.PostgresqlApi
-	internal.Service
-}
 
 func stringifyResponse(reponse interface{}, err error) (string, error) {
 	if err != nil {
@@ -40,11 +31,5 @@ func (service *PostgresService) handleBackup(body []byte) (string, error) {
 		return "", nil
 	}
 	return stringifyResponse(service.Comm.CreateBackrest(&request.CreateBackrestBackupRequest))
-}
 
-func (service *PostgresService) getAllHandlers() map[string]func([]byte) (string, error) {
-	return map[string]func([]byte) (string, error){
-		internal.SCALE:   service.handleScale,
-		internal.BACK_UP: service.handleBackup,
-	}
 }
