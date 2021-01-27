@@ -125,7 +125,9 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {},
+                    "200": {
+                        "description": ""
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -172,7 +174,9 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {},
+                    "200": {
+                        "description": ""
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -351,7 +355,9 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {},
+                    "200": {
+                        "description": ""
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {

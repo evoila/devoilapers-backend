@@ -161,7 +161,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200": {}
+        "200":
+          description: ""
         "401":
           description: Unauthorized
           schema:
@@ -201,7 +202,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200": {}
+        "200":
+          description: ""
         "401":
           description: Unauthorized
           schema:
@@ -231,7 +233,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200": {}
+        "200":
+          description: ""
         "401":
           description: Unauthorized
           schema:

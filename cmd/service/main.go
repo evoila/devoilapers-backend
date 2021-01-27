@@ -6,12 +6,19 @@ import (
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/dummy"
 	"OperatorAutomation/pkg/elasticsearch"
+	cc "OperatorAutomation/pkg/kubernetes"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"os"
 )
 
 func main() {
+
+	host:= "https://127.0.0.1:49153"
+	token :=  "eyJhbGciOiJSUzI1NiIsImtpZCI6Il9aV0F1RnNOSEV0VllHVWt3UmVPTFlGTWpFb1g2RHRCNzA2TVRsV2NLRlkifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6InVzZXIwLXRva2VuLWdiYmY4Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InVzZXIwIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiZjFhY2ExMjktMzlhNS00MzgwLTlhNWItN2E4Y2FkMzhhNTU3Iiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmRlZmF1bHQ6dXNlcjAifQ.FhOq24sC1tRIwODSKTWUvkhGhzXqCl94hhmTwChpdH88SC_0csnyU9-EFiTHTKdYMnJrnxCxwxedyta_WESRAz62y9YPZ6FeqA2a9ttscRXlNHQmvb0CBy4W0KSb3_nZB8y8wXVA2FfMAyFU-RcQiT6PccTV_l9kNdjuqp7x_HRLWDw-QUvDpajiQZS-DVp5pB3bii49Gslhdm3Yp6iv4O8g8pgRoSZ2NC79aTNyCGpVh4NR54zRMMrP_9XXCIX26cdYtlJJAggPl3qtAM53acSRBtKHgIRZ4OaUgoRnDNZmiRdVF7fk7m1M00iJ2Rd55t0P8sUSAUJpeA3t_PlsAA"
+
+	obj, _ := cc.CreateKubernetesWrapper(host, token)
+	obj.Apply("apiVersion: elasticsearch.k8s.elastic.co/v1\nkind: Elasticsearch\nmetadata:\n  name: wibu\nspec:\n  version: 7.10.0\n  nodeSets:\n  - name: ganmo\n    count: 1\n    config:\n      node.store.allow_mmap: false")
 	log.SetLevel(log.TraceLevel)
 
 	app := cli.NewApp()
