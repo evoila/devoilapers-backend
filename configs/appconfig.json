@@ -7,7 +7,7 @@
   },
   "kubernetes": {
     "server": "https://127.0.0.1:32768",
-    "certificate-authority": "C:\\Users\\Chris\\.minikube\\ca.crt",
+    "certificate-authority": "/home/tung/.minikube/ca.crt",
     "name": "minikube"
   },
   "users": [

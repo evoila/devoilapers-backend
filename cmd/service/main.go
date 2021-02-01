@@ -6,12 +6,14 @@ import (
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/dummy"
 	"OperatorAutomation/pkg/elasticsearch"
+	"os"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
-	"os"
 )
 
 func main() {
+
 	log.SetLevel(log.TraceLevel)
 
 	app := cli.NewApp()
@@ -30,9 +32,9 @@ func main() {
 			Aliases: []string{"s"},
 			Usage:   "Start webserver",
 			Action: func(context *cli.Context) error {
-				return initialize(context,false)
+				return initialize(context, false)
 			},
-		},{
+		}, {
 			Name: "demo",
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -45,7 +47,7 @@ func main() {
 			Aliases: []string{"s"},
 			Usage:   "Start webserver demo",
 			Action: func(context *cli.Context) error {
-				return initialize(context,true)
+				return initialize(context, true)
 			},
 		},
 	}
@@ -56,40 +58,41 @@ func main() {
 	} else {
 		log.Info("Exit application")
 	}
+
 }
 
 func initialize(c *cli.Context, demoMode bool) error {
-		// Import config file
-		filepath := c.String("configfile")
-		parsedConfig, err := config.LoadConfigurationFromFile(filepath)
-		if err != nil {
-			log.Error("Config file in path could not be found or parsed. Ensure file exists and is valid json")
-			log.Fatal(err)
-			return err
-		}
-
-		//Apply loglevel
-		ApplyGlobalLogConfigurations(parsedConfig)
-
-		var appCore *core.Core
-
-		if demoMode {
-			log.Info("App launched in demo mode")
-			appCore = InitializeDemoCore(parsedConfig)
-		} else {
-			// Create the core of the app
-			appCore = InitializeCore(parsedConfig)
-		}
-
-		// Start webserver
-		log.Info("Starting the webserver")
-		err = StartWebserver(parsedConfig, appCore)
-		if err != nil {
-			log.Error("Webserver start failed")
-			log.Fatal(err)
-		}
-
+	// Import config file
+	filepath := c.String("configfile")
+	parsedConfig, err := config.LoadConfigurationFromFile(filepath)
+	if err != nil {
+		log.Error("Config file in path could not be found or parsed. Ensure file exists and is valid json")
+		log.Fatal(err)
 		return err
+	}
+
+	//Apply loglevel
+	ApplyGlobalLogConfigurations(parsedConfig)
+
+	var appCore *core.Core
+
+	if demoMode {
+		log.Info("App launched in demo mode")
+		appCore = InitializeDemoCore(parsedConfig)
+	} else {
+		// Create the core of the app
+		appCore = InitializeCore(parsedConfig)
+	}
+
+	// Start webserver
+	log.Info("Starting the webserver")
+	err = StartWebserver(parsedConfig, appCore)
+	if err != nil {
+		log.Error("Webserver start failed")
+		log.Fatal(err)
+	}
+
+	return err
 }
 
 // Create the core object that the service is interacting with

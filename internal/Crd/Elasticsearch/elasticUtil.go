@@ -1,0 +1,78 @@
+package Elasticsearch
+
+import (
+	"context"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
+
+	"OperatorAutomation/internal"
+)
+
+// Elastic search api for accessing Elasticsearch custom resource definition
+type ElasticsearchApi struct {
+	Client *rest.RESTClient
+}
+
+// generate an elastic search api based on provided token
+func GenerateEsApiBasedOnToken(token string) (*ElasticsearchApi, error) {
+	config := &rest.Config{
+		Host:        internal.Host,
+		BearerToken: token,
+		TLSClientConfig: rest.TLSClientConfig{
+			CertFile: internal.CertPath,
+			KeyFile:  internal.KeyPath,
+			CAFile:   internal.CAPath,
+		},
+	}
+	crdConfig := *config
+	crdConfig.ContentConfig.GroupVersion = &schema.GroupVersion{Group: GroupName, Version: GroupVersion}
+	crdConfig.APIPath = "/apis"
+	crdConfig.NegotiatedSerializer = serializer.NewCodecFactory(scheme.Scheme)
+	crdConfig.UserAgent = rest.DefaultKubernetesUserAgent()
+
+	if restClient, err := rest.UnversionedRESTClientFor(&crdConfig); err != nil {
+		return nil, err
+	} else {
+		return &ElasticsearchApi{restClient}, nil
+	}
+}
+
+// get the elastic search custom resource with provided name in given namespace
+func (api *ElasticsearchApi) Get(namespace, name string) (*Elasticsearch, error) {
+	result := Elasticsearch{}
+	e := api.Client.Get().
+		Namespace(namespace).
+		Resource("elasticsearches").
+		Name(name).
+		VersionedParams(&metav1.GetOptions{}, scheme.ParameterCodec).
+		Do(context.TODO()).
+		Into(&result)
+	return &result, e
+}
+
+// list all the elastic search custom resource in given namespace
+func (api *ElasticsearchApi) List(namespace string) (*ElasticsearchList, error) {
+	result := ElasticsearchList{}
+	e := api.Client.Get().
+		Namespace(namespace).
+		Resource("elasticsearches").
+		VersionedParams(&metav1.ListOptions{}, scheme.ParameterCodec).
+		Do(context.TODO()).
+		Into(&result)
+	return &result, e
+}
+
+// delete an elastic search custom resource with provided name in given namespace
+func (api *ElasticsearchApi) Delete(namespace, name string) error {
+	err := api.Client.Delete().
+		Namespace(namespace).
+		Resource("elasticsearches").
+		VersionedParams(&metav1.DeleteOptions{}, scheme.ParameterCodec).
+		Name(name).
+		Do(context.TODO()).Error()
+	return err
+}
