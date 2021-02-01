@@ -6,7 +6,7 @@
     "public_key_file_path": "configs/webserver_ssl_certificates/server.crt"
   },
   "kubernetes": {
-    "server": "https://127.0.0.1:32768",
+    "server": "https://127.0.0.1:49157",
     "certificate-authority": "C:\\Users\\Chris\\.minikube\\ca.crt",
     "name": "minikube"
   },
@@ -14,8 +14,8 @@
     {
       "name": "admin",
       "password": "masterkey",
-      "kubernetes_access_token": "MYKUBTOKEN",
-      "kubernetes_namespace": "User1Namespace",
+      "kubernetes_access_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6Il9aV0F1RnNOSEV0VllHVWt3UmVPTFlGTWpFb1g2RHRCNzA2TVRsV2NLRlkifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZC10b2tlbi14N2Q3eCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjgyZDBjNTMyLTNhN2YtNGNlOC1hY2ZjLTNmY2Y3MDU5NWE2ZSIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlcm5ldGVzLWRhc2hib2FyZDprdWJlcm5ldGVzLWRhc2hib2FyZCJ9.DafDiqQFz1DSDQlF8XNDk20x7JCEsYWeAXYzxdVHNt5Q82ukbsYWhHvUTLP_paZO1KpfOokl-m-zjVncCaD8PltDdL-xFGqJuHZ-0qqK3S8jJEIaKNo4foXRmZA56I8UaubuulATKc-busblViQ8MfLG9R0jmWWhqkQCTKWu1duiEx2E3QCZFL7WelkAi3XoEmYhHNAALERA03ZyItA1vkbHoHbA4-e8xZDOuGogBPqFWOWO30IXftRxGm1y8UX-JCqHhhG0BIAP_Jl9NzA_lXaV18wgTPSF2wcD5HSPHhJZ3U4fnu93Ojq0iqVtkJ_9uS83Sif6tOAKYXa1HWZzeA",
+      "kubernetes_namespace": "kubernetes-dashboard",
       "role": "admin"
     },
     {

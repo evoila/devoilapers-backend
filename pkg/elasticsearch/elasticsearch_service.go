@@ -2,14 +2,14 @@ package elasticsearch
 
 import (
 	"OperatorAutomation/pkg/core/action"
-	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/elasticsearch/dtos"
 )
 
 type ElasticSearchService struct {
 	serviceType string
-	auth common.IKubernetesAuthInformation
+	serviceName string
+	serviceStatus string
 }
 
 func (es ElasticSearchService) GetType() string {
@@ -17,7 +17,7 @@ func (es ElasticSearchService) GetType() string {
 }
 
 func (es ElasticSearchService) GetName() string {
-	return "DummyService"
+	return es.serviceName
 }
 
 func (es ElasticSearchService) GetActions() []action.IActionGroup {
@@ -25,19 +25,19 @@ func (es ElasticSearchService) GetActions() []action.IActionGroup {
 	return []action.IActionGroup{
 
 		// Part to add a Action
-		action.ActionGroup{
-			Name: "Backup & Restore",
-			Actions: []action.IAction{
-				action.Action{
-					Name:        "Backup",
-					UniqueCommand: "cmd_elasticsearch_backup",
-					Placeholder: &dtos.BackupActionDto{},
-					ActionExecuteCallback: func(i interface{}) (string, error) {
-						return es.ExecuteBackup(i.(*dtos.BackupActionDto))
-					},
-				},
-			},
-		},
+		//action.ActionGroup{
+		//	Name: "Backup & Restore",
+		//	Actions: []action.IAction{
+		//		action.Action{
+		//			Name:        "Backup",
+		//			UniqueCommand: "cmd_elasticsearch_backup",
+		//			Placeholder: &dtos.BackupActionDto{},
+		//			ActionExecuteCallback: func(i interface{}) (string, error) {
+		//				return es.ExecuteBackup(i.(*dtos.BackupActionDto))
+		//			},
+		//		},
+		//	},
+		//},
 
 	}
 }
@@ -53,5 +53,11 @@ func (es ElasticSearchService) GetTemplate() service.IServiceTemplate {
 }
 
 func (es ElasticSearchService) GetStatus() int {
-	return 3
+	if es.serviceStatus == "green" {
+		return 2
+	} else if es.serviceStatus == "yellow" {
+		return 1
+	}
+
+	return 0
 }
