@@ -1,14 +1,13 @@
 package kubernetes
 
-
 import (
+	"bytes"
+	v1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	kubernetes "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
-	//metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/cli-runtime/pkg/resource"
-	"k8s.io/client-go/kubernetes/scheme"
 )
 
 // Quelle: https://gist.github.com/pytimer/0ad436972a073bb37b8b6b8b474520fc
@@ -31,59 +30,63 @@ func CreateKubernetesWrapper(host string, token string) (KubernetesWrapper, erro
 }
 
 func newRestClient(restConfig rest.Config, gv schema.GroupVersion) (rest.Interface, error) {
-	restConfig.ContentConfig = resource.UnstructuredPlusDefaultContentConfig()
-	restConfig.GroupVersion = &gv
-	if len(gv.Group) == 0 {
-		restConfig.APIPath = "/api"
-	} else {
-		restConfig.APIPath = "/apis"
-	}
+	//restConfig.ContentConfig = resource.UnstructuredPlusDefaultContentConfig()
+	//restConfig.GroupVersion = &gv
+	//if len(gv.Group) == 0 {
+	//	restConfig.APIPath = "/api"
+	//} else {
+	//	restConfig.APIPath = "/apis"
+	//}
 
 	return rest.RESTClientFor(&restConfig)
 }
 
+func getObjFromYAML(yamlDeploy string) v1.Deployment {
+	d := v1.Deployment{}
+	obj := yaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(yamlDeploy)), 1000)
+	obj.Decode(&d)
+	return d
+}
+
 func (kubWrapper KubernetesWrapper) Apply(serviceyaml string) error {
 
-	decode := scheme.Codecs.UniversalDeserializer().Decode
-	obj, _, _ := decode([]byte(serviceyaml), nil, nil)
+	d := v1.Deployment{}
+	obj := yaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(serviceyaml)), 1000)
+	obj.Decode(&d)
 
 
-
-	//obj := &unstructured.Unstructured{}
-	//// Decode YAML to unstructured object.
-	//if _, _, err := decUnstructured.Decode([]byte(serviceyaml), nil, obj); err != nil {
-	//	return err
-	//}
 
 	groupResources, err := restmapper.GetAPIGroupResources(kubWrapper.Clientset.Discovery())
 	if err != nil {
 		return err
 	}
 	rm := restmapper.NewDiscoveryRESTMapper(groupResources)
-
-	// Get some metadata needed to make the REST request.
-	gvk := obj.GetObjectKind().GroupVersionKind()
+	_ = rm
+	//Get some metadata needed to make the REST request.
+	gvk := d.GetObjectKind().GroupVersionKind()
 	gk := schema.GroupKind{Group: gvk.Group, Kind: gvk.Kind}
 	mapping, err := rm.RESTMapping(gk, gvk.Version)
 	if err != nil {
 		return err
 	}
 
-	// Create a client specifically for creating the object.
+//	// Create a client specifically for creating the object.
 	restClient, err := newRestClient(*kubWrapper.RestConfig, mapping.GroupVersionKind.GroupVersion())
 	if err != nil {
 		return err
 	}
 
-	// Use the REST helper to create the object in the "default" namespace.
-	restHelper := resource.NewHelper(restClient, mapping)
-	e, err :=  restHelper.Create("default", false, obj)
+	_ = restClient
 
-	_ = e
-	_ = err
+//	// Use the REST helper to create the object in the "default" namespace.
+//	restHelper := resource.NewHelper(restClient, mapping)
+	//e, err := restHelper.Create("default", false, d.DeepCopy())
 
+	//_ = e
+	//_ = err
+//
 	return nil
-
+}
 	//
 	//gr, err := restmapper.GetAPIGroupResources(kubWrapper.Clientset.Discovery())
 	//if err != nil {
@@ -111,7 +114,7 @@ func (kubWrapper KubernetesWrapper) Apply(serviceyaml string) error {
 	//}
 	//
 	//return nil
-}
+//}
 //
 //func (api *K8sApi) Apply(b []byte, opCode string) (*unstructured.Unstructured, error) {
 //	decoder := yamlutil.NewYAMLOrJSONDecoder(bytes.NewReader(b), 100)
