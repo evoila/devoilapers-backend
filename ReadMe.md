@@ -25,11 +25,18 @@ The current structure is based on https://github.com/golang-standards/project-la
     - Software to generate a swagger document out of the webserver definition and specific comments
     - Execute to install swaggo 
     - Details: https://github.com/swaggo/swag
-- GenerateSwaggerDoc
+- GenerateSwaggerDoc 
     - Used to generate a swagger document out of the webserver definition and specific comments
     - Execute in `<ProjectRoot>` to generate the swagger documentation  
     - Details: https://github.com/swaggo/swag
-    
+- EckOperatorInstallation 
+    - Used to set up minikube with eck operator
+    - Delete minikube
+    - Start minikube
+    - Install eck
+    - Start minikube dashboard
+    - The user has to find kubernetes-dashboard-token admin token
+    - The user has to add the admin token to config/appconfig.json (kubernetes_access_token)
 
 ## Getting started
 Ensure you have Go **1.15.5** installed.
