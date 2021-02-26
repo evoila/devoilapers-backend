@@ -289,7 +289,11 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 	}
 
 	userCtx := controller.Core.CrateUserContext(userInfos)
-	services := userCtx.GetServices()
+	services, err := userCtx.GetServices()
+	if err != nil {
+		utils.NewError(ctx, http.StatusInternalServerError, err)
+		return
+	}
 
 	for _, servicePtr := range services {
 		service := *servicePtr

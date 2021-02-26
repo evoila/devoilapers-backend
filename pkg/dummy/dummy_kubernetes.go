@@ -10,6 +10,7 @@ import (
 type DummyKubernetes struct {
 	data map[string]DummyKubernetesData
 }
+
 type DummyKubernetesData struct {
 	status int
 	yaml   string
@@ -24,6 +25,10 @@ func (dk DummyKubernetes) Create(yaml string) error {
 }
 
 func (dk DummyKubernetes) Delete(id string) error {
+	if _, found := dk.data[id]; !found {
+		return errors.New("Id not found")
+	}
+
 	delete(dk.data, id)
 	return nil
 }
