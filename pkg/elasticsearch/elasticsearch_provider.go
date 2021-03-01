@@ -50,16 +50,16 @@ func (es ElasticSearchProvider) GetTemplate() *service.IServiceTemplate {
 	return es.template
 }
 
-func (es ElasticSearchProvider) GetServices(auth common.IKubernetesAuthInformation) []*service.IService {
+func (es ElasticSearchProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
 	elasticSearchCrd, err := crd.GenerateEsApiBasedOnToken(es.host, es.caPath, auth.GetKubernetesAccessToken())
 
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	elasticSearchInstances, err := elasticSearchCrd.List(auth.GetKubernetesNamespace())
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	var services []*service.IService
@@ -73,12 +73,12 @@ func (es ElasticSearchProvider) GetServices(auth common.IKubernetesAuthInformati
 		services = append(services, &elasticSearchService)
 	}
 
-	return services
+	return services, nil
 }
 
-func (es ElasticSearchProvider) GetService(auth common.IKubernetesAuthInformation, id string) *service.IService {
+func (es ElasticSearchProvider) GetService(auth common.IKubernetesAuthInformation, id string) (*service.IService, error) {
 	var els service.IService = ElasticSearchService{serviceType: es.GetServiceType()}
-	return &els
+	return &els, nil
 }
 
 func (es ElasticSearchProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
@@ -96,6 +96,16 @@ func (es ElasticSearchProvider) CreateService(auth common.IKubernetesAuthInforma
 }
 
 func (es ElasticSearchProvider) DeleteService(auth common.IKubernetesAuthInformation, id string) error {
-	panic("implement me")
+	api, err := kubernetes.GenerateK8sApiFromToken(es.host, es.caPath, auth.GetKubernetesAccessToken())
+	if err != nil {
+		return err
+	}
+
+	err = api.DeleteService(auth.GetKubernetesNamespace(), id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 

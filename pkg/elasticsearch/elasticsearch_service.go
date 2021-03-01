@@ -42,7 +42,7 @@ func (es ElasticSearchService) GetActions() []action.IActionGroup {
 	}
 }
 
-func (es ElasticSearchService) ExecuteBackup(dto *dtos.BackupActionDto) (string, error) {
+func (es ElasticSearchService) ExecuteBackup(dto *dtos.BackupActionDto) (interface{}, error) {
 	// part to add a function
     // return service.Comm.CreateSnapshot(dto)
 	return "Its OK", nil
