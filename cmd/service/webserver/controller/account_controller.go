@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"OperatorAutomation/cmd/service/dtos"
+	"OperatorAutomation/cmd/service/webserver/dtos"
 	"OperatorAutomation/cmd/service/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -36,7 +36,7 @@ func (controller AccountController) HandlePostLogin(ctx *gin.Context) {
 	}
 
 	// Get user information from the user management
-	user, userCouldBeFound := controller.UserManagement.GetUserInformation(
+	user, userCouldBeFound := controller.UserManagement.TryGetUserInformation(
 		accountCredentials.Username,
 		accountCredentials.Password,
 	)

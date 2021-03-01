@@ -30,12 +30,12 @@ func Test_UserContext_Create_Get_Delete(t *testing.T) {
 				createServiceCounter += 1
 				return nil
 			},
-			GetServiceCb: func(auth common.IKubernetesAuthInformation, id string) *service.IService {
+			GetServiceCb: func(auth common.IKubernetesAuthInformation, id string) (*service.IService, error) {
 				assert.Equal(t, 2, closure)
 				assert.Equal(t, "Token", auth.GetKubernetesAccessToken())
 				assert.Equal(t, "Namespace", auth.GetKubernetesNamespace())
 				getServiceCounter += 1
-				return nil
+				return nil, nil
 			},
 			DeleteServiceCb: func(auth common.IKubernetesAuthInformation, id string) error {
 				assert.Equal(t, 2, closure)
@@ -44,9 +44,9 @@ func Test_UserContext_Create_Get_Delete(t *testing.T) {
 				deleteServiceCounter += 1
 				return nil
 			},
-			GetServicesCb: func(auth common.IKubernetesAuthInformation) []*service.IService {
+			GetServicesCb: func(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
 				getServicesCounter += 1
-				return []*service.IService{nil, nil}
+				return []*service.IService{nil, nil}, nil
 			},
 		}
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"OperatorAutomation/cmd/service/config"
+	"OperatorAutomation/cmd/service/webserver"
 	"OperatorAutomation/pkg/core"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/dummy"
@@ -83,7 +84,7 @@ func initialize(c *cli.Context, demoMode bool) error {
 
 		// Start webserver
 		log.Info("Starting the webserver")
-		err = StartWebserver(parsedConfig, appCore)
+		err = webserver.StartWebserver(parsedConfig, appCore)
 		if err != nil {
 			log.Error("Webserver start failed")
 			log.Fatal(err)

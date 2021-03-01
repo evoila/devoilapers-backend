@@ -11,8 +11,8 @@ type TestProvider struct {
 	GetServiceImageCb func() string
 	GetServiceTypeCb  func() string
 	GetTemplateCb     func() *service.IServiceTemplate
-	GetServicesCb     func(auth common.IKubernetesAuthInformation) []*service.IService
-	GetServiceCb      func(auth common.IKubernetesAuthInformation, id string) *service.IService
+	GetServicesCb     func(auth common.IKubernetesAuthInformation) ([]*service.IService, error)
+	GetServiceCb      func(auth common.IKubernetesAuthInformation, id string) (*service.IService, error)
 	CreateServiceCb   func(auth common.IKubernetesAuthInformation, yaml string) error
 	DeleteServiceCb   func(auth common.IKubernetesAuthInformation, id string) error
 }
@@ -34,11 +34,11 @@ func (es TestProvider) GetTemplate() *service.IServiceTemplate {
 }
 
 func (es TestProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
-	return es.GetServicesCb(auth), nil
+	return es.GetServicesCb(auth)
 }
 
 func (es TestProvider) GetService(auth common.IKubernetesAuthInformation, id string) (*service.IService, error) {
-	return es.GetServiceCb(auth, id), nil
+	return es.GetServiceCb(auth, id)
 }
 
 func (es TestProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {

@@ -1,6 +1,7 @@
 package dummy
 
 import (
+	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/dummy"
 	"OperatorAutomation/test/common_test"
 	"github.com/stretchr/testify/assert"
@@ -56,25 +57,25 @@ func Test_DummyProvider_Get_Services(t *testing.T) {
 	// Get single service
 	servicePtr, err := dummyProvider.GetService(auth, services1.GetName())
 	assert.Nil(t, err)
-	service := *servicePtr
-	assert.NotNil(t, service)
+	service0 := *servicePtr
+	assert.NotNil(t, service0)
 
 	// Ensure they are two different instances
-	assert.NotEqual(t, services1, service)
+	assert.NotEqual(t, services1, service0)
 
 	// Compare values of GetServices and GetService
-	assert.NotEqual(t, "", service.GetName())
-	assert.Equal(t, 0, len(service.GetTemplate().GetImportantSections()))
-	assert.Equal(t, 1, service.GetStatus())
-	assert.Equal(t, 1, len(service.GetActions()))
-	assert.NotEqual(t, "", service.GetActions()[0].GetName())
-	assert.Equal(t, 1, len(service.GetActions()[0].GetActions()))
+	assert.NotEqual(t, "", service0.GetName())
+	assert.Equal(t, 0, len(service0.GetTemplate().GetImportantSections()))
+	assert.Equal(t, service.SERVICE_STATUS_OK, service0.GetStatus())
+	assert.Equal(t, 1, len(service0.GetActions()))
+	assert.NotEqual(t, "", service0.GetActions()[0].GetName())
+	assert.Equal(t, 1, len(service0.GetActions()[0].GetActions()))
 
 
-	assert.Equal(t, service.GetName(), services1.GetName())
-	assert.Equal(t, service.GetStatus(), services1.GetStatus())
-	assert.Equal(t, service.GetType(), services1.GetType())
-	assert.Equal(t, service.GetTemplate().GetYAML(), services1.GetTemplate().GetYAML())
+	assert.Equal(t, service0.GetName(), services1.GetName())
+	assert.Equal(t, service0.GetStatus(), services1.GetStatus())
+	assert.Equal(t, service0.GetType(), services1.GetType())
+	assert.Equal(t, service0.GetTemplate().GetYAML(), services1.GetTemplate().GetYAML())
 
 	_, err = dummyProvider.GetService(auth, "Not existing")
 	assert.NotNil(t, err)

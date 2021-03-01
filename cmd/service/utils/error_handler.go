@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"OperatorAutomation/cmd/service/dtos"
+	"OperatorAutomation/cmd/service/webserver/dtos"
 	"github.com/gin-gonic/gin"
 )
 

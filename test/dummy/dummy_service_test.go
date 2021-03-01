@@ -30,7 +30,7 @@ func Test_DummyProvider_Service_Attributes(t *testing.T) {
 
 	// Compare properties
 	assert.NotEqual(t, "", service0.GetName())
-	assert.Equal(t, 1, service0.GetStatus())
+	assert.Equal(t, service.SERVICE_STATUS_OK, service0.GetStatus())
 	assert.Equal(t, provider.GetServiceType(), service0.GetType())
 
 	// Get action groups

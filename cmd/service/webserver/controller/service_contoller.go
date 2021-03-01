@@ -1,10 +1,11 @@
 package controller
 
 import (
-	"OperatorAutomation/cmd/service/dtos"
+	"OperatorAutomation/cmd/service/webserver/dtos"
 	"OperatorAutomation/cmd/service/utils"
 	"OperatorAutomation/pkg/core/service"
 	"encoding/json"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"net/http"
@@ -29,7 +30,9 @@ type ServiceController struct {
 // @Param servicetype path string true "Type of service"
 //
 // @Success 200
+// @Failure 400 {object} dtos.HTTPErrorDto
 // @Failure 401 {object} dtos.HTTPErrorDto
+// @Failure 500 {object} dtos.HTTPErrorDto
 //
 // @Router /services/create/{servicetype} [post]
 func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Context) {
@@ -40,22 +43,18 @@ func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Con
 	}
 
 	user, password, _ := ctx.Request.BasicAuth()
-	userInfos, foundUser := controller.UserManagement.GetUserInformation(user, password)
-	if !foundUser {
-		ctx.Status(http.StatusUnauthorized)
-		return
-	}
+	userInfos := controller.UserManagement.GetUserInformation(user, password)
 
 	serviceType := ctx.Param("servicetype")
 	userCtx := controller.Core.CrateUserContext(userInfos)
 	err := userCtx.CreateServices(serviceType, yamlData.Yaml)
 
 	if err != nil {
-		utils.NewError(ctx, http.StatusBadRequest, err)
+		utils.NewError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	ctx.Status(http.StatusOK)
+	ctx.Status(http.StatusCreated)
 }
 
 // Apply a service specific action godoc
@@ -75,17 +74,14 @@ func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Con
 // @Param actioncommand path string true "action command"
 //
 // @Success 200
+// @Failure 400 {object} dtos.HTTPErrorDto
 // @Failure 401 {object} dtos.HTTPErrorDto
+// @Failure 500 {object} dtos.HTTPErrorDto
 //
 // @Router /services/action/{servicetype}/{servicename}/{actioncommand}  [post]
 func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Context) {
-
 	user, password, _ := ctx.Request.BasicAuth()
-	userInfos, foundUser := controller.UserManagement.GetUserInformation(user, password)
-	if !foundUser {
-		ctx.Status(http.StatusUnauthorized)
-		return
-	}
+	userInfos := controller.UserManagement.GetUserInformation(user, password)
 
 	serviceType := ctx.Param("servicetype")
 	serviceName := ctx.Param("servicename")
@@ -96,6 +92,11 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 
 	if err != nil {
 		utils.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	if ctx.Request.ContentLength == 0 {
+		utils.NewError(ctx, http.StatusBadRequest, errors.New("Request does not contain any body data"))
 		return
 	}
 
@@ -115,7 +116,7 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 
 			val, err := action.GetActionExecuteCallback()(placeholder)
 			if err != nil {
-				utils.NewError(ctx, http.StatusBadRequest, err)
+				utils.NewError(ctx, http.StatusInternalServerError, err)
 				return
 			}
 
@@ -143,15 +144,12 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 //
 // @Success 200
 // @Failure 401 {object} dtos.HTTPErrorDto
+// @Failure 500 {object} dtos.HTTPErrorDto
 //
 // @Router /services/{servicetype}/{servicename} [delete]
 func (controller ServiceController) HandleDeleteServiceInstance(ctx *gin.Context) {
 	user, password, _ := ctx.Request.BasicAuth()
-	userInfos, foundUser := controller.UserManagement.GetUserInformation(user, password)
-	if !foundUser {
-		ctx.Status(http.StatusUnauthorized)
-		return
-	}
+	userInfos := controller.UserManagement.GetUserInformation(user, password)
 
 	serviceType := ctx.Param("servicetype")
 	serviceName := ctx.Param("servicename")
@@ -160,7 +158,7 @@ func (controller ServiceController) HandleDeleteServiceInstance(ctx *gin.Context
 	err := userCtx.DeleteService(serviceType, serviceName)
 
 	if err != nil {
-		utils.NewError(ctx, http.StatusBadRequest, err)
+		utils.NewError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -183,6 +181,7 @@ func (controller ServiceController) HandleDeleteServiceInstance(ctx *gin.Context
 //
 // @Success 200 {object} dtos.ServiceInstanceDetailsOverviewDto
 // @Failure 401 {object} dtos.HTTPErrorDto
+// @Failure 500 {object} dtos.HTTPErrorDto
 //
 // @Router /services/info/{servicetype}/{servicename} [get]
 func (controller ServiceController) HandleGetServiceInstanceDetails(ctx *gin.Context) {
@@ -192,11 +191,7 @@ func (controller ServiceController) HandleGetServiceInstanceDetails(ctx *gin.Con
 	}
 
 	user, password, _ := ctx.Request.BasicAuth()
-	userInfos, foundUser := controller.UserManagement.GetUserInformation(user, password)
-	if !foundUser {
-		ctx.Status(http.StatusUnauthorized)
-		return
-	}
+	userInfos := controller.UserManagement.GetUserInformation(user, password)
 
 	serviceType := ctx.Param("servicetype")
 	serviceName := ctx.Param("servicename")
@@ -205,7 +200,7 @@ func (controller ServiceController) HandleGetServiceInstanceDetails(ctx *gin.Con
 	servicePtr, err := userCtx.GetService(serviceType, serviceName)
 
 	if err != nil {
-		utils.NewError(ctx, http.StatusBadRequest, err)
+		utils.NewError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -249,11 +244,11 @@ func serviceGroupToDto(servicePtr *service.IService) []dtos.ServiceInstanceActio
 
 func serviceStatusToString(status int) string {
 	switch status {
-	case 0:
+	case service.SERVICE_STATUS_ERROR:
 		return "Error"
-	case 1:
+	case service.SERVICE_STATUS_WARNING:
 		return "Warning"
-	case 2:
+	case service.SERVICE_STATUS_OK:
 		return "Ok"
 	default:
 		return "Unkown"
@@ -273,6 +268,7 @@ func serviceStatusToString(status int) string {
 //
 // @Success 200 {object} dtos.ServiceInstanceDetailsOverviewDto
 // @Failure 401 {object} dtos.HTTPErrorDto
+// @Failure 500 {object} dtos.HTTPErrorDto
 //
 // @Router /services/info [get]
 func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstances(ctx *gin.Context) {
@@ -282,11 +278,7 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 	}
 
 	user, password, _ := ctx.Request.BasicAuth()
-	userInfos, foundUser := controller.UserManagement.GetUserInformation(user, password)
-	if !foundUser {
-		ctx.Status(http.StatusUnauthorized)
-		return
-	}
+	userInfos := controller.UserManagement.GetUserInformation(user, password)
 
 	userCtx := controller.Core.CrateUserContext(userInfos)
 	services, err := userCtx.GetServices()
@@ -326,6 +318,7 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 //
 // @Success 200 {object} dtos.ServiceYamlDto
 // @Failure 401 {object} dtos.HTTPErrorDto
+// @Failure 500 {object} dtos.HTTPErrorDto
 //
 // @Router /services/yaml/{servicetype}/{servicename} [get]
 func (controller ServiceController) HandleGetServiceInstanceYaml(ctx *gin.Context) {
@@ -333,16 +326,12 @@ func (controller ServiceController) HandleGetServiceInstanceYaml(ctx *gin.Contex
 	servicetype := ctx.Param("servicetype")
 
 	user, password, _ := ctx.Request.BasicAuth()
-	userInfos, foundUser := controller.UserManagement.GetUserInformation(user, password)
-	if !foundUser {
-		ctx.Status(http.StatusUnauthorized)
-		return
-	}
+	userInfos := controller.UserManagement.GetUserInformation(user, password)
 
 	userCtx := controller.Core.CrateUserContext(userInfos)
 	service, err := userCtx.GetService(servicetype, servicename)
 	if err != nil {
-		utils.NewError(ctx, http.StatusBadRequest, err)
+		utils.NewError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 

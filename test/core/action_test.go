@@ -15,7 +15,7 @@ func Test_ActionGetter(t *testing.T) {
 		Name:          "ActionGroup1Item1Name",
 		UniqueCommand: "ActionGroup1Item1Cmd",
 		Placeholder:   &ActionPlaceholder{},
-		ActionExecuteCallback: func(placeholder interface{}) (string, error) {
+		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
 			return "", nil
 		},
 	}
@@ -24,7 +24,7 @@ func Test_ActionGetter(t *testing.T) {
 		Name:          "ActionGroup1Item2Name",
 		UniqueCommand: "ActionGroup1Item2Cmd",
 		Placeholder:   &ActionPlaceholder{},
-		ActionExecuteCallback: func(placeholder interface{}) (string, error) {
+		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
 			return "", nil
 		},
 	}
@@ -59,7 +59,7 @@ func Test_ActionExecution(t *testing.T) {
 		Name:          "Action1Name",
 		UniqueCommand: "Action1Cmd",
 		Placeholder:   &ActionPlaceholder{Value: "OldValue"},
-		ActionExecuteCallback: func(placeholder interface{}) (string, error) {
+		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
 			counter += 1
 			return placeholder.(*ActionPlaceholder).Value, nil
 		},
