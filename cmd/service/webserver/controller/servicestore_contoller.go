@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"OperatorAutomation/cmd/service/dtos"
+	"OperatorAutomation/cmd/service/webserver/dtos"
 	"OperatorAutomation/cmd/service/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -56,6 +56,7 @@ func (controller ServiceStoreController) HandleGetServiceStoreOverview(ctx *gin.
 // @Param servicetype path string true "Type of service"
 //
 // @Success 200 {object} dtos.ServiceStoreItemYamlDto
+// @Failure 400 {object} dtos.HTTPErrorDto
 // @Failure 401 {object} dtos.HTTPErrorDto
 //
 // @Router /servicestore/yaml/{servicetype} [get]
@@ -64,7 +65,7 @@ func (controller ServiceStoreController) HandleGetServiceStoreItemYaml(ctx *gin.
 
 	provider, err := controller.Core.GetProviderByName(serviceType)
 	if err != nil {
-		utils.NewError(ctx, http.StatusNotFound, err)
+		utils.NewError(ctx, http.StatusBadRequest, err)
 		return
 	}
 

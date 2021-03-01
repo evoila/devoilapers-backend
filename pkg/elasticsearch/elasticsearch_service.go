@@ -32,7 +32,7 @@ func (es ElasticSearchService) GetActions() []action.IActionGroup {
 					Name:        "Backup",
 					UniqueCommand: "cmd_elasticsearch_backup",
 					Placeholder: &dtos.BackupActionDto{},
-					ActionExecuteCallback: func(i interface{}) (string, error) {
+					ActionExecuteCallback: func(i interface{}) (interface{}, error) {
 						return es.ExecuteBackup(i.(*dtos.BackupActionDto))
 					},
 				},

@@ -2,7 +2,8 @@ name: Go
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - '**'
   pull_request:
     branches: [ main ]
 
@@ -36,4 +37,8 @@ jobs:
           cd ../..
 
       - name: Test
-        run: go test -v ./...
+        run: go test -v -coverpkg ./pkg/...,./cmd/... -coverprofile=profile.cov ./test/...
+
+      - uses: shogo82148/actions-goveralls@v1
+        with:
+          path-to-profile: profile.cov

@@ -14,9 +14,9 @@ type IServiceProvider interface {
 
 	GetServiceImage() string
 
-	GetServices(auth common.IKubernetesAuthInformation) []*IService
+	GetServices(auth common.IKubernetesAuthInformation) ([]*IService, error)
 
-	GetService(auth common.IKubernetesAuthInformation, id string) *IService
+	GetService(auth common.IKubernetesAuthInformation, id string) (*IService, error)
 
 	CreateService(auth common.IKubernetesAuthInformation, yaml string) error
 

@@ -26,13 +26,13 @@ func (es ElasticSearchProvider) GetTemplate() *service.IServiceTemplate {
 	panic("implement me")
 }
 
-func (es ElasticSearchProvider) GetServices(auth common.IKubernetesAuthInformation) []*service.IService {
+func (es ElasticSearchProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
 	panic("implement me")
 }
 
-func (es ElasticSearchProvider) GetService(auth common.IKubernetesAuthInformation, id string) *service.IService {
+func (es ElasticSearchProvider) GetService(auth common.IKubernetesAuthInformation, id string) (*service.IService, error) {
 	var els service.IService = ElasticSearchService{auth: auth, serviceType: es.GetServiceType()}
-	return &els
+	return &els, nil
 }
 
 func (es ElasticSearchProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
