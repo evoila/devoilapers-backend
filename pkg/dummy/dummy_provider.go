@@ -36,7 +36,7 @@ func (es DummyProvider) GetTemplate() *service.IServiceTemplate {
 	return &st
 }
 
-func (es DummyProvider) GetServices(auth common.IKubernetesAuthInformation) []*service.IService {
+func (es DummyProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
 	var services []*service.IService
 	for id, data := range es.DummyKubernetes.GetServices() {
 		var service service.IService = DummyService{
@@ -49,11 +49,15 @@ func (es DummyProvider) GetServices(auth common.IKubernetesAuthInformation) []*s
 		}
 		services = append(services, &service)
 	}
-	return services
+	return services, nil
 }
 
-func (es DummyProvider) GetService(auth common.IKubernetesAuthInformation, id string) *service.IService {
-	data, _ := es.DummyKubernetes.GetService(id)
+func (es DummyProvider) GetService(auth common.IKubernetesAuthInformation, id string) (*service.IService, error) {
+	data, err := es.DummyKubernetes.GetService(id)
+	if err != nil{
+		return nil, err
+	}
+
 	var service service.IService = DummyService{
 		id:          id,
 		status:      data.status,
@@ -61,7 +65,8 @@ func (es DummyProvider) GetService(auth common.IKubernetesAuthInformation, id st
 		serviceType: es.GetServiceType(),
 		auth:        auth,
 	}
-	return &service
+
+	return &service, nil
 }
 
 func (es DummyProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {

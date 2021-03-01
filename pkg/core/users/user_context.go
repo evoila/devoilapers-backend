@@ -20,21 +20,30 @@ func (ctx UserContext) GetService(serviceType string, id string) (*service.IServ
 	if err != nil {
 		return nil, err
 	}
-	return (*provider).GetService(ctx.Auth,id),nil
+
+	return (*provider).GetService(ctx.Auth,id)
 }
 
 // Shut return the all service instances.
 // The service instances should be a concrete implementation by i.e. elasticsearch.
 // To ensure this, we probably need a factory pattern.
 // Try not to hardcode if trees if possible.
-func (ctx UserContext) GetServices() []*service.IService {
+func (ctx UserContext) GetServices() ([]*service.IService, error) {
 	var services []*service.IService
+	var err error = nil
+
 	for _,provider := range ctx.ServiceProviderRegistry.Providers{
-		for _,ser := range (*provider).GetServices(ctx.Auth){
+		runningServices, providerErr := (*provider).GetServices(ctx.Auth)
+		if providerErr != nil {
+			err = providerErr
+		}
+
+		for _,ser := range runningServices{
 			services = append(services, ser)
 		}
 	}
-	return services
+
+	return services, err
 }
 
 // Shut delete the given service instance from the cluster

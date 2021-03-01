@@ -18,7 +18,13 @@ type Core struct {
 func CreateCore(providers []*service.IServiceProvider) *Core {
 	core := Core{service.ServiceProviderRegistry{Providers: map[string]*service.IServiceProvider{}}}
 	for _,provider := range providers {
-		core.Providers[(*provider).GetServiceType()] = provider
+		providerType := (*provider).GetServiceType()
+
+		if _, ok := core.Providers[providerType]; ok {
+			panic("Duplicate provider type during core initialization")
+		}
+
+		core.Providers[providerType] = provider
 	}
 	return &core
 }

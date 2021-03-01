@@ -1,10 +1,10 @@
-package main
+package webserver
 
 import (
 	_ "OperatorAutomation/api" //Indirect use for swagger -- DO NOT REMOVE --
 	"OperatorAutomation/cmd/service/config"
-	"OperatorAutomation/cmd/service/controller"
 	"OperatorAutomation/cmd/service/management"
+	"OperatorAutomation/cmd/service/webserver/controller"
 	"OperatorAutomation/pkg/core"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -30,6 +30,16 @@ import (
 //
 // @x-extension-openapi {"example": "value on a json format"}
 func StartWebserver(appconfig config.RawConfig, core *core.Core) error {
+	router := BuildRouter(appconfig, core)
+
+	// Start server
+	return router.RunTLS(
+		":"+strconv.Itoa(appconfig.Port),
+		appconfig.WebserverSllCertificate.PublicKeyFilePath,
+		appconfig.WebserverSllCertificate.PrivateKeyFilePath)
+}
+
+func BuildRouter(appconfig config.RawConfig, core *core.Core) *gin.Engine {
 	log := logrus.New()
 	// Set to global log level
 	log.SetLevel(logrus.GetLevel())
@@ -39,6 +49,7 @@ func StartWebserver(appconfig config.RawConfig, core *core.Core) error {
 
 	// Logging and recovery middleware
 	router.Use(ginlogrus.Logger(log), gin.Recovery())
+
 	// Allow cross origins
 	c := cors.DefaultConfig()
 	c.AllowAllOrigins = true
@@ -87,9 +98,5 @@ func StartWebserver(appconfig config.RawConfig, core *core.Core) error {
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	log.Debugf("Visit https://127.0.0.1:%d/swagger/index.html to see the swagger document", appconfig.Port)
 
-	// Start server
-	return router.RunTLS(
-		":"+strconv.Itoa(appconfig.Port),
-		appconfig.WebserverSllCertificate.PublicKeyFilePath,
-		appconfig.WebserverSllCertificate.PrivateKeyFilePath)
+	return router
 }

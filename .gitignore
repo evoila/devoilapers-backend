@@ -29,4 +29,5 @@
 /dist/
 /out/
 
+*.cov
 cmd/service/service

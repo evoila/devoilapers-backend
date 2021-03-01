@@ -29,15 +29,17 @@ type IAction interface {
 	GetUniqueCommand() string
 	// Get placeholder
 	GetPlaceholder() interface{}
-	// Get	action execute callback function for executing an action
-	GetActionExecuteCallback() func(placeholder interface{}) (string,error)
+	// Getaction execute callback function for executing an action.
+	// Placeholder value equals the placeholder of action.
+	// Return value could be any struct
+	GetActionExecuteCallback() func(placeholder interface{}) (interface{},error)
 }
 // Action
 type Action struct{
 	Name string
 	UniqueCommand string
 	Placeholder interface{}
-	ActionExecuteCallback func(placeholder interface{}) (string,error)
+	ActionExecuteCallback func(placeholder interface{}) (interface{},error)
 }
 
 func (a Action) GetName() string {
@@ -52,9 +54,6 @@ func (a Action) GetPlaceholder() interface{} {
 	return a.Placeholder
 }
 
-func (a Action) GetActionExecuteCallback() func(placeholder interface{}) (string, error) {
+func (a Action) GetActionExecuteCallback() func(placeholder interface{}) (interface{}, error) {
 	return a.ActionExecuteCallback
 }
-
-
-

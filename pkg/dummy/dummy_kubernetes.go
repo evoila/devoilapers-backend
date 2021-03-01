@@ -1,6 +1,7 @@
 package dummy
 
 import (
+	"OperatorAutomation/pkg/core/service"
 	"errors"
 	"math/rand"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 type DummyKubernetes struct {
 	data map[string]DummyKubernetesData
 }
+
 type DummyKubernetesData struct {
 	status int
 	yaml   string
@@ -17,13 +19,17 @@ type DummyKubernetesData struct {
 
 func (dk DummyKubernetes) Create(yaml string) error {
 	dk.data[strconv.Itoa(rand.Int())] = DummyKubernetesData{
-		status: 1,
+		status: service.SERVICE_STATUS_OK,
 		yaml:   yaml,
 	}
 	return nil
 }
 
 func (dk DummyKubernetes) Delete(id string) error {
+	if _, found := dk.data[id]; !found {
+		return errors.New("Id not found")
+	}
+
 	delete(dk.data, id)
 	return nil
 }

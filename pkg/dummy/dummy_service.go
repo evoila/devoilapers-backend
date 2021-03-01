@@ -33,7 +33,7 @@ func (es DummyService) GetActions() []action.IActionGroup {
 					Name:          "Dummy Action",
 					UniqueCommand: "cmd_dummy_action",
 					Placeholder:   &dtos.DummyActionDto{},
-					ActionExecuteCallback: func(i interface{}) (string, error) {
+					ActionExecuteCallback: func(i interface{}) (interface{}, error) {
 						return es.ExecuteDummyAction(i.(*dtos.DummyActionDto))
 					},
 				},
@@ -42,7 +42,7 @@ func (es DummyService) GetActions() []action.IActionGroup {
 	}
 }
 
-func (es DummyService) ExecuteDummyAction(dto *dtos.DummyActionDto) (string, error) {
+func (es DummyService) ExecuteDummyAction(dto *dtos.DummyActionDto) (interface{}, error) {
 	return dto.Dummy, nil
 }
 
