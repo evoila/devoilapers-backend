@@ -2,6 +2,7 @@
 Operator Automation golang Backend
 
 ![Go](https://github.com/evoila/devoilapers-backend/workflows/Go/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/evoila/devoilapers-backend/badge.svg)](https://coveralls.io/github/evoila/devoilapers-backend)
 
 ## Backend architecture UML diagram
 https://lucid.app/documents/view/a73a136b-4166-4417-8550-073922da4a47
