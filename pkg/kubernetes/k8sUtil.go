@@ -170,8 +170,8 @@ func (api *K8sApi) GetStatefulSetScale(namespace, name string) (*autoscalingv1.S
 func (api *K8sApi) CreateSecret(namespace, name string, cert, key []byte) (*v1.Secret, error) {
 	new_secret := v1.Secret{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       Kind_Secret,
-			APIVersion: APIVersion_v1,
+			Kind:       KindSecret,
+			APIVersion: ApiversionV1,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -197,8 +197,8 @@ func (api *K8sApi) GetClientCertFromSecret(namespace, secretname string) ([]byte
 func (api *K8sApi) CreateServiceAccount(namespace, name string) (*v1.ServiceAccount, error) {
 	new := v1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       Kind_ServiceAccount,
-			APIVersion: APIVersion_v1,
+			Kind:       KindServiceaccount,
+			APIVersion: ApiversionV1,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,

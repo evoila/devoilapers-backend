@@ -23,8 +23,8 @@ func (api *K8sApi) GetIngress(namespace, name string) (*v1.Ingress, error) {
 func (api *K8sApi) CreateIngress(namespace, ingressName, serviceName, hostname string, servicePort int32) (*v1.Ingress, error) {
 	new_ingress := v1.Ingress{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       Kind_Ingress,
-			APIVersion: APIVersion_v1beta1,
+			Kind:       KindIngress,
+			APIVersion: ApiversionV1beta1,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ingressName,

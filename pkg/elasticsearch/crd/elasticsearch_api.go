@@ -17,7 +17,7 @@ type ElasticsearchApi struct {
 }
 
 // generate an elastic search api based on provided token
-func GenerateEsApiBasedOnToken(host string, caPath string, token string) (*ElasticsearchApi, error) {
+func CreateElasticsearchApi(host string, caPath string, token string) (*ElasticsearchApi, error) {
 	config := &rest.Config{
 		Host:        host,
 		BearerToken: token,
@@ -40,7 +40,6 @@ func GenerateEsApiBasedOnToken(host string, caPath string, token string) (*Elast
 
 // get the elastic search custom resource with provided name in given namespace
 func (api *ElasticsearchApi) Get(namespace, name string) (*v1.Elasticsearch, error) {
-
 	result := v1.Elasticsearch{}
 	e := api.Client.Get().
 		Namespace(namespace).

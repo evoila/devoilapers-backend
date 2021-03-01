@@ -37,8 +37,8 @@ func (auth *K8sApi) AddUserTo(old *rbacV1.RoleBinding, namespace, name string) e
 	new.Subjects = append(
 		new.Subjects,
 		rbacV1.Subject{
-			Kind:      Kind_ServiceAccount,
-			APIGroup:  APIGroup_Authorization,
+			Kind:      KindServiceaccount,
+			APIGroup:  ApigroupAuthorization,
 			Name:      name,
 			Namespace: namespace,
 		},
@@ -83,7 +83,7 @@ func (auth *K8sApi) CreateRoleBinding(namespace, name, rolename string, account_
 		subjects = append(
 			subjects,
 			rbacV1.Subject{
-				Kind:      Kind_ServiceAccount,
+				Kind:      KindServiceaccount,
 				Name:      account_name[i],
 				Namespace: account_namespace[i],
 			},
@@ -91,16 +91,16 @@ func (auth *K8sApi) CreateRoleBinding(namespace, name, rolename string, account_
 	}
 	new := rbacV1.RoleBinding{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       Kind_RoleBinding,
-			APIVersion: APIGroup_Authorization,
+			Kind:       KindRolebinding,
+			APIVersion: ApigroupAuthorization,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
 		RoleRef: rbacV1.RoleRef{
-			APIGroup: APIGroup_Authorization,
-			Kind:     Kind_Role,
+			APIGroup: ApigroupAuthorization,
+			Kind:     KindRole,
 			Name:     rolename,
 		},
 		Subjects: subjects,
@@ -122,8 +122,8 @@ func (auth *K8sApi) CreateRole(namespace, name string, apiGroups, resources, ver
 	}
 	new := rbacV1.Role{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       Kind_Role,
-			APIVersion: APIGroup_Authorization,
+			Kind:       KindRole,
+			APIVersion: ApigroupAuthorization,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,

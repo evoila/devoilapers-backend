@@ -13,13 +13,13 @@ import (
 )
 
 // Should implement ServiceProvider interface
-type ElasticSearchProvider struct {
+type ElasticsearchProvider struct {
 	template *service.IServiceTemplate
 	host string
 	caPath string
 }
 
-func CreateElasticSearchProvider(host string, caPath string, templatePath string) ElasticSearchProvider {
+func CreateElasticSearchProvider(host string, caPath string, templatePath string) ElasticsearchProvider {
 	yamlTemplatePath := path.Join(templatePath, "elasticsearch.yaml")
 	templateData, err := ioutil.ReadFile(yamlTemplatePath)
 	if err != nil {
@@ -28,29 +28,29 @@ func CreateElasticSearchProvider(host string, caPath string, templatePath string
 
 	var template service.IServiceTemplate = service.ServiceTemplate{
 		Yaml: string(templateData),
-		ImportantSections: []string{"name"},
+		ImportantSections: []string{"metadata.name"},
 	}
 
-	return ElasticSearchProvider{
+	return ElasticsearchProvider{
 		template: &template,
 		host: host,
 		caPath: caPath,
 	}
 }
 
-func (es ElasticSearchProvider) GetServiceDescription() string {
+func (es ElasticsearchProvider) GetServiceDescription() string {
 	return "Elasticsearch is a distributed, free and open search and analytics engine for all types of data."
 }
 
-func (es ElasticSearchProvider) GetServiceImage() string {
+func (es ElasticsearchProvider) GetServiceImage() string {
 	return "https://cdn.iconscout.com/icon/free/png-256/elasticsearch-226094.png"
 }
 
-func (es ElasticSearchProvider) GetServiceType() string {
+func (es ElasticsearchProvider) GetServiceType() string {
 	return "Elasticsearch"
 }
 
-func (es ElasticSearchProvider) GetTemplate(auth common.IKubernetesAuthInformation) *service.IServiceTemplate {
+func (es ElasticsearchProvider) GetTemplate(auth common.IKubernetesAuthInformation) *service.IServiceTemplate {
 	originalTemplate := (*es.template)
 	yamlTemplate := originalTemplate.GetYAML()
 	yamlTemplate = utils.FillWithData(auth, yamlTemplate)
@@ -63,8 +63,8 @@ func (es ElasticSearchProvider) GetTemplate(auth common.IKubernetesAuthInformati
 	return &template
 }
 
-func (es ElasticSearchProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
-	elasticSearchCrd, err := crd.GenerateEsApiBasedOnToken(es.host, es.caPath, auth.GetKubernetesAccessToken())
+func (es ElasticsearchProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
+	elasticSearchCrd, err := crd.CreateElasticsearchApi(es.host, es.caPath, auth.GetKubernetesAccessToken())
 
 	if err != nil {
 		return nil, err
@@ -83,8 +83,8 @@ func (es ElasticSearchProvider) GetServices(auth common.IKubernetesAuthInformati
 	return services, nil
 }
 
-func (es ElasticSearchProvider) GetService(auth common.IKubernetesAuthInformation, id string) (*service.IService, error) {
-	elasticSearchCrd, err := crd.GenerateEsApiBasedOnToken(es.host, es.caPath, auth.GetKubernetesAccessToken())
+func (es ElasticsearchProvider) GetService(auth common.IKubernetesAuthInformation, id string) (*service.IService, error) {
+	elasticSearchCrd, err := crd.CreateElasticsearchApi(es.host, es.caPath, auth.GetKubernetesAccessToken())
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (es ElasticSearchProvider) GetService(auth common.IKubernetesAuthInformatio
 	return es.CrdInstanceToServiceInstance(crdInstance), nil
 }
 
-func (es ElasticSearchProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
+func (es ElasticsearchProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
 	api, err := kubernetes.GenerateK8sApiFromToken(es.host, es.caPath, auth.GetKubernetesAccessToken())
 	if err != nil {
 		return err
@@ -111,8 +111,8 @@ func (es ElasticSearchProvider) CreateService(auth common.IKubernetesAuthInforma
 	return nil
 }
 
-func (es ElasticSearchProvider) DeleteService(auth common.IKubernetesAuthInformation, id string) error {
-	elasticSearchCrd, err := crd.GenerateEsApiBasedOnToken(es.host, es.caPath, auth.GetKubernetesAccessToken())
+func (es ElasticsearchProvider) DeleteService(auth common.IKubernetesAuthInformation, id string) error {
+	elasticSearchCrd, err := crd.CreateElasticsearchApi(es.host, es.caPath, auth.GetKubernetesAccessToken())
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func (es ElasticSearchProvider) DeleteService(auth common.IKubernetesAuthInforma
 }
 
 // Converts a crd.Elasticsearch instance to an service representation
-func (es ElasticSearchProvider) CrdInstanceToServiceInstance(crdInstance *v1.Elasticsearch) *service.IService {
+func (es ElasticsearchProvider) CrdInstanceToServiceInstance(crdInstance *v1.Elasticsearch) *service.IService {
 	yamlData, err := yaml.Marshal(crdInstance)
 	if err != nil {
 		yamlData = []byte("Unknown")
