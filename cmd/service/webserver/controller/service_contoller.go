@@ -29,7 +29,7 @@ type ServiceController struct {
 // @Param serviceyaml body dtos.ServiceYamlDto true "Service-Yaml"
 // @Param servicetype path string true "Type of service"
 //
-// @Success 200
+// @Success 201
 // @Failure 400 {object} dtos.HTTPErrorDto
 // @Failure 401 {object} dtos.HTTPErrorDto
 // @Failure 500 {object} dtos.HTTPErrorDto
@@ -250,6 +250,8 @@ func serviceStatusToString(status int) string {
 		return "Warning"
 	case service.SERVICE_STATUS_OK:
 		return "Ok"
+	case service.SERVICE_STATUS_PENDING:
+		return "Pending"
 	default:
 		return "Unkown"
 	}

@@ -8,7 +8,7 @@ type IServiceProvider interface {
 	GetServiceType() string
 
 	// Template to create an instance
-	GetTemplate() *IServiceTemplate
+	GetTemplate(auth common.IKubernetesAuthInformation) *IServiceTemplate
 
 	GetServiceDescription() string
 

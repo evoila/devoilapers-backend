@@ -69,8 +69,11 @@ func (controller ServiceStoreController) HandleGetServiceStoreItemYaml(ctx *gin.
 		return
 	}
 
+	user, password, _ := ctx.Request.BasicAuth()
+	userInfos := controller.UserManagement.GetUserInformation(user, password)
+
 	serviceYaml := dtos.ServiceStoreItemYamlDto{
-		Yaml: (*(*provider).GetTemplate()).GetYAML(),
+		Yaml: (*(*provider).GetTemplate(userInfos)).GetYAML(),
 	}
 
 	ctx.JSON(http.StatusOK, serviceYaml)
