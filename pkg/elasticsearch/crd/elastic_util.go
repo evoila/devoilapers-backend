@@ -8,7 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-
+	"github.com/elastic/cloud-on-k8s/pkg/apis/elasticsearch/v1"
 )
 
 // Elastic search api for accessing Elasticsearch custom resource definition
@@ -39,8 +39,9 @@ func GenerateEsApiBasedOnToken(host string, caPath string, token string) (*Elast
 }
 
 // get the elastic search custom resource with provided name in given namespace
-func (api *ElasticsearchApi) Get(namespace, name string) (*Elasticsearch, error) {
-	result := Elasticsearch{}
+func (api *ElasticsearchApi) Get(namespace, name string) (*v1.Elasticsearch, error) {
+
+	result := v1.Elasticsearch{}
 	e := api.Client.Get().
 		Namespace(namespace).
 		Resource("elasticsearches").
@@ -52,8 +53,8 @@ func (api *ElasticsearchApi) Get(namespace, name string) (*Elasticsearch, error)
 }
 
 // list all the elastic search custom resource in given namespace
-func (api *ElasticsearchApi) List(namespace string) (*ElasticsearchList, error) {
-	result := ElasticsearchList{}
+func (api *ElasticsearchApi) List(namespace string) (*v1.ElasticsearchList, error) {
+	result := v1.ElasticsearchList{}
 	e := api.Client.Get().
 		Namespace(namespace).
 		Resource("elasticsearches").

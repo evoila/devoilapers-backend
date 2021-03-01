@@ -6,10 +6,10 @@ import (
 	"OperatorAutomation/pkg/elasticsearch/crd"
 	"OperatorAutomation/pkg/kubernetes"
 	"OperatorAutomation/pkg/utils"
+	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/elasticsearch/v1"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"path"
-	"strings"
 )
 
 // Should implement ServiceProvider interface
@@ -123,14 +123,14 @@ func (es ElasticSearchProvider) DeleteService(auth common.IKubernetesAuthInforma
 }
 
 // Converts a crd.Elasticsearch instance to an service representation
-func (es ElasticSearchProvider) CrdInstanceToServiceInstance(crdInstance *crd.Elasticsearch) *service.IService {
+func (es ElasticSearchProvider) CrdInstanceToServiceInstance(crdInstance *v1.Elasticsearch) *service.IService {
 	yamlData, err := yaml.Marshal(crdInstance)
 	if err != nil {
 		yamlData = []byte("Unknown")
 	}
 
 	var elasticSearchService service.IService = ElasticSearchService{
-		status: strings.ToLower(crdInstance.Status.Health),
+		status: crdInstance.Status.Health,
 		name : crdInstance.Name,
 		providerType: es.GetServiceType(),
 		yaml: string(yamlData),

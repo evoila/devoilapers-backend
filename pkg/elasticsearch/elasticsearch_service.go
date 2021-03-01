@@ -3,12 +3,13 @@ package elasticsearch
 import (
 	"OperatorAutomation/pkg/core/action"
 	"OperatorAutomation/pkg/core/service"
+	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/elasticsearch/v1"
 )
 
 type ElasticSearchService struct {
 	providerType   string
 	name   string
-	status string
+	status v1.ElasticsearchHealth
 	yaml string
 	importantSections []string
 }
@@ -35,11 +36,11 @@ func (es ElasticSearchService) GetTemplate() service.IServiceTemplate {
 }
 
 func (es ElasticSearchService) GetStatus() int {
-	if es.status == "green" {
+	if es.status == v1.ElasticsearchGreenHealth {
 		return service.SERVICE_STATUS_OK
-	} else if es.status == "yellow" {
+	} else if es.status == v1.ElasticsearchYellowHealth {
 		return service.SERVICE_STATUS_WARNING
-	} else if es.status == "red" {
+	} else if es.status == v1.ElasticsearchRedHealth {
 		return service.SERVICE_STATUS_ERROR
 	}
 

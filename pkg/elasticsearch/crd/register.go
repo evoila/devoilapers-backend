@@ -1,6 +1,7 @@
 package crd
 
 import (
+	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/elasticsearch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -23,8 +24,8 @@ func init() {
 
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&Elasticsearch{},
-		&ElasticsearchList{},
+		&v1.Elasticsearch{},
+		&v1.ElasticsearchList{},
 	)
 
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
