@@ -29,7 +29,7 @@ func (es TestProvider) GetServiceType() string {
 	return es.GetServiceTypeCb()
 }
 
-func (es TestProvider) GetTemplate() *service.IServiceTemplate {
+func (es TestProvider) GetTemplate(auth common.IKubernetesAuthInformation) *service.IServiceTemplate {
 	return es.GetTemplateCb()
 }
 

@@ -10,7 +10,7 @@ import (
 
 func Test_DummyProvider_Get_Attributes(t *testing.T)  {
 	dummyProvider := dummy.CreateDummyProvider()
-	template := *dummyProvider.GetTemplate()
+	template := *dummyProvider.GetTemplate(common_test.TestUser{})
 
 	assert.Equal(t, "DummyService", dummyProvider.GetServiceType())
 	assert.True(t, len(dummyProvider.GetServiceImage()) > 0)
@@ -19,7 +19,7 @@ func Test_DummyProvider_Get_Attributes(t *testing.T)  {
 	assert.True(t, len(template.GetImportantSections()) > 0)
 
 	dummyProvider2 := dummy.CreateDummyProvider()
-	template2 := *dummyProvider2.GetTemplate()
+	template2 := *dummyProvider2.GetTemplate(common_test.TestUser{})
 
 	assert.Equal(t, 1, len(template2.GetImportantSections()))
 	assert.Equal(t, template2.GetYAML(), template.GetYAML())
