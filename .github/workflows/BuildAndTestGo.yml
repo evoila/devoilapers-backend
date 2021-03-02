@@ -25,7 +25,9 @@ jobs:
       - name: Generate remote cluster config
         run: |
           cd configs
-          envsubst < appconfig_github_actions.json > appconfig_github_actions.json
+          cp appconfig_github_actions.json appconfig_github_actions_temp.json
+          envsubst < appconfig_github_actions_temp.json > appconfig_github_actions.json
+          rm appconfig_github_actions_temp.json
           cat appconfig_github_actions.json
           cd ..
         env:
