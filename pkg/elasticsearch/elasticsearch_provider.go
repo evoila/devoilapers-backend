@@ -12,13 +12,15 @@ import (
 	"path"
 )
 
-// Should implement ServiceProvider interface
+// Implements IServiceProvider interface
+// Use factory method CreateElasticSearchProvider to create
 type ElasticsearchProvider struct {
 	template *service.IServiceTemplate
 	host string
 	caPath string
 }
 
+// Factory method to create an instance of the ElasticsearchProvider
 func CreateElasticSearchProvider(host string, caPath string, templatePath string) ElasticsearchProvider {
 	yamlTemplatePath := path.Join(templatePath, "elasticsearch.yaml")
 	templateData, err := ioutil.ReadFile(yamlTemplatePath)
@@ -122,7 +124,7 @@ func (es ElasticsearchProvider) DeleteService(auth common.IKubernetesAuthInforma
 	return elasticSearchCrd.Delete(auth.GetKubernetesNamespace(), id)
 }
 
-// Converts a crd.Elasticsearch instance to an service representation
+// Converts a v1.Elasticsearch instance to an service representation
 func (es ElasticsearchProvider) CrdInstanceToServiceInstance(crdInstance *v1.Elasticsearch) *service.IService {
 	yamlData, err := yaml.Marshal(crdInstance)
 	if err != nil {

@@ -2,10 +2,10 @@ package service
 
 import "OperatorAutomation/pkg/core/action"
 
-var SERVICE_STATUS_OK = 0
-var SERVICE_STATUS_WARNING = 1
-var SERVICE_STATUS_ERROR = 2
-var SERVICE_STATUS_PENDING = 3
+const ServiceStatusOk = 0
+const ServiceStatusWarning = 1
+const ServiceStatusError = 2
+const ServiceStatusPending = 3
 
 // Defines an abstraction for an service-instance
 type IService interface {

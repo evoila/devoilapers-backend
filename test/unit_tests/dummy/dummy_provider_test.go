@@ -66,7 +66,7 @@ func Test_DummyProvider_Get_Services(t *testing.T) {
 	// Compare values of GetServices and GetService
 	assert.NotEqual(t, "", service0.GetName())
 	assert.Equal(t, 0, len(service0.GetTemplate().GetImportantSections()))
-	assert.Equal(t, service.SERVICE_STATUS_OK, service0.GetStatus())
+	assert.Equal(t, service.ServiceStatusOk, service0.GetStatus())
 	assert.Equal(t, 1, len(service0.GetActions()))
 	assert.NotEqual(t, "", service0.GetActions()[0].GetName())
 	assert.Equal(t, 1, len(service0.GetActions()[0].GetActions()))

@@ -19,7 +19,7 @@ type DummyKubernetesData struct {
 
 func (dk DummyKubernetes) Create(yaml string) error {
 	dk.data[strconv.Itoa(rand.Int())] = DummyKubernetesData{
-		status: service.SERVICE_STATUS_OK,
+		status: service.ServiceStatusOk,
 		yaml:   yaml,
 	}
 	return nil

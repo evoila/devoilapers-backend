@@ -96,9 +96,10 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	service0 := *services[0]
 	assert.NotEqual(t, "", service0.GetName())
 	assert.Equal(t, esProvider.GetServiceType(), service0.GetType())
+	assert.Equal(t, 0, len(service0.GetActions()))
 	assert.True(t,
-		service.SERVICE_STATUS_PENDING == service0.GetStatus() ||
-			service.SERVICE_STATUS_OK == service0.GetStatus(),
+		service.ServiceStatusPending == service0.GetStatus() ||
+			service.ServiceStatusOk == service0.GetStatus(),
 	)
 
 	// Try get service with invalid user data
@@ -115,13 +116,13 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 		assert.Nil(t, err)
 		service1 = *service1Ptr
 
-		if service1.GetStatus() == service.SERVICE_STATUS_OK {
+		if service1.GetStatus() == service.ServiceStatusOk {
 			break
 		}
 	}
 
 	// Ensure service is ok
-	assert.Equal(t, service.SERVICE_STATUS_OK, service1.GetStatus())
+	assert.Equal(t, service.ServiceStatusOk, service1.GetStatus())
 
 	// Ensure they have the same attributes
 	assert.Equal(t, service0.GetName(), service1.GetName())

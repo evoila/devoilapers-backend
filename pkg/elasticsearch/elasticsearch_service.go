@@ -37,12 +37,12 @@ func (es ElasticSearchService) GetTemplate() service.IServiceTemplate {
 
 func (es ElasticSearchService) GetStatus() int {
 	if es.status == v1.ElasticsearchGreenHealth {
-		return service.SERVICE_STATUS_OK
+		return service.ServiceStatusOk
 	} else if es.status == v1.ElasticsearchYellowHealth {
-		return service.SERVICE_STATUS_WARNING
+		return service.ServiceStatusWarning
 	} else if es.status == v1.ElasticsearchRedHealth {
-		return service.SERVICE_STATUS_ERROR
+		return service.ServiceStatusError
 	}
 
-	return service.SERVICE_STATUS_PENDING
+	return service.ServiceStatusPending
 }

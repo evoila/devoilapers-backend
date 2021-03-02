@@ -244,13 +244,13 @@ func serviceGroupToDto(servicePtr *service.IService) []dtos.ServiceInstanceActio
 
 func serviceStatusToString(status int) string {
 	switch status {
-	case service.SERVICE_STATUS_ERROR:
+	case service.ServiceStatusError:
 		return "Error"
-	case service.SERVICE_STATUS_WARNING:
+	case service.ServiceStatusWarning:
 		return "Warning"
-	case service.SERVICE_STATUS_OK:
+	case service.ServiceStatusOk:
 		return "Ok"
-	case service.SERVICE_STATUS_PENDING:
+	case service.ServiceStatusPending:
 		return "Pending"
 	default:
 		return "Unkown"
