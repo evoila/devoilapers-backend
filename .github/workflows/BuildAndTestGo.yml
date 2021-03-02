@@ -21,12 +21,13 @@ jobs:
       - name: Prepare new remote cluster user
         run: |
           cd .github
-          (printf KUB_TEMP_PREFIX=github; (tr -dc a-z </dev/urandom | head -c 13 ; echo '')) >> $GITHUB_ENV
+          (printf KUB_TEMP_PREFIX=github; (tr -dc a-z </dev/urandom | head -c 13 ; echo '')) >> randomuser.txt
+          cat randomuser.txt >> $GITHUB_ENV
           echo $KUB_TEMP_PREFIX
           ls -al
-          cp create_service_account.yaml create_service_account_temp.json
-          envsubst < create_service_account_temp.json > create_service_account.yaml
-          rm create_service_account_temp.json
-          cat create_service_account.json
+          cp create_service_account.yaml create_service_account_temp.yaml
+          envsubst < create_service_account_temp.yaml > create_service_account.yaml
+          rm create_service_account_temp.yaml
+          cat create_service_account.yaml
           cd ..
 
