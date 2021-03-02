@@ -40,7 +40,10 @@ func loadConfigAndResolveToAbsolutePaths(t *testing.T, pathFromRoot string) opaC
 	// Get path of this file
 	_, filename, _, _ := runtime.Caller(0)
 	// Navigate back to repositiory root
+	fmt.Println("Loader file in: " + path.Dir(filename))
+
 	rootDirectoryPath := path.Join(path.Dir(filename), "../../..")
+	fmt.Println("Root directory at: " + rootDirectoryPath)
 
 	// Load configuration file
 	configPath := tryPathOrJoinWithWorkingDirectory(pathFromRoot, rootDirectoryPath, false)
