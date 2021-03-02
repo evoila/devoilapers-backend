@@ -36,8 +36,22 @@ jobs:
           go build -v ./...
           cd ../..
 
+      - name: Generate remote cluster config
+        run: |
+          cd configs
+          envsubst < appconfig_github_actions.json >> appconfig_github_actions.json
+          cd ..
+
+      - name: Dump remote cluster ca certificate
+        run: |
+          cd configs
+          echo $GH_KUBERNETES_CA >> kubernetes_ca.crt
+          cd ..
+
       - name: Test
         run: go test -v -coverpkg ./pkg/...,./cmd/... -coverprofile=profile.cov ./test/...
+        env:
+          ENV_GITHUB_ACTION: "TRUE"
 
       - uses: shogo82148/actions-goveralls@v1
         with:

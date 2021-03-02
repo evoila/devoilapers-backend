@@ -4,7 +4,7 @@ import (
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/dummy"
 	"OperatorAutomation/pkg/dummy/dtos"
-	"OperatorAutomation/test/common_test"
+	"OperatorAutomation/test/unit_tests/common_test"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

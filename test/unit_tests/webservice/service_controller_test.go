@@ -5,7 +5,7 @@ import (
 	"OperatorAutomation/pkg/core/action"
 	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/service"
-	"OperatorAutomation/test/common_test"
+	"OperatorAutomation/test/unit_tests/common_test"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"net/http"
