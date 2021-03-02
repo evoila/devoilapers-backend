@@ -25,16 +25,22 @@ jobs:
       - name: Generate remote cluster config
         run: |
           cd configs
-          envsubst < appconfig_github_actions.json >> appconfig_github_actions.json
+          envsubst < appconfig_github_actions.json > appconfig_github_actions.json
           cat appconfig_github_actions.json
           cd ..
+        env:
+          GH_KUBERNETES_HOST: ${{ secrets.GH_KUBERNETES_HOST }}
+          GH_KUBERNETES_TOKEN: ${{ secrets.$GH_KUBERNETES_TOKEN }}
+          GH_KUBERNETES_NAMESPACE: ${{ secrets.$GH_KUBERNETES_NAMESPACE }}
 
       - name: Dump remote cluster ca certificate
         run: |
           cd configs
-          echo $GH_KUBERNETES_CA >> kubernetes_ca.crt
+          echo $GH_KUBERNETES_CA > kubernetes_ca.crt
           cat kubernetes_ca.crt
           cd ..
+        env:
+          GH_KUBERNETES_CA: ${{ secrets.GH_KUBERNETES_CA }}
 
       - name: Get dependencies
         run: |
