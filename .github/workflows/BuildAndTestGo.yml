@@ -23,29 +23,60 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - name: Prepare new remote cluster user
+      - name: Create temp working dir
         run: |
-          cd .github
-          printf github > randomuser.txt
-          head -1 <(fold -w 20  <(tr -dc 'a-z' < /dev/urandom)) >> randomuser.txt
-          export KUB_TEMP_PREFIX=`cat randomuser.txt`
-          echo $KUB_TEMP_PREFIX
-          cp create_service_account.yaml create_service_account_temp.yaml
-          envsubst < create_service_account_temp.yaml > create_service_account.yaml
-          rm create_service_account_temp.yaml
-          cat create_service_account.yaml
+          mkdir temp
+
+      - name: Prepare random user
+          cd temp
+          printf github > randomuser
+          head -1 <(fold -w 20  <(tr -dc 'a-z' < /dev/urandom)) >> randomuser
+          export KUB_TEMP_PREFIX=`cat randomuser`
+          echo "New user prefix is " $KUB_TEMP_PREFIX
+          envsubst < ../.github/create_service_account.yaml > create_service_account.yaml
           cd ..
 
       - name: Write .kubeconfig to file
         run: |
+          cd temp
           echo $GHKUBECONFIG | base64 -di > kubeconfig
           mkdir ~/.kube
           mv kubeconfig ~/.kube/config
           echo "Installed kubeconfig"
           kubectl get pods --all-namespaces
+          cd ..
         env:
           GHKUBECONFIG: ${{ secrets.GH_KUBE_CONFIG }}
 
-      - name: Test
+      - name: Create opa config
         run: |
-          echo $KUB_TEMP_PREFIX
+          cd temp
+          export KUB_TEMP_PREFIX=`cat randomuser`
+
+          echo Create user on cluster
+          kubectl apply -f create_service_account.yaml
+
+          echo Export token
+          kubectl -n $KUB_TEMP_PREFIX-namespace describe secret $(kubectl -n $KUB_TEMP_PREFIX-namespace get secret | (grep $KUB_TEMP_PREFIX-user || echo "$_") | awk '{print $1}') | grep token: | awk '{print $2}' > usertoken
+
+          echo Export host
+          cat ~/.kube/config | grep server | awk -F '"' '{print $2}'> host
+
+          echo Export ca
+          cat ~/.kube/config | grep certificate-authority-data | awk -F ': ' '{print $2}' | base64 -d > ca.crt
+          mv ca.crt ../configs/kubernetes_ca.crt
+
+          export GH_KUBERNETES_HOST=`cat host`
+          export GH_KUBERNETES_TOKEN=`cat usertoken`
+          export GH_KUBERNETES_NAMESPACE=$KUB_TEMP_PREFIX-namespace
+
+          cd ..
+          cd configs
+
+          echo Adapt opa config
+          cp appconfig_github_actions.json appconfig_github_actions_temp.json
+          envsubst < appconfig_github_actions_temp.json > appconfig_github_actions.json
+          rm appconfig_github_actions_temp.json
+
+          cd ..
+
