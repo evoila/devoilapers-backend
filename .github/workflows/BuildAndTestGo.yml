@@ -22,11 +22,10 @@ jobs:
         run: |
           cd .github
           printf KUB_TEMP_PREFIX=github > randomuser.txt
-          (tr -dc a-z </dev/urandom | head -c 13 ; echo '') >> randomuser.txt
+          head -1 <(fold -w 20  <(tr -dc 'a-z' < /dev/urandom)) >> randomuser.txt
           cat randomuser.txt
           cat randomuser.txt >> $GITHUB_ENV
           echo $KUB_TEMP_PREFIX
-          ls -al
           cp create_service_account.yaml create_service_account_temp.yaml
           envsubst < create_service_account_temp.yaml > create_service_account.yaml
           rm create_service_account_temp.yaml
