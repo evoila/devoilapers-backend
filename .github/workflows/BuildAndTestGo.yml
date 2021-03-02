@@ -38,8 +38,9 @@ jobs:
 
       - name: Write .kubeconfig to file
         run: |
-          echo $KUBECONFIG > kubeconfig
-          kubectl get pods --all-namespaces --kubeconfig=kubeconfig
+          echo $KUBECONFIG | base64 -di > kubeconfig
+          mv kubeconfig $HOME/.kube/config
+          kubectl get pods --all-namespaces
         env:
           KUBECONFIG: ${{ secrets.GH_KUBE_CONFIG }}
 
