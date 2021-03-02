@@ -28,6 +28,7 @@ jobs:
           mkdir temp
 
       - name: Prepare random user
+        run: |
           cd temp
           printf github > randomuser
           head -1 <(fold -w 20  <(tr -dc 'a-z' < /dev/urandom)) >> randomuser
