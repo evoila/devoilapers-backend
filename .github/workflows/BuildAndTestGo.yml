@@ -27,8 +27,8 @@ jobs:
           (printf KUB_TEMP_PREFIX=github; (tr -dc a-z </dev/urandom | head -c 13 ; echo '')) >> $GITHUB_ENV
           cp create_service_account.yaml create_service_account_temp.json
           envsubst < create_service_account_temp.json > create_service_account.yaml
-          rm create_service_account_temp.json
-          cat create_service_account_temp.json
+          rm create_service_account.json
+          cat create_service_account.json
           cd ..
 
       - uses: danielr1996/kubectl-action@1.0.0
