@@ -8,9 +8,8 @@ on:
     branches: [ main ]
 
 jobs:
-
   build:
-    name: Build
+    name: Build and Test
     runs-on: ubuntu-latest
     steps:
 
@@ -22,47 +21,18 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - name: Generate remote cluster config
+      - name: Prepare new remote cluster user
         run: |
-          cd configs
-          cp appconfig_github_actions.json appconfig_github_actions_temp.json
-          envsubst < appconfig_github_actions_temp.json > appconfig_github_actions.json
-          rm appconfig_github_actions_temp.json
-          cat appconfig_github_actions.json
+          cd .github
+          (printf KUB_TEMP_PREFIX=github; (tr -dc a-z </dev/urandom | head -c 13 ; echo '')) >> $GITHUB_ENV
+          cp create_service_account.yaml create_service_account_temp.json
+          envsubst < create_service_account_temp.json > create_service_account.yaml
+          rm create_service_account_temp.json
+          cat create_service_account_temp.json
           cd ..
-        env:
-          GH_KUBERNETES_HOST: ${{ secrets.GH_KUBERNETES_HOST }}
-          GH_KUBERNETES_TOKEN: ${{ secrets.GH_KUBERNETES_TOKEN }}
-          GH_KUBERNETES_NAMESPACE: ${{ secrets.GH_KUBERNETES_NAMESPACE }}
 
-      - name: Dump remote cluster ca certificate
-        run: |
-          cd configs
-          echo $GH_KUBERNETES_CA > kubernetes_ca.crt
-          cat kubernetes_ca.crt
-          cd ..
-        env:
-          GH_KUBERNETES_CA: ${{ secrets.GH_KUBERNETES_CA }}
-
-      - name: Get dependencies
-        run: |
-          go get -v -t -d ./...
-          if [ -f Gopkg.toml ]; then
-              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-              dep ensure
-          fi
-
-      - name: Build service
-        run: |
-          cd cmd/service
-          go build -v ./...
-          cd ../..
-
-      - name: Test
-        run: go test -v -coverpkg ./pkg/...,./cmd/... -coverprofile=profile.cov ./test/...
-        env:
-          ENV_GITHUB_ACTION: "TRUE"
-
-      - uses: shogo82148/actions-goveralls@v1
+      - uses: danielr1996/kubectl-action@1.0.0
+        name: Create new user on remote cluster
         with:
-          path-to-profile: profile.cov
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+          args: apply -f .github/create_service_account.yaml
