@@ -49,6 +49,10 @@ func loadConfigAndResolveToAbsolutePaths(t *testing.T, pathFromRoot string) opaC
 	configPath := tryPathOrJoinWithWorkingDirectory(pathFromRoot, rootDirectoryPath, false)
 	fmt.Println("Use config at: " + configPath)
 
+	file, err := os.Open(configPath)
+	assert.Nil(t, err)
+	fmt.Println(file)
+
 	config, err = opaConfig.LoadConfigurationFromFile(configPath)
 	assert.Nil(t, err)
 

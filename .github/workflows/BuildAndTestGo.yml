@@ -22,6 +22,20 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
+      - name: Generate remote cluster config
+        run: |
+          cd configs
+          envsubst < appconfig_github_actions.json >> appconfig_github_actions.json
+          cat appconfig_github_actions.json
+          cd ..
+
+      - name: Dump remote cluster ca certificate
+        run: |
+          cd configs
+          echo $GH_KUBERNETES_CA >> kubernetes_ca.crt
+          cat kubernetes_ca.crt
+          cd ..
+
       - name: Get dependencies
         run: |
           go get -v -t -d ./...
@@ -35,18 +49,6 @@ jobs:
           cd cmd/service
           go build -v ./...
           cd ../..
-
-      - name: Generate remote cluster config
-        run: |
-          cd configs
-          envsubst < appconfig_github_actions.json >> appconfig_github_actions.json
-          cd ..
-
-      - name: Dump remote cluster ca certificate
-        run: |
-          cd configs
-          echo $GH_KUBERNETES_CA >> kubernetes_ca.crt
-          cd ..
 
       - name: Test
         run: go test -v -coverpkg ./pkg/...,./cmd/... -coverprofile=profile.cov ./test/...
