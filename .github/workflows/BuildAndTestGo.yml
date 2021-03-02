@@ -30,8 +30,8 @@ jobs:
           cd ..
         env:
           GH_KUBERNETES_HOST: ${{ secrets.GH_KUBERNETES_HOST }}
-          GH_KUBERNETES_TOKEN: ${{ secrets.$GH_KUBERNETES_TOKEN }}
-          GH_KUBERNETES_NAMESPACE: ${{ secrets.$GH_KUBERNETES_NAMESPACE }}
+          GH_KUBERNETES_TOKEN: ${{ secrets.GH_KUBERNETES_TOKEN }}
+          GH_KUBERNETES_NAMESPACE: ${{ secrets.GH_KUBERNETES_NAMESPACE }}
 
       - name: Dump remote cluster ca certificate
         run: |
