@@ -81,3 +81,34 @@ jobs:
 
           cd ..
 
+      - name: Get dependencies
+        run: |
+          go get -v -t -d ./...
+          if [ -f Gopkg.toml ]; then
+              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+              dep ensure
+          fi
+
+      - name: Build service
+        run: |
+          cd cmd/service
+          go build -v ./...
+          cd ../..
+
+      - name: Test
+        run: go test -v -coverpkg ./pkg/...,./cmd/... -coverprofile=profile.cov ./test/...
+        env:
+          ENV_GITHUB_ACTION: "TRUE"
+
+      - uses: shogo82148/actions-goveralls@v1
+        with:
+          path-to-profile: profile.cov
+
+      - name: Clean up
+        run: |
+          cd temp
+          echo Deleting kubernetes namespace
+          export KUB_TEMP_PREFIX=`cat randomuser`
+          kubectl delete namespace $KUB_TEMP_PREFIX-namespace
+          cd ..
+        if: ${{ always() }}
