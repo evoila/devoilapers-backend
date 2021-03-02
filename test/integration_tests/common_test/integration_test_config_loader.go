@@ -44,28 +44,34 @@ func loadConfigAndResolveToAbsolutePaths(t *testing.T, pathFromRoot string) opaC
 
 	// Load configuration file
 	configPath := tryPathOrJoinWithWorkingDirectory(pathFromRoot, rootDirectoryPath, false)
+	fmt.Println("Use config at: " + configPath)
+
 	config, err = opaConfig.LoadConfigurationFromFile(configPath)
 	assert.Nil(t, err)
 
 	// Convert relative paths to absolute
+	fmt.Println("Try resolve config.WebserverSllCertificate.PrivateKeyFilePath")
 	config.WebserverSllCertificate.PrivateKeyFilePath = tryPathOrJoinWithWorkingDirectory(
 		config.WebserverSllCertificate.PrivateKeyFilePath,
 		rootDirectoryPath,
 		false,
 	)
 
+	fmt.Println("Try resolve config.WebserverSllCertificate.PublicKeyFilePath")
 	config.WebserverSllCertificate.PublicKeyFilePath = tryPathOrJoinWithWorkingDirectory(
 		config.WebserverSllCertificate.PublicKeyFilePath,
 		rootDirectoryPath,
 		false,
 	)
 
+	fmt.Println("Try resolve config.Kubernetes.CertificateAuthority")
 	config.Kubernetes.CertificateAuthority = tryPathOrJoinWithWorkingDirectory(
 		config.Kubernetes.CertificateAuthority,
 		rootDirectoryPath,
 		false,
 	)
 
+	fmt.Println("Try resolve config.YamlTemplatePath")
 	config.YamlTemplatePath = tryPathOrJoinWithWorkingDirectory(
 		config.YamlTemplatePath,
 		rootDirectoryPath,
@@ -78,12 +84,12 @@ func loadConfigAndResolveToAbsolutePaths(t *testing.T, pathFromRoot string) opaC
 func GetConfig(t *testing.T) opaConfig.RawConfig {
 	var config opaConfig.RawConfig
 	if os.Getenv("ENV_GITHUB_ACTION") == "" {
-		fmt.Print("Using local appconfig")
+		fmt.Println("Using local appconfig")
 		// Local
 		config = loadConfigAndResolveToAbsolutePaths(t, "configs/appconfig.json")
 	} else {
 		// remote/github action
-		fmt.Print("Using github appconfig")
+		fmt.Println("Using github appconfig")
 		config = loadConfigAndResolveToAbsolutePaths(t, "configs/appconfig_github_actions.json")
 	}
 
