@@ -21,7 +21,9 @@ jobs:
       - name: Prepare new remote cluster user
         run: |
           cd .github
-          (printf KUB_TEMP_PREFIX=github; (tr -dc a-z </dev/urandom | head -c 13 ; echo '')) >> randomuser.txt
+          printf KUB_TEMP_PREFIX=github > randomuser.txt
+          (tr -dc a-z </dev/urandom | head -c 13 ; echo '') >> randomuser.txt
+          cat randomuser.txt
           cat randomuser.txt >> $GITHUB_ENV
           echo $KUB_TEMP_PREFIX
           ls -al
