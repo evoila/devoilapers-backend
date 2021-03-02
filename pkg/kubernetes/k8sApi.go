@@ -42,11 +42,11 @@ func GenerateK8sApiFromToken(host string, caPath string, token string) (*K8sApi,
 			ClientSet: clientSet,
 			Dif:       dif,
 		}
-		if rbacClient, err := GetRbacClient(config); err != nil {
+		if rbacClient, err := rbac.NewForConfig(config); err != nil {
 			return nil, err
 		} else {
 			api.RbacClient = rbacClient
-			if v1beta1Client, err := GetV1Beta1Client(config); err != nil {
+			if v1beta1Client, err := v1beta1.NewForConfig(config); err != nil {
 				return nil, err
 			} else {
 				api.V1beta1Client = v1beta1Client
