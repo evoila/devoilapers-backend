@@ -39,14 +39,14 @@ func (kb KibanaProvider) GetServices(auth common.IKubernetesAuthInformation) ([]
 		return nil, err
 	}
 
-	result := v1.KibanaList{}
-	err = KibanaCrd.List(auth.GetKubernetesNamespace(), ResourceName, &result)
+	kibanaInstances := v1.KibanaList{}
+	err = KibanaCrd.List(auth.GetKubernetesNamespace(), ResourceName, &kibanaInstances)
 	if err != nil {
 		return nil, err
 	}
 
 	var services []*service.IService
-	for _, kibanaInstance := range result.Items {
+	for _, kibanaInstance := range kibanaInstances.Items {
 		services = append(services, kb.CrdInstanceToServiceInstance(&kibanaInstance))
 	}
 
@@ -60,13 +60,13 @@ func (kb KibanaProvider) GetService(auth common.IKubernetesAuthInformation, id s
 		return nil, err
 	}
 
-	result := v1.Kibana{}
-	err = KibanaCrd.Get(auth.GetKubernetesNamespace(), id, ResourceName, &result)
+	kibanaInstance := v1.Kibana{}
+	err = KibanaCrd.Get(auth.GetKubernetesNamespace(), id, ResourceName, &kibanaInstance)
 	if err != nil {
 		return nil, err
 	}
 
-	return kb.CrdInstanceToServiceInstance(&result), nil
+	return kb.CrdInstanceToServiceInstance(&kibanaInstance), nil
 }
 
 func (kb KibanaProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {

@@ -40,14 +40,14 @@ func (es ElasticsearchProvider) GetServices(auth common.IKubernetesAuthInformati
 		return nil, err
 	}
 
-	result := v1.ElasticsearchList{}
-	err = elasticSearchCrd.List(auth.GetKubernetesNamespace(), RessourceName, &result)
+	elasticSearchInstances := v1.ElasticsearchList{}
+	err = elasticSearchCrd.List(auth.GetKubernetesNamespace(), RessourceName, &elasticSearchInstances)
 	if err != nil {
 		return nil, err
 	}
 
 	var services []*service.IService
-	for _, elasticSearchInstance := range result.Items {
+	for _, elasticSearchInstance := range elasticSearchInstances.Items {
 		services = append(services, es.CrdInstanceToServiceInstance(&elasticSearchInstance))
 	}
 
@@ -60,13 +60,13 @@ func (es ElasticsearchProvider) GetService(auth common.IKubernetesAuthInformatio
 		return nil, err
 	}
 
-	result := v1.Elasticsearch{}
-	err = elasticSearchCrd.Get(auth.GetKubernetesNamespace(), id, RessourceName, &result)
+	elasticSearchInstance := v1.Elasticsearch{}
+	err = elasticSearchCrd.Get(auth.GetKubernetesNamespace(), id, RessourceName, &elasticSearchInstance)
 	if err != nil {
 		return nil, err
 	}
 
-	return es.CrdInstanceToServiceInstance(&result), nil
+	return es.CrdInstanceToServiceInstance(&elasticSearchInstance), nil
 }
 
 func (es ElasticsearchProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
