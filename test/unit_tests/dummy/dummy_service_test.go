@@ -4,7 +4,7 @@ import (
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/dummy"
 	"OperatorAutomation/pkg/dummy/dtos"
-	"OperatorAutomation/test/common_test"
+	"OperatorAutomation/test/unit_tests/common_test"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -30,7 +30,7 @@ func Test_DummyProvider_Service_Attributes(t *testing.T) {
 
 	// Compare properties
 	assert.NotEqual(t, "", service0.GetName())
-	assert.Equal(t, service.SERVICE_STATUS_OK, service0.GetStatus())
+	assert.Equal(t, service.ServiceStatusOk, service0.GetStatus())
 	assert.Equal(t, provider.GetServiceType(), service0.GetType())
 
 	// Get action groups

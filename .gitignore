@@ -30,4 +30,6 @@
 /out/
 
 *.cov
+profile.cov
 cmd/service/service
+configs/appconfig.json

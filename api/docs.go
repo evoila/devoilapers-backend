@@ -125,9 +125,23 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {},
+                    "200": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/dtos.HTTPErrorDto"
                         }
@@ -172,9 +186,23 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {},
+                    "201": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/dtos.HTTPErrorDto"
                         }
@@ -209,6 +237,12 @@ var doc = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/dtos.HTTPErrorDto"
                         }
@@ -262,6 +296,12 @@ var doc = `{
                         "schema": {
                             "$ref": "#/definitions/dtos.HTTPErrorDto"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
+                        }
                     }
                 }
             }
@@ -312,6 +352,12 @@ var doc = `{
                         "schema": {
                             "$ref": "#/definitions/dtos.HTTPErrorDto"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
+                        }
                     }
                 }
             }
@@ -351,9 +397,17 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {},
+                    "200": {
+                        "description": ""
+                    },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/dtos.HTTPErrorDto"
                         }
@@ -427,6 +481,12 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dtos.ServiceStoreItemYamlDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
                         }
                     },
                     "401": {

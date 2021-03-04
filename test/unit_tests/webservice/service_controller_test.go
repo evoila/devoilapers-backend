@@ -5,7 +5,7 @@ import (
 	"OperatorAutomation/pkg/core/action"
 	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/service"
-	"OperatorAutomation/test/common_test"
+	"OperatorAutomation/test/unit_tests/common_test"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -320,7 +320,7 @@ func Test_ServiceController_HandleGetServiceInstanceDetails(t *testing.T) {
 
 			var service0 service.IService = common_test.TestService{
 				GetStatusCb: func() int {
-					return service.SERVICE_STATUS_WARNING
+					return service.ServiceStatusWarning
 				},
 				GetNameCb: func() string {
 					return id
@@ -417,7 +417,7 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 		GetServicesCb: func(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
 			var service0 service.IService = common_test.TestService{
 				GetStatusCb: func() int {
-					return service.SERVICE_STATUS_ERROR
+					return service.ServiceStatusError
 				},
 				GetNameCb: func() string {
 					return "TestService0"
@@ -443,7 +443,7 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 
 			var service1 service.IService = common_test.TestService{
 				GetStatusCb: func() int {
-					return service.SERVICE_STATUS_OK
+					return service.ServiceStatusOk
 				},
 				GetNameCb: func() string {
 					return "TestService1"

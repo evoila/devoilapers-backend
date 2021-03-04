@@ -80,10 +80,10 @@ func MakeRequest(t *testing.T,
 func Create_Users(t *testing.T) []config.User {
 	return []config.User{
 		{
-			Name:     TEST_USERNAME,
-			Password: TEST_PASSWORD,
-			Role: TEST_ROLE,
-			KubernetesNamespace: TEST_NAMESPACE,
+			Name:                  TEST_USERNAME,
+			Password:              TEST_PASSWORD,
+			Role:                  TEST_ROLE,
+			KubernetesNamespace:   TEST_NAMESPACE,
 			KubernetesAccessToken: TEST_TOKEN,
 		},
 	}

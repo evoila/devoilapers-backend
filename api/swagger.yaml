@@ -161,9 +161,14 @@ paths:
       produces:
       - application/json
       responses:
-        "200": {}
+        "200":
+          description: ""
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
@@ -201,9 +206,18 @@ paths:
       produces:
       - application/json
       responses:
-        "200": {}
+        "200":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
@@ -231,9 +245,18 @@ paths:
       produces:
       - application/json
       responses:
-        "200": {}
+        "201":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
@@ -255,6 +278,10 @@ paths:
             $ref: '#/definitions/dtos.ServiceInstanceDetailsOverviewDto'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
@@ -289,6 +316,10 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
       - BasicAuth: []
       summary: Get details over a single service instance
@@ -320,6 +351,10 @@ paths:
             $ref: '#/definitions/dtos.ServiceYamlDto'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
@@ -366,6 +401,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/dtos.ServiceStoreItemYamlDto'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
         "401":
           description: Unauthorized
           schema:

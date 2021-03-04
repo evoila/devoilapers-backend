@@ -3,14 +3,14 @@ package dummy
 import (
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/dummy"
-	"OperatorAutomation/test/common_test"
+	"OperatorAutomation/test/unit_tests/common_test"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func Test_DummyProvider_Get_Attributes(t *testing.T)  {
 	dummyProvider := dummy.CreateDummyProvider()
-	template := *dummyProvider.GetTemplate()
+	template := *dummyProvider.GetTemplate(common_test.TestUser{})
 
 	assert.Equal(t, "DummyService", dummyProvider.GetServiceType())
 	assert.True(t, len(dummyProvider.GetServiceImage()) > 0)
@@ -19,7 +19,7 @@ func Test_DummyProvider_Get_Attributes(t *testing.T)  {
 	assert.True(t, len(template.GetImportantSections()) > 0)
 
 	dummyProvider2 := dummy.CreateDummyProvider()
-	template2 := *dummyProvider2.GetTemplate()
+	template2 := *dummyProvider2.GetTemplate(common_test.TestUser{})
 
 	assert.Equal(t, 1, len(template2.GetImportantSections()))
 	assert.Equal(t, template2.GetYAML(), template.GetYAML())
@@ -66,7 +66,7 @@ func Test_DummyProvider_Get_Services(t *testing.T) {
 	// Compare values of GetServices and GetService
 	assert.NotEqual(t, "", service0.GetName())
 	assert.Equal(t, 0, len(service0.GetTemplate().GetImportantSections()))
-	assert.Equal(t, service.SERVICE_STATUS_OK, service0.GetStatus())
+	assert.Equal(t, service.ServiceStatusOk, service0.GetStatus())
 	assert.Equal(t, 1, len(service0.GetActions()))
 	assert.NotEqual(t, "", service0.GetActions()[0].GetName())
 	assert.Equal(t, 1, len(service0.GetActions()[0].GetActions()))

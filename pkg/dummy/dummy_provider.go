@@ -28,11 +28,12 @@ func (es DummyProvider) GetServiceType() string {
 	return "DummyService"
 }
 
-func (es DummyProvider) GetTemplate() *service.IServiceTemplate {
+func (es DummyProvider) GetTemplate(auth common.IKubernetesAuthInformation) *service.IServiceTemplate {
 	var st service.IServiceTemplate = service.ServiceTemplate{
 		Yaml:              "apiVersion: operator.knative.dev/v1alpha1\nkind: KnativeEventing\nmetadata:\n  name: eventing\nspec: {}\n",
 		ImportantSections: []string{"name"},
 	}
+
 	return &st
 }
 
@@ -43,7 +44,7 @@ func (es DummyProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*
 			id:                id,
 			status:            data.status,
 			yaml:              data.yaml,
-			importantSections: (*es.GetTemplate()).GetImportantSections(),
+			importantSections: (*es.GetTemplate(auth)).GetImportantSections(),
 			serviceType:       es.GetServiceType(),
 			auth:              auth,
 		}

@@ -3,7 +3,7 @@ package core
 import (
 	"OperatorAutomation/pkg/core"
 	"OperatorAutomation/pkg/core/service"
-	"OperatorAutomation/test/common_test"
+	"OperatorAutomation/test/unit_tests/common_test"
 	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"

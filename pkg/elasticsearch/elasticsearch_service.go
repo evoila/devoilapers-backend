@@ -2,56 +2,47 @@ package elasticsearch
 
 import (
 	"OperatorAutomation/pkg/core/action"
-	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/service"
-	"OperatorAutomation/pkg/elasticsearch/dtos"
+	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/elasticsearch/v1"
 )
 
 type ElasticSearchService struct {
-	serviceType string
-	auth common.IKubernetesAuthInformation
+	providerType   string
+	name   string
+	status v1.ElasticsearchHealth
+	yaml string
+	importantSections []string
 }
 
 func (es ElasticSearchService) GetType() string {
-	return es.serviceType
+	return es.providerType
 }
 
 func (es ElasticSearchService) GetName() string {
-	return "DummyService"
+	return es.name
 }
 
 func (es ElasticSearchService) GetActions() []action.IActionGroup {
-
-	return []action.IActionGroup{
-
-		// Part to add a Action
-		action.ActionGroup{
-			Name: "Backup & Restore",
-			Actions: []action.IAction{
-				action.Action{
-					Name:        "Backup",
-					UniqueCommand: "cmd_elasticsearch_backup",
-					Placeholder: &dtos.BackupActionDto{},
-					ActionExecuteCallback: func(i interface{}) (interface{}, error) {
-						return es.ExecuteBackup(i.(*dtos.BackupActionDto))
-					},
-				},
-			},
-		},
-
-	}
-}
-
-func (es ElasticSearchService) ExecuteBackup(dto *dtos.BackupActionDto) (string, error) {
-	// part to add a function
-    // return service.Comm.CreateSnapshot(dto)
-	return "Its OK", nil
+	return []action.IActionGroup{}
 }
 
 func (es ElasticSearchService) GetTemplate() service.IServiceTemplate {
-	panic("implement me")
+	var template service.IServiceTemplate = service.ServiceTemplate{
+		ImportantSections: es.importantSections,
+		Yaml: es.yaml,
+	}
+
+	return template
 }
 
 func (es ElasticSearchService) GetStatus() int {
-	return 3
+	if es.status == v1.ElasticsearchGreenHealth {
+		return service.ServiceStatusOk
+	} else if es.status == v1.ElasticsearchYellowHealth {
+		return service.ServiceStatusWarning
+	} else if es.status == v1.ElasticsearchRedHealth {
+		return service.ServiceStatusError
+	}
+
+	return service.ServiceStatusPending
 }
