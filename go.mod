@@ -3,6 +3,7 @@ module OperatorAutomation
 go 1.15
 
 require (
+	github.com/Crunchydata/postgres-operator v4.5.1+incompatible
 	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/elastic/cloud-on-k8s v0.0.0-20210301124940-30bbdff2e9bf
@@ -28,7 +29,6 @@ require (
 	golang.org/x/tools v0.1.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.20.2
 	k8s.io/apimachinery v0.20.2
 	k8s.io/client-go v0.20.2
 )

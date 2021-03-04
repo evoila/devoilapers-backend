@@ -8,6 +8,7 @@ import (
 	"OperatorAutomation/pkg/dummy"
 	"OperatorAutomation/pkg/elasticsearch"
 	"OperatorAutomation/pkg/kibana"
+	"OperatorAutomation/pkg/postgres"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"os"
@@ -108,9 +109,16 @@ func InitializeCore(appconfig config.RawConfig) *core.Core {
 		appconfig.YamlTemplatePath,
 	)
 
+	var pg service.IServiceProvider = postgres.CreatePostgresProvider(
+		appconfig.Kubernetes.Server,
+		appconfig.Kubernetes.CertificateAuthority,
+		appconfig.YamlTemplatePath,
+	)
+
 	return core.CreateCore([]*service.IServiceProvider{
 		&esp,
 		&kb,
+		&pg,
 	})
 }
 func InitializeDemoCore(appconfig config.RawConfig) *core.Core {
