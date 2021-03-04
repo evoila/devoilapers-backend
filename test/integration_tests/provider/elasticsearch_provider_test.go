@@ -1,4 +1,4 @@
-package common_test
+package provider
 
 import (
 	"OperatorAutomation/cmd/service/config"
@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func CreateElasticSearchProvider(t *testing.T) (*elasticsearch.ElasticsearchProvider, config.RawConfig) {
+func CreateElasticSearchTestProvider(t *testing.T) (*elasticsearch.ElasticsearchProvider, config.RawConfig) {
 	config := common_test.GetConfig(t)
 
 	esProvider := elasticsearch.CreateElasticSearchProvider(
@@ -39,11 +39,11 @@ func Test_Create_Panic_Template_Not_Found(t *testing.T) {
 }
 
 func Test_Elasticsearch_Provider_GetAttributes(t *testing.T) {
-	esProvider, _ := CreateElasticSearchProvider(t)
+	esProvider, _ := CreateElasticSearchTestProvider(t)
 
 	assert.NotEqual(t, "", esProvider.GetServiceImage())
 	assert.NotEqual(t, "", esProvider.GetServiceDescription())
-	assert.NotEqual(t, "ElasticSearch", esProvider.GetServiceType())
+	assert.Equal(t, "Elasticsearch", esProvider.GetServiceType())
 
 	testUser := unit_test.TestUser{
 		KubernetesNamespace: "A_LONG_NAMESPACE",
@@ -62,7 +62,7 @@ func Test_Elasticsearch_Provider_GetAttributes(t *testing.T) {
 }
 
 func Test_Elasticsearch_Provider_End2End(t *testing.T) {
-	esProvider, config := CreateElasticSearchProvider(t)
+	esProvider, config := CreateElasticSearchTestProvider(t)
 
 	user := config.Users[0]
 	invalidUser := unit_test.TestUser{KubernetesNamespace: "namespace", KubernetesAccessToken: "InvalidToken"}
