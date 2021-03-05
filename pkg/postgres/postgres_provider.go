@@ -4,6 +4,7 @@ import (
 	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/kubernetes"
+	common2 "OperatorAutomation/pkg/postgres/common"
 	"OperatorAutomation/pkg/utils/provider"
 	v1 "github.com/Crunchydata/postgres-operator/pkg/apis/crunchydata.com/v1"
 	"gopkg.in/yaml.v2"
@@ -101,10 +102,12 @@ func (pg PostgresProvider) CrdInstanceToServiceInstance(auth common.IKubernetesA
 	}
 
 	var postgresService service.IService = PostgresService{
-		clusterInstance: crdInstance,
-		auth: auth,
-		host: pg.Host,
-		caPath: pg.CaPath,
+		PostgresServiceInformations: common2.PostgresServiceInformations{
+			ClusterInstance: crdInstance,
+			Auth:            auth,
+			Host:            pg.Host,
+			CaPath:          pg.CaPath,
+		},
 		BasicService: provider.BasicService{
 			Name:              crdInstance.Name,
 			ProviderType:      pg.GetServiceType(),
