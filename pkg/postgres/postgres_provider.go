@@ -40,15 +40,15 @@ func (pg PostgresProvider) GetServices(auth common.IKubernetesAuthInformation) (
 		return nil, err
 	}
 
-	kibanaInstances := v1.PgclusterList{}
-	err = postgresCrd.List(auth.GetKubernetesNamespace(), ResourceName, &kibanaInstances)
+	postgresInstances := v1.PgclusterList{}
+	err = postgresCrd.List(auth.GetKubernetesNamespace(), ResourceName, &postgresInstances)
 	if err != nil {
 		return nil, err
 	}
 
 	var services []*service.IService
-	for _, kibanaInstance := range kibanaInstances.Items {
-		services = append(services, pg.CrdInstanceToServiceInstance(auth, &kibanaInstance))
+	for _, postgresInstance := range postgresInstances.Items {
+		services = append(services, pg.CrdInstanceToServiceInstance(postgresCrd, auth, &postgresInstance))
 	}
 
 	return services, nil
@@ -61,13 +61,13 @@ func (pg PostgresProvider) GetService(auth common.IKubernetesAuthInformation, id
 		return nil, err
 	}
 
-	kibanaInstance := v1.Pgcluster{}
-	err = postgresCrd.Get(auth.GetKubernetesNamespace(), id, ResourceName, &kibanaInstance)
+	postgresInstance := v1.Pgcluster{}
+	err = postgresCrd.Get(auth.GetKubernetesNamespace(), id, ResourceName, &postgresInstance)
 	if err != nil {
 		return nil, err
 	}
 
-	return pg.CrdInstanceToServiceInstance(auth, &kibanaInstance), nil
+	return pg.CrdInstanceToServiceInstance(postgresCrd, auth, &postgresInstance), nil
 }
 
 func (pg PostgresProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
@@ -95,7 +95,11 @@ func (pg PostgresProvider) DeleteService(auth common.IKubernetesAuthInformation,
 }
 
 // Converts a v1.Pgcluster instance to an service representation
-func (pg PostgresProvider) CrdInstanceToServiceInstance(auth common.IKubernetesAuthInformation, crdInstance *v1.Pgcluster) *service.IService {
+func (pg PostgresProvider) CrdInstanceToServiceInstance(
+	crdClient *kubernetes.CommonCrdApi,
+	auth common.IKubernetesAuthInformation,
+	crdInstance *v1.Pgcluster) *service.IService {
+
 	yamlData, err := yaml.Marshal(crdInstance)
 	if err != nil {
 		yamlData = []byte("Unknown")
@@ -107,6 +111,7 @@ func (pg PostgresProvider) CrdInstanceToServiceInstance(auth common.IKubernetesA
 			Auth:            auth,
 			Host:            pg.Host,
 			CaPath:          pg.CaPath,
+			CrdClient: crdClient,
 		},
 		BasicService: provider.BasicService{
 			Name:              crdInstance.Name,

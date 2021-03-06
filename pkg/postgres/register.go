@@ -5,7 +5,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
-	PostgresV1 "github.com/Crunchydata/postgres-operator/pkg/apis/crunchydata.com/v1"
+	pgV1 "github.com/Crunchydata/postgres-operator/pkg/apis/crunchydata.com/v1"
 )
 
 
@@ -42,14 +42,14 @@ func Resource(resource string) schema.GroupResource {
 // addKnownTypes adds the set of types defined in this package to the supplied scheme.
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&PostgresV1.Pgcluster{},
-		&PostgresV1.PgclusterList{},
-		&PostgresV1.Pgreplica{},
-		&PostgresV1.PgreplicaList{},
-		&PostgresV1.Pgpolicy{},
-		&PostgresV1.PgpolicyList{},
-		&PostgresV1.Pgtask{},
-		&PostgresV1.PgtaskList{},
+		&pgV1.Pgcluster{},
+		&pgV1.PgclusterList{},
+		&pgV1.Pgreplica{},
+		&pgV1.PgreplicaList{},
+		&pgV1.Pgpolicy{},
+		&pgV1.PgpolicyList{},
+		&pgV1.Pgtask{},
+		&pgV1.PgtaskList{},
 	)
 
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)

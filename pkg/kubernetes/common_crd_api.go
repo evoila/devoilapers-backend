@@ -22,7 +22,7 @@ func CreateRestConfig(host string, caPath string, token string, groupName string
 		Host:        host,
 		BearerToken: token,
 		TLSClientConfig: rest.TLSClientConfig{
-			CAFile:   caPath,
+			CAFile: caPath,
 		},
 	}
 
@@ -36,7 +36,7 @@ func CreateRestConfig(host string, caPath string, token string, groupName string
 }
 
 // Create a common crd api to get, list and delete a custom resource in a kubernetes cluster
-func CreateCommonCrdApi(host string, caPath string, token string, groupName string, groupVersion string) (*CommonCrdApi, error)  {
+func CreateCommonCrdApi(host string, caPath string, token string, groupName string, groupVersion string) (*CommonCrdApi, error) {
 	crdConfig := CreateRestConfig(host, caPath, token, groupName, groupVersion)
 
 	if restClient, err := rest.UnversionedRESTClientFor(crdConfig); err != nil {
@@ -61,13 +61,22 @@ func (api CommonCrdApi) Get(namespace string, name string, resource string, out 
 // Get a all custom resource of given type resource in given namespace with
 // given name an pass into given out (list)-object
 func (api CommonCrdApi) List(namespace string, resource string, out runtime.Object) error {
+	return api.ListWithOptions(namespace, resource, &metav1.ListOptions{}, out)
+}
+
+
+// Get a all custom resource of given type resource in given namespace with
+// given name an pass into given out (list)-object
+func (api CommonCrdApi) ListWithOptions(namespace string, resource string, listOptions *metav1.ListOptions, out runtime.Object) error {
 	return api.Client.Get().
 		Namespace(namespace).
 		Resource(resource).
-		VersionedParams(&metav1.ListOptions{}, scheme.ParameterCodec).
+		VersionedParams(listOptions, scheme.ParameterCodec).
 		Do(context.TODO()).
 		Into(out)
 }
+
+
 
 // Delete a custom resource of given type resource in given namespace with given name
 func (api CommonCrdApi) Delete(namespace string, name string, resource string) error {
