@@ -55,7 +55,7 @@ func (es DummyProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*
 
 func (es DummyProvider) GetService(auth common.IKubernetesAuthInformation, id string) (*service.IService, error) {
 	data, err := es.DummyKubernetes.GetService(id)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -76,4 +76,8 @@ func (es DummyProvider) CreateService(auth common.IKubernetesAuthInformation, ya
 
 func (es DummyProvider) DeleteService(auth common.IKubernetesAuthInformation, id string) error {
 	return es.DummyKubernetes.Delete(id)
+}
+
+func (es DummyProvider) SetCertificateToService(auth common.IKubernetesAuthInformation, id string, tlsCert map[string][]byte) error {
+	return nil
 }

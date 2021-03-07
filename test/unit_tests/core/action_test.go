@@ -2,8 +2,9 @@ package core
 
 import (
 	"OperatorAutomation/pkg/core/action"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type ActionPlaceholder struct {
@@ -50,7 +51,6 @@ func Test_ActionGetter(t *testing.T) {
 	assert.Equal(t, action2.GetPlaceholder(), group.GetActions()[1].GetPlaceholder())
 	assert.NotNil(t, action2.GetActionExecuteCallback())
 }
-
 
 func Test_ActionExecution(t *testing.T) {
 

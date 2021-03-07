@@ -3,10 +3,12 @@ package kubernetes
 import (
 	"bytes"
 	"context"
+
 	"github.com/sirupsen/logrus"
 
 	"encoding/json"
 
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -90,4 +92,42 @@ func (api *K8sApi) Apply(b []byte) (*unstructured.Unstructured, error) {
 		return unstructured, err
 
 	}
+}
+
+// create a new tls certificate associated with the provided CRD info
+// tlsCert must contain ca.crt, tls.crt and tls.key
+func (api *K8sApi) CreateTlsSecret(namespace, ownerName, kind, apiVersion, uid string, tlsCert map[string][]byte) (string, error) {
+	secretName := ownerName + "-tls-cert"
+	_ = api.ClientSet.CoreV1().Secrets(namespace).Delete(context.TODO(), secretName, metav1.DeleteOptions{})
+	True := true
+	secret := &v1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion:         apiVersion,
+					Name:               ownerName,
+					Kind:               kind,
+					Controller:         &True,
+					BlockOwnerDeletion: &True,
+					UID:                types.UID(uid),
+				},
+			},
+		},
+		Data: map[string][]byte{
+			"ca.crt":  tlsCert["ca.crt"],
+			"tls.crt": tlsCert["tls.crt"],
+			"tls.key": tlsCert["tls.key"],
+		},
+		Type: "Opaque",
+	}
+	if _, err := api.ClientSet.CoreV1().Secrets(namespace).Create(context.TODO(), secret, metav1.CreateOptions{}); err != nil {
+		return "", err
+	}
+	return secretName, nil
 }

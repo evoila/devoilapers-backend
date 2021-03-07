@@ -7,9 +7,10 @@ import (
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/test/unit_tests/common_test"
 	"errors"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_ServiceController_HandlePostCreateServiceInstance(t *testing.T) {
@@ -334,9 +335,12 @@ func Test_ServiceController_HandleGetServiceInstanceDetails(t *testing.T) {
 							Name: "SomeActionGroup",
 							Actions: []action.IAction{
 								action.Action{
-									Name: "MyAction",
-									Placeholder: &common_test.TestPlaceholder{},
+									Name:          "MyAction",
+									Placeholder:   &common_test.TestPlaceholder{},
 									UniqueCommand: "MyActionCmd",
+									ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
+										return "", nil
+									},
 								},
 							},
 						},
@@ -431,9 +435,12 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 							Name: "SomeActionGroup0",
 							Actions: []action.IAction{
 								action.Action{
-									Name: "MyAction0",
-									Placeholder: &common_test.TestPlaceholder{},
+									Name:          "MyAction0",
+									Placeholder:   &common_test.TestPlaceholder{},
 									UniqueCommand: "MyActionCmd0",
+									ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
+										return "", nil
+									},
 								},
 							},
 						},
@@ -457,9 +464,12 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 							Name: "SomeActionGroup1",
 							Actions: []action.IAction{
 								action.Action{
-									Name: "MyAction1",
-									Placeholder: &common_test.TestPlaceholder{},
+									Name:          "MyAction1",
+									Placeholder:   &common_test.TestPlaceholder{},
 									UniqueCommand: "MyActionCmd1",
+									ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
+										return "", nil
+									},
 								},
 							},
 						},
@@ -474,7 +484,6 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 			return []*service.IService{&service0, &service1}, nil
 		},
 	}
-
 
 	router := CreateRouter(t, &provider)
 

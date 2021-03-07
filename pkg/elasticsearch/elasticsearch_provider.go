@@ -5,9 +5,12 @@ import (
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/kubernetes"
 	"OperatorAutomation/pkg/utils/provider"
-	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/elasticsearch/v1"
-	"gopkg.in/yaml.v2"
 	"path"
+
+	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/elasticsearch/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"gopkg.in/yaml.v2"
 )
 
 // Implements IServiceProvider interface
@@ -28,8 +31,7 @@ func CreateElasticSearchProvider(host string, caPath string, templateDirectoryPa
 	)}
 }
 
-
-func (es ElasticsearchProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error)  {
+func (es ElasticsearchProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error) {
 	return kubernetes.CreateCommonCrdApi(es.Host, es.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
 }
 
@@ -93,23 +95,48 @@ func (es ElasticsearchProvider) DeleteService(auth common.IKubernetesAuthInforma
 	return elasticSearchCrd.Delete(auth.GetKubernetesNamespace(), id, RessourceName)
 }
 
+func (es ElasticsearchProvider) SetCertificateToService(auth common.IKubernetesAuthInformation, id string, tlcCert map[string][]byte) error {
+	if api, err := kubernetes.GenerateK8sApiFromToken(es.Host, es.CaPath, auth.GetKubernetesAccessToken()); err != nil {
+		return err
+	} else {
+		if elasticSearchCrd, err := es.createCrdApi(auth); err != nil {
+			return err
+		} else {
+			elasticSearchInstance := v1.Elasticsearch{}
+			err = elasticSearchCrd.Get(auth.GetKubernetesNamespace(), id, RessourceName, &elasticSearchInstance)
+			if err != nil {
+				return err
+			}
+			if secretName, err := api.CreateTlsSecret(auth.GetKubernetesNamespace(), id, "Elasticsearch", GroupName+"/"+GroupVersion, string(elasticSearchInstance.UID), tlcCert); err != nil {
+				return err
+			} else {
+				elasticSearchInstance.Spec.HTTP.TLS.Certificate.SecretName = secretName
+				elasticSearchInstance.ObjectMeta = metav1.ObjectMeta{
+					Name:            elasticSearchInstance.Name,
+					Namespace:       elasticSearchInstance.Namespace,
+					ResourceVersion: elasticSearchInstance.ResourceVersion,
+				}
+				return elasticSearchCrd.Update(auth.GetKubernetesNamespace(), id, RessourceName, &elasticSearchInstance)
+			}
+		}
+	}
+}
+
 // Converts a v1.Elasticsearch instance to an service representation
 func (es ElasticsearchProvider) CrdInstanceToServiceInstance(crdInstance *v1.Elasticsearch) *service.IService {
 	yamlData, err := yaml.Marshal(crdInstance)
 	if err != nil {
 		yamlData = []byte("Unknown")
 	}
-
 	var elasticSearchService service.IService = ElasticSearchService{
 		status: crdInstance.Status.Health,
 		BasicService: provider.BasicService{
-			Name : crdInstance.Name,
-			ProviderType: es.GetServiceType(),
-			Yaml: string(yamlData),
+			Name:              crdInstance.Name,
+			ProviderType:      es.GetServiceType(),
+			Yaml:              string(yamlData),
 			ImportantSections: (*es.Template).GetImportantSections(),
 		},
 	}
 
 	return &elasticSearchService
 }
-

@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"context"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -22,7 +23,7 @@ func CreateRestConfig(host string, caPath string, token string, groupName string
 		Host:        host,
 		BearerToken: token,
 		TLSClientConfig: rest.TLSClientConfig{
-			CAFile:   caPath,
+			CAFile: caPath,
 		},
 	}
 
@@ -36,7 +37,7 @@ func CreateRestConfig(host string, caPath string, token string, groupName string
 }
 
 // Create a common crd api to get, list and delete a custom resource in a kubernetes cluster
-func CreateCommonCrdApi(host string, caPath string, token string, groupName string, groupVersion string) (*CommonCrdApi, error)  {
+func CreateCommonCrdApi(host string, caPath string, token string, groupName string, groupVersion string) (*CommonCrdApi, error) {
 	crdConfig := CreateRestConfig(host, caPath, token, groupName, groupVersion)
 
 	if restClient, err := rest.UnversionedRESTClientFor(crdConfig); err != nil {
@@ -77,4 +78,17 @@ func (api CommonCrdApi) Delete(namespace string, name string, resource string) e
 		VersionedParams(&metav1.DeleteOptions{}, scheme.ParameterCodec).
 		Name(name).
 		Do(context.TODO()).Error()
+}
+
+// Update a custom resource of given type resource in given namespace with given name
+func (api CommonCrdApi) Update(namespace, name, resource string, obj runtime.Object) error {
+	err := api.Client.Put().
+		Namespace(namespace).
+		Resource(resource).
+		Name(name).
+		VersionedParams(&metav1.UpdateOptions{}, scheme.ParameterCodec).
+		Body(obj).
+		Do(context.TODO()).
+		Error()
+	return err
 }

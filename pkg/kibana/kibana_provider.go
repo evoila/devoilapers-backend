@@ -5,9 +5,11 @@ import (
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/kubernetes"
 	"OperatorAutomation/pkg/utils/provider"
+	"path"
+
 	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/kibana/v1"
 	"gopkg.in/yaml.v2"
-	"path"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Implements IServiceProvider interface
@@ -28,7 +30,7 @@ func CreateKibanaProvider(host string, caPath string, templateDirectoryPath stri
 	)}
 }
 
-func (kb KibanaProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error)  {
+func (kb KibanaProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error) {
 	return kubernetes.CreateCommonCrdApi(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
 }
 
@@ -91,6 +93,33 @@ func (kb KibanaProvider) DeleteService(auth common.IKubernetesAuthInformation, i
 
 	//TODO: Check if there is an associated ingress
 	return KibanaCrd.Delete(auth.GetKubernetesNamespace(), id, ResourceName)
+}
+
+func (es KibanaProvider) SetCertificateToService(auth common.IKubernetesAuthInformation, id string, tlcCert map[string][]byte) error {
+	if api, err := kubernetes.GenerateK8sApiFromToken(es.Host, es.CaPath, auth.GetKubernetesAccessToken()); err != nil {
+		return err
+	} else {
+		if elasticSearchCrd, err := es.createCrdApi(auth); err != nil {
+			return err
+		} else {
+			kibanaInstance := v1.Kibana{}
+			err = elasticSearchCrd.Get(auth.GetKubernetesNamespace(), id, ResourceName, &kibanaInstance)
+			if err != nil {
+				return err
+			}
+			if secretName, err := api.CreateTlsSecret(auth.GetKubernetesNamespace(), id, "Kibana", GroupName+"/"+GroupVersion, string(kibanaInstance.UID), tlcCert); err != nil {
+				return err
+			} else {
+				kibanaInstance.Spec.HTTP.TLS.Certificate.SecretName = secretName
+				kibanaInstance.ObjectMeta = metav1.ObjectMeta{
+					Name:            kibanaInstance.Name,
+					Namespace:       kibanaInstance.Namespace,
+					ResourceVersion: kibanaInstance.ResourceVersion,
+				}
+				return elasticSearchCrd.Update(auth.GetKubernetesNamespace(), id, ResourceName, &kibanaInstance)
+			}
+		}
+	}
 }
 
 // Converts a v1.Kibana instance to an service reprkbentation

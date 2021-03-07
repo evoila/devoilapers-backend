@@ -4,9 +4,10 @@ import (
 	"OperatorAutomation/pkg/core"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/test/unit_tests/common_test"
-	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Core_GetProvider(t *testing.T) {
@@ -60,4 +61,3 @@ func Test_Core_DuplicateProvider_Panic(t *testing.T) {
 	// Should panic
 	_ = core.CreateCore(providers)
 }
-
