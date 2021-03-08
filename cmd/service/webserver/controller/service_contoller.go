@@ -229,8 +229,8 @@ func serviceGroupToDto(servicePtr *service.IService) []dtos.ServiceInstanceActio
 			jsonPlaceholder, _ := json.Marshal(action.GetPlaceholder())
 
 			actionDto := dtos.ServiceInstanceActionDto{
-				Name: action.GetName(),
-				Command: action.GetUniqueCommand(),
+				Name:        action.GetName(),
+				Command:     action.GetUniqueCommand(),
 				Placeholder: string(jsonPlaceholder),
 			}
 
@@ -300,7 +300,6 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 		instanceDetailsOverview.Instances = append(instanceDetailsOverview.Instances, serviceDto)
 	}
 
-
 	ctx.JSON(http.StatusOK, instanceDetailsOverview)
 	return
 }
@@ -343,14 +342,4 @@ func (controller ServiceController) HandleGetServiceInstanceYaml(ctx *gin.Contex
 	}
 
 	ctx.JSON(http.StatusOK, yamlData)
-}
-
-func (controller ServiceController) TestExposeSerrvice(ctx *gin.Context) {
-	user, password, _ := ctx.Request.BasicAuth()
-	userInfos := controller.UserManagement.GetUserInformation(user, password)
-
-
-	userCtx := controller.Core.CrateUserContext(userInfos)
-	service, err := userCtx.GetService(serviceType, serviceName)
-	service.
 }
