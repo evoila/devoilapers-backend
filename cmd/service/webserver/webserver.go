@@ -3,16 +3,17 @@ package webserver
 import (
 	_ "OperatorAutomation/api" //Indirect use for swagger -- DO NOT REMOVE --
 	"OperatorAutomation/cmd/service/config"
-	"OperatorAutomation/cmd/service/management"
+	user "OperatorAutomation/cmd/service/management"
 	"OperatorAutomation/cmd/service/webserver/controller"
 	"OperatorAutomation/pkg/core"
+	"strconv"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	ginlogrus "github.com/toorop/gin-logrus"
-	"strconv"
 )
 
 // @title Operator Automation Backend API

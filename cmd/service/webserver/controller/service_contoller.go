@@ -1,14 +1,15 @@
 package controller
 
 import (
-	"OperatorAutomation/cmd/service/webserver/dtos"
 	"OperatorAutomation/cmd/service/utils"
+	"OperatorAutomation/cmd/service/webserver/dtos"
 	"OperatorAutomation/pkg/core/service"
 	"encoding/json"
 	"errors"
-	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type ServiceController struct {
@@ -342,4 +343,14 @@ func (controller ServiceController) HandleGetServiceInstanceYaml(ctx *gin.Contex
 	}
 
 	ctx.JSON(http.StatusOK, yamlData)
+}
+
+func (controller ServiceController) TestExposeSerrvice(ctx *gin.Context) {
+	user, password, _ := ctx.Request.BasicAuth()
+	userInfos := controller.UserManagement.GetUserInformation(user, password)
+
+
+	userCtx := controller.Core.CrateUserContext(userInfos)
+	service, err := userCtx.GetService(serviceType, serviceName)
+	service.
 }

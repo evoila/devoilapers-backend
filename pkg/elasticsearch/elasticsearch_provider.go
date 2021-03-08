@@ -5,9 +5,11 @@ import (
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/kubernetes"
 	"OperatorAutomation/pkg/utils/provider"
+	"fmt"
+	"path"
+
 	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/elasticsearch/v1"
 	"gopkg.in/yaml.v2"
-	"path"
 )
 
 // Implements IServiceProvider interface
@@ -28,8 +30,7 @@ func CreateElasticSearchProvider(host string, caPath string, templateDirectoryPa
 	)}
 }
 
-
-func (es ElasticsearchProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error)  {
+func (es ElasticsearchProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error) {
 	return kubernetes.CreateCommonCrdApi(es.Host, es.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
 }
 
@@ -103,9 +104,9 @@ func (es ElasticsearchProvider) CrdInstanceToServiceInstance(crdInstance *v1.Ela
 	var elasticSearchService service.IService = ElasticSearchService{
 		status: crdInstance.Status.Health,
 		BasicService: provider.BasicService{
-			Name : crdInstance.Name,
-			ProviderType: es.GetServiceType(),
-			Yaml: string(yamlData),
+			Name:              crdInstance.Name,
+			ProviderType:      es.GetServiceType(),
+			Yaml:              string(yamlData),
 			ImportantSections: (*es.Template).GetImportantSections(),
 		},
 	}
@@ -113,3 +114,12 @@ func (es ElasticsearchProvider) CrdInstanceToServiceInstance(crdInstance *v1.Ela
 	return &elasticSearchService
 }
 
+// ExposeThroughIngress exposes a service through ingress and return error if not successful
+func (es ElasticsearchProvider) ExposeThroughIngress(auth common.IKubernetesAuthInformation, ingressName, serviceName, hostname string) (string, error) {
+	api, err := kubernetes.GenerateK8sApiFromToken(es.Host, es.CaPath, auth.GetKubernetesAccessToken())
+	if err != nil {
+		return "", err
+	}
+	fmt.Print("es_provider_in namespace: ", auth.GetKubernetesNamespace(), "\n")
+	return api.AddServiceToIngress("default", ingressName, serviceName, hostname, 9200)
+}

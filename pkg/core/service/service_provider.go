@@ -21,4 +21,6 @@ type IServiceProvider interface {
 	CreateService(auth common.IKubernetesAuthInformation, yaml string) error
 
 	DeleteService(auth common.IKubernetesAuthInformation, id string) error
+
+	//ExposeThroughIngress(auth common.IKubernetesAuthInformation, ingressName, serviceName, hostname string, servicePort int32) (string, error)
 }
