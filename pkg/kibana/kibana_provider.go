@@ -9,7 +9,6 @@ import (
 
 	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/kibana/v1"
 	"gopkg.in/yaml.v2"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Implements IServiceProvider interface
@@ -49,7 +48,7 @@ func (kb KibanaProvider) GetServices(auth common.IKubernetesAuthInformation) ([]
 
 	var services []*service.IService
 	for _, kibanaInstance := range kibanaInstances.Items {
-		services = append(services, kb.CrdInstanceToServiceInstance(&kibanaInstance))
+		services = append(services, kb.CrdInstanceToServiceInstance(auth, &kibanaInstance))
 	}
 
 	return services, nil
@@ -68,7 +67,7 @@ func (kb KibanaProvider) GetService(auth common.IKubernetesAuthInformation, id s
 		return nil, err
 	}
 
-	return kb.CrdInstanceToServiceInstance(&kibanaInstance), nil
+	return kb.CrdInstanceToServiceInstance(auth, &kibanaInstance), nil
 }
 
 func (kb KibanaProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
@@ -95,42 +94,30 @@ func (kb KibanaProvider) DeleteService(auth common.IKubernetesAuthInformation, i
 	return KibanaCrd.Delete(auth.GetKubernetesNamespace(), id, ResourceName)
 }
 
-func (es KibanaProvider) SetCertificateToService(auth common.IKubernetesAuthInformation, id string, tlcCert map[string][]byte) error {
-	if api, err := kubernetes.GenerateK8sApiFromToken(es.Host, es.CaPath, auth.GetKubernetesAccessToken()); err != nil {
-		return err
-	} else {
-		if elasticSearchCrd, err := es.createCrdApi(auth); err != nil {
-			return err
-		} else {
-			kibanaInstance := v1.Kibana{}
-			err = elasticSearchCrd.Get(auth.GetKubernetesNamespace(), id, ResourceName, &kibanaInstance)
-			if err != nil {
-				return err
-			}
-			if secretName, err := api.CreateTlsSecret(auth.GetKubernetesNamespace(), id, "Kibana", GroupName+"/"+GroupVersion, string(kibanaInstance.UID), tlcCert); err != nil {
-				return err
-			} else {
-				kibanaInstance.Spec.HTTP.TLS.Certificate.SecretName = secretName
-				kibanaInstance.ObjectMeta = metav1.ObjectMeta{
-					Name:            kibanaInstance.Name,
-					Namespace:       kibanaInstance.Namespace,
-					ResourceVersion: kibanaInstance.ResourceVersion,
-				}
-				return elasticSearchCrd.Update(auth.GetKubernetesNamespace(), id, ResourceName, &kibanaInstance)
-			}
-		}
-	}
-}
-
 // Converts a v1.Kibana instance to an service reprkbentation
-func (kb KibanaProvider) CrdInstanceToServiceInstance(crdInstance *v1.Kibana) *service.IService {
+func (kb KibanaProvider) CrdInstanceToServiceInstance(auth common.IKubernetesAuthInformation, crdInstance *v1.Kibana) *service.IService {
 	yamlData, err := yaml.Marshal(crdInstance)
 	if err != nil {
 		yamlData = []byte("Unknown")
 	}
 
+	api, err := kubernetes.GenerateK8sApiFromToken(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken())
+
+	if err != nil {
+		return nil
+	}
+
+	KibanaCrd, err := kb.createCrdApi(auth)
+
+	if err != nil {
+		return nil
+	}
+
 	var KibanaService service.IService = KibanaService{
-		status: crdInstance.Status.Health,
+		k8sApi:       api,
+		crdInstance:  crdInstance,
+		commonCrdApi: KibanaCrd,
+		status:       crdInstance.Status.Health,
 		BasicService: provider.BasicService{
 			Name:              crdInstance.Name,
 			ProviderType:      kb.GetServiceType(),

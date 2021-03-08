@@ -21,6 +21,4 @@ type IServiceProvider interface {
 	CreateService(auth common.IKubernetesAuthInformation, yaml string) error
 
 	DeleteService(auth common.IKubernetesAuthInformation, id string) error
-
-	SetCertificateToService(auth common.IKubernetesAuthInformation, id string, tlsCert map[string][]byte) error
 }
