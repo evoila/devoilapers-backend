@@ -15,26 +15,33 @@ import (
 // Use factory method CreatePostgresProvider to create
 type PostgresProvider struct {
 	provider.BasicProvider
+	nginxInformation kubernetes.NginxInformation
 }
 
 // Factory method to create an instance of the PostgresProvider
-func CreatePostgresProvider(host string, caPath string, templateDirectoryPath string) PostgresProvider {
-	return PostgresProvider{provider.CreateCommonProvider(
-		host,
-		caPath,
-		path.Join(templateDirectoryPath, "postgres.yaml"),
-		"Postgres",
-		"Postgres is an open source relational database management system.",
-		"https://dashboard.snapcraft.io/site_media/appmedia/2018/11/postgresql-icon-256x256.jpg.png",
-	)}
+func CreatePostgresProvider(
+	host string,
+	caPath string,
+	templateDirectoryPath string,
+	nginxInformation kubernetes.NginxInformation) PostgresProvider {
+	return PostgresProvider{
+		nginxInformation: nginxInformation,
+		BasicProvider: provider.CreateCommonProvider(
+			host,
+			caPath,
+			path.Join(templateDirectoryPath, "postgres.yaml"),
+			"Postgres",
+			"Postgres is an open source relational database management system.",
+			"https://dashboard.snapcraft.io/site_media/appmedia/2018/11/postgresql-icon-256x256.jpg.png",
+		)}
 }
 
-func (pg PostgresProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error)  {
-	return  kubernetes.CreateCommonCrdApi(pg.Host, pg.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
+func (pg PostgresProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error) {
+	return kubernetes.CreateCommonCrdApi(pg.Host, pg.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
 }
 
 func (pg PostgresProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
-	postgresCrd,  err := pg.createCrdApi(auth)
+	postgresCrd, err := pg.createCrdApi(auth)
 
 	if err != nil {
 		return nil, err
@@ -111,7 +118,8 @@ func (pg PostgresProvider) CrdInstanceToServiceInstance(
 			Auth:            auth,
 			Host:            pg.Host,
 			CaPath:          pg.CaPath,
-			CrdClient: crdClient,
+			CrdClient:       crdClient,
+			NginxInformation: pg.nginxInformation,
 		},
 		BasicService: provider.BasicService{
 			Name:              crdInstance.Name,

@@ -13,4 +13,5 @@ type PostgresServiceInformations struct {
 	ClusterInstance *v1.Pgcluster
 	CrdClient *kubernetes.CommonCrdApi
 	ClusterReplica []*v1.Pgreplica
+	NginxInformation kubernetes.NginxInformation
 }

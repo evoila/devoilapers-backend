@@ -12,56 +12,150 @@ import (
 	"strconv"
 )
 
+// Creates an action to deliver port informations about the service
+func CreateGetExposeInformationAction(service *pgCommon.PostgresServiceInformations) action.IAction {
+	return action.Action{
+		Name:          "Expose infos",
+		UniqueCommand: "cmd_pg_get_expose_info",
+		Placeholder:   nil,
+		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
+			return GetExposeInformation(service)
+		},
+	}
+}
+
+// Creates an action to expose the service with a random port
 func CreateExposeAction(service *pgCommon.PostgresServiceInformations) action.IAction {
 	return action.Action{
-		Name:          "Exposure",
+		Name:          "Expose",
 		UniqueCommand: "cmd_pg_expose",
-		Placeholder:   &dtos.ClusterCredentialsDto{},
+		Placeholder:   nil,
 		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
 			return Expose(service)
 		},
 	}
 }
 
-func  GetService(pg *pgCommon.PostgresServiceInformations) (*kubernetes.K8sApi, *coreApiV1.Service, error) {
-	api, err := kubernetes.GenerateK8sApiFromToken(pg.Host, pg.CaPath, pg.Auth.GetKubernetesAccessToken())
+// Creates an action to remove the exposure
+func DeleteExposeAction(service *pgCommon.PostgresServiceInformations) action.IAction {
+	return action.Action{
+		Name:          "Hide",
+		UniqueCommand: "cmd_pg_hide",
+		Placeholder:   nil,
+		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
+			return Hide(service)
+		},
+	}
+}
 
+// Delivers information about the exposed port
+func GetExposeInformation(pg *pgCommon.PostgresServiceInformations) (interface{}, error) {
+	api, err := kubernetes.GenerateK8sApiFromToken(pg.Host, pg.CaPath, pg.Auth.GetKubernetesAccessToken())
 	if err != nil {
-		return api, nil, err
+		return nil, err
 	}
 
+	internalPort, err := strconv.Atoi(pg.ClusterInstance.Spec.Port)
+	if err != nil {
+		return nil, err
+	}
+
+	exposedPort, err := kubernetes.NginxGetExposedTcpPort(
+		api,
+		pg.NginxInformation,
+		pg.ClusterInstance.Namespace,
+		pg.ClusterInstance.Name,
+		internalPort,
+	)
+
+	return dtos.ClusterExposeResponseDto{Port: exposedPort}, err
+}
+
+// Helper method to get the service of a postgres cluster
+func getService(pg *pgCommon.PostgresServiceInformations, api *kubernetes.K8sApi) (*coreApiV1.Service, error) {
+
 	opts := metav1.ListOptions{
-		LabelSelector: "pg-cluster=hoonah-emma",
+		LabelSelector: "pg-cluster=" + pg.ClusterInstance.Name,
 	}
 
 	services, err := api.ClientSet.CoreV1().Services(pg.Auth.GetKubernetesNamespace()).List(context.TODO(), opts)
 	if err != nil {
-		return api, nil, err
+		return nil, err
 	}
 
 	postgresServicePort, err := strconv.Atoi(pg.ClusterInstance.Spec.Port)
 	if err != nil {
-		return api, nil, err
+		return nil, err
 	}
 
 	for _, service := range services.Items {
 		for _, port := range service.Spec.Ports {
 			if int(port.TargetPort.IntVal) == postgresServicePort {
-				return api, &service, nil
+				return &service, nil
 			}
 		}
 	}
 
-	return api, nil, errors.New("Kubernetes service with matching name and port for postgres cluster could not be found.")
+	return nil, errors.New("Kubernetes service with matching name and port for postgres cluster could not be found.")
 }
 
-func Expose(pg *pgCommon.PostgresServiceInformations) (interface{}, error) {
-	api, service, err := GetService(pg)
+// Reverts the expose action by removing the port
+func Hide(pg *pgCommon.PostgresServiceInformations) (interface{}, error) {
+	api, err := kubernetes.GenerateK8sApiFromToken(pg.Host, pg.CaPath, pg.Auth.GetKubernetesAccessToken())
 	if err != nil {
 		return nil, err
 	}
 
-	_ = api
-	_ = service
-	return nil, nil
+	// Ensure a service with matching port exists
+	_, err = getService(pg, api)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the cluster internal service port
+	internalPort, err := strconv.Atoi(pg.ClusterInstance.Spec.Port)
+	if err != nil {
+		return nil, err
+	}
+
+	// Finally try close the port
+	return nil, kubernetes.NginxCloseTcpPort(
+		api,
+		pg.NginxInformation,
+		pg.ClusterInstance.Namespace,
+		pg.ClusterInstance.Name,
+		internalPort,
+	)
+}
+
+// Open a port to connect to the db from outside
+func Expose(pg *pgCommon.PostgresServiceInformations) (interface{}, error) {
+	api, err := kubernetes.GenerateK8sApiFromToken(pg.Host, pg.CaPath, pg.Auth.GetKubernetesAccessToken())
+	if err != nil {
+		return nil, err
+	}
+
+	// Ensure a service with matching port exists
+	_, err = getService(pg, api)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the cluster internal service port
+	internalPort, err := strconv.Atoi(pg.ClusterInstance.Spec.Port)
+	if err != nil {
+		return nil, err
+	}
+
+	exposedPort, err := kubernetes.NginxOpenRandomTcpPort(
+		api,
+		pg.NginxInformation,
+		pg.ClusterInstance.Namespace,
+		pg.ClusterInstance.Name,
+		internalPort,
+	)
+
+	return dtos.ClusterExposeResponseDto{
+		Port: exposedPort,
+	}, err
 }
