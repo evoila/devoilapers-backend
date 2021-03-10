@@ -40,7 +40,7 @@ func GetDatabaseCredentials(pg *pgCommon.PostgresServiceInformations) (*dtos.Clu
 	}
 
 	// Convert port to int
-	port, err := strconv.Atoi(pg.ClusterInstance.Spec.Port)
+	internalPort, err := strconv.Atoi(pg.ClusterInstance.Spec.Port)
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +48,6 @@ func GetDatabaseCredentials(pg *pgCommon.PostgresServiceInformations) (*dtos.Clu
 	return &dtos.ClusterCredentialsDto{
 		Username: string(secret.Data["username"]),
 		Password: string(secret.Data["password"]),
-		Port:     port,
+		InternalPort:     internalPort,
 	}, nil
 }
