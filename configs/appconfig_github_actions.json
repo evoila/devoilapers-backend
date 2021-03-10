@@ -12,7 +12,8 @@
     "nginx": {
       "namespace": "ingress-nginx",
       "tcp_config_map_name": "tcp-services",
-      "deployment_name": "default-http-backend"
+      "deployment_name": "default-http-backend",
+      "container_name": "default-http-backend"
     }
   },
   "users": [
