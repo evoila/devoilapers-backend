@@ -145,9 +145,7 @@ func scaleCluster(pg *pgCommon.PostgresServiceInformations, dto *dtos.ClusterSca
 		return nil, errors.New("neither number of replicas nor size has changed")
 	} else if len(currentReplicas.Items) > dto.NumberOfReplicas {
 		return nil, scaleDown(pg, len(currentReplicas.Items)-dto.NumberOfReplicas, currentReplicas)
-	} else if len(currentReplicas.Items) < dto.NumberOfReplicas {
+	} else {
 		return nil, scaleUp(pg, dto.NumberOfReplicas-len(currentReplicas.Items))
 	}
-
-	return nil, nil
 }

@@ -216,13 +216,23 @@ func Test_Postgres_Provider_End2End(t *testing.T) {
 	action = *actionPtr
 	clusterScale := *(action.GetPlaceholder().(*dtos.ClusterScaleDto))
 	assert.Equal(t, 0, clusterScale.NumberOfReplicas)
+	// Try setting the same number of replicas as we have
+	clusterScale.NumberOfReplicas = 0
+	result, err = action.GetActionExecuteCallback()(&clusterScale)
+	assert.NotNil(t, err) // Should create an error
+	assert.Nil(t, result)
+	// Try setting a negative number of replicas
+	clusterScale.NumberOfReplicas = -1
+	result, err = action.GetActionExecuteCallback()(&clusterScale)
+	assert.NotNil(t, err) // Should create an error
+	assert.Nil(t, result)
 	// Increment the number of replicas
 	clusterScale.NumberOfReplicas = 2
 	result, err = action.GetActionExecuteCallback()(&clusterScale)
 	assert.Nil(t, err)
 	assert.Nil(t, result)
 	time.Sleep(5 * time.Second)
-	// Ensure we have replicas now
+	// Ensure we have 2 replicas now
 	serviceTemp, err = pgProvider.GetService(user, service0.GetName())
 	assert.Nil(t, err)
 	actionPtr, err = get_action(serviceTemp, "Features", "cmd_pg_scale")
@@ -230,6 +240,21 @@ func Test_Postgres_Provider_End2End(t *testing.T) {
 	action = *actionPtr
 	clusterScale = *(action.GetPlaceholder().(*dtos.ClusterScaleDto))
 	assert.Equal(t, 2, clusterScale.NumberOfReplicas)
+	// Decrement the number of replicas
+	clusterScale.NumberOfReplicas = 1
+	result, err = action.GetActionExecuteCallback()(&clusterScale)
+	assert.Nil(t, err)
+	assert.Nil(t, result)
+	time.Sleep(5 * time.Second)
+	// Ensure we have only 1 replica now
+	serviceTemp, err = pgProvider.GetService(user, service0.GetName())
+	assert.Nil(t, err)
+	actionPtr, err = get_action(serviceTemp, "Features", "cmd_pg_scale")
+	assert.Nil(t, err)
+	action = *actionPtr
+	clusterScale = *(action.GetPlaceholder().(*dtos.ClusterScaleDto))
+	assert.Equal(t, 1, clusterScale.NumberOfReplicas)
+
 
 	// Try delete service with invalid id
 	err = pgProvider.DeleteService(user, "some-not-existing-id")
