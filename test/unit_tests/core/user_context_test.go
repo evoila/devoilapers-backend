@@ -3,6 +3,7 @@ package core
 import (
 	"OperatorAutomation/pkg/core"
 	"OperatorAutomation/pkg/core/common"
+	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/test/unit_tests/common_test"
 	"github.com/stretchr/testify/assert"
@@ -16,10 +17,10 @@ func Test_UserContext_Create_Get_Delete(t *testing.T) {
 	deleteServiceCounter := 0
 	getServicesCounter := 0
 
-	var providers []*service.IServiceProvider
+	var providers []*provider.IServiceProvider
 	for i := 0; i < 3; i++ {
 		closure := i
-		var provider service.IServiceProvider = common_test.TestProvider{
+		var provider provider.IServiceProvider = common_test.TestProvider{
 			GetServiceTypeCb: func() string {
 				return "Type" + strconv.Itoa(closure)
 			},

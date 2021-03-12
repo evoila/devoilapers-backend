@@ -2,7 +2,7 @@ package webservice
 
 import (
 	"OperatorAutomation/cmd/service/webserver/dtos"
-	"OperatorAutomation/pkg/core/service"
+	provider2 "OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/test/unit_tests/common_test"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -10,7 +10,7 @@ import (
 )
 
 func Test_AccountController_HandlePostLogin(t *testing.T) {
-	var provider service.IServiceProvider = common_test.TestProvider{
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},

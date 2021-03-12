@@ -2,12 +2,13 @@ package users
 
 import (
 	"OperatorAutomation/pkg/core/common"
+	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 )
 
 // Created by core instance. Do not create by yourself
 type UserContext struct {
-	ServiceProviderRegistry *service.ServiceProviderRegistry
+	ServiceProviderRegistry *provider.ServiceProviderRegistry
 	Auth                    common.IKubernetesAuthInformation
 }
 

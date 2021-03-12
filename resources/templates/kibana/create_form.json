@@ -1,0 +1,25 @@
+{
+  "properties":{
+    "common":{
+      "type":"object",
+      "description":"Common settings",
+      "properties":{
+        "cluster_name":{
+          "type":"string",
+          "title":"Cluster name",
+          "widget":{
+            "id":"string"
+          }
+        },
+        "elastic_search_instance":{
+          "type":"string",
+          "title":"Elasticsearch instance name",
+          "widget":{
+            "id":"select"
+          },
+          "oneOf":[]
+        }
+      }
+    }
+  }
+}

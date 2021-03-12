@@ -338,7 +338,7 @@ func (controller ServiceController) HandleGetServiceInstanceYaml(ctx *gin.Contex
 	}
 
 	yamlData := dtos.ServiceYamlDto{
-		Yaml: (*service).GetTemplate().GetYAML(),
+		Yaml: (*service).GetYamlTemplate(),
 	}
 
 	ctx.JSON(http.StatusOK, yamlData)

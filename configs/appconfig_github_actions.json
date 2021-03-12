@@ -1,7 +1,7 @@
 {
   "log_level": "trace",
   "port": 8080,
-  "yaml_template_path": "configs/yaml_templates",
+  "resources_templates_path": "resources/templates",
   "webserver_sll_certificate": {
     "private_key_file_path": "configs/webserver_ssl_certificates/server.key",
     "public_key_file_path": "configs/webserver_ssl_certificates/server.crt"

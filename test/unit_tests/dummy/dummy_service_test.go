@@ -1,6 +1,7 @@
 package dummy
 
 import (
+	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/dummy"
 	"OperatorAutomation/pkg/dummy/dtos"
@@ -9,9 +10,9 @@ import (
 	"testing"
 )
 
-func CreateProviderAndService(t *testing.T) (*service.IServiceProvider, *service.IService) {
+func CreateProviderAndService(t *testing.T) (*provider.IServiceProvider, *service.IService) {
 	auth := common_test.TestUser{}
-	var dummyProvider service.IServiceProvider = dummy.CreateDummyProvider()
+	var dummyProvider provider.IServiceProvider = dummy.CreateDummyProvider()
 
 	err := dummyProvider.CreateService(auth,"1")
 	assert.Nil(t, err)
@@ -42,10 +43,7 @@ func Test_DummyProvider_Service_Attributes(t *testing.T) {
 	assert.NotEqual(t, "", actionGroup0.GetName())
 
 
-
-	template := service0.GetTemplate()
-	assert.Equal(t, "1", template.GetYAML())
-	assert.Equal(t, 1, len(template.GetImportantSections()))
+	assert.Equal(t, "1", service0.GetYamlTemplate())
 }
 
 
@@ -75,9 +73,7 @@ func Test_DummyProvider_Service_Actions(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "NewValue", response)
 
-	template := service0.GetTemplate()
-	assert.Equal(t, "1", template.GetYAML())
-	assert.Equal(t, 1, len(template.GetImportantSections()))
+	assert.Equal(t, "1", service0.GetYamlTemplate())
 }
 
 

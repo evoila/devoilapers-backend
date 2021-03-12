@@ -415,6 +415,61 @@ var doc = `{
                 }
             }
         },
+        "/servicestore/form/{servicetype}": {
+            "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Get the default yaml file for a service-template",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Servicestore"
+                ],
+                "summary": "Get the json form for a service-template",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Type of service",
+                        "name": "servicetype",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ServiceStoreItemYamlDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
+                        }
+                    }
+                }
+            }
+        },
         "/servicestore/info": {
             "get": {
                 "security": [
@@ -450,13 +505,13 @@ var doc = `{
             }
         },
         "/servicestore/yaml/{servicetype}": {
-            "get": {
+            "post": {
                 "security": [
                     {
                         "BasicAuth": []
                     }
                 ],
-                "description": "Get the default yaml file for a service-template",
+                "description": "Get the yaml for a service based on the filled form and the user data",
                 "consumes": [
                     "application/json"
                 ],
@@ -466,8 +521,17 @@ var doc = `{
                 "tags": [
                     "Servicestore"
                 ],
-                "summary": "Get the default yaml for a service-template",
+                "summary": "Get the yaml for a service",
                 "parameters": [
+                    {
+                        "description": "Form-Result",
+                        "name": "formresult",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "type": "string",
                         "description": "Type of service",
@@ -491,6 +555,12 @@ var doc = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.HTTPErrorDto"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/dtos.HTTPErrorDto"
                         }

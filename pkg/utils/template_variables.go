@@ -7,13 +7,13 @@ import (
 )
 
 func FillWithData(authInformation common.IKubernetesAuthInformation, template string) string {
-	template = strings.Replace(template, "{opa.random.name}", getRandomName(), -1)
+	template = strings.Replace(template, "{opa.random.name}", GetRandomKubernetesResourceName(), -1)
 	template = strings.Replace(template, "{opa.user.namespace}", authInformation.GetKubernetesNamespace(), -1)
 
 	return template
 }
 
-func getRandomName() string {
+func GetRandomKubernetesResourceName() string {
 	randomName := randomdata.FirstName(randomdata.RandomGender)
 	if randomdata.Boolean() {
 		randomName = randomName + "-" + randomdata.City()

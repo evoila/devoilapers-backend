@@ -6,7 +6,7 @@ type RawConfig struct {
 	WebserverSllCertificate WebserverSllCertificate `json:"webserver_sll_certificate"`
 	Kubernetes              Kubernetes              `json:"kubernetes"`
 	Users                   []User                  `json:"users"`
-	YamlTemplatePath		string					`json:"yaml_template_path"`
+	ResourcesTemplatesPath		string				`json:"resources_templates_path"`
 }
 
 type WebserverSllCertificate struct {

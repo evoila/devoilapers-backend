@@ -362,28 +362,7 @@ paths:
       summary: Get the yaml file for an instance
       tags:
       - Service
-  /servicestore/info:
-    get:
-      consumes:
-      - application/json
-      description: Lists all possible deployable services
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dtos.ServiceStoreOverviewDto'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/dtos.HTTPErrorDto'
-      security:
-      - BasicAuth: []
-      summary: Lists all possible deployable services
-      tags:
-      - Servicestore
-  /servicestore/yaml/{servicetype}:
+  /servicestore/form/{servicetype}:
     get:
       consumes:
       - application/json
@@ -409,9 +388,76 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/dtos.HTTPErrorDto'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
       security:
       - BasicAuth: []
-      summary: Get the default yaml for a service-template
+      summary: Get the json form for a service-template
+      tags:
+      - Servicestore
+  /servicestore/info:
+    get:
+      consumes:
+      - application/json
+      description: Lists all possible deployable services
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.ServiceStoreOverviewDto'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
+      security:
+      - BasicAuth: []
+      summary: Lists all possible deployable services
+      tags:
+      - Servicestore
+  /servicestore/yaml/{servicetype}:
+    post:
+      consumes:
+      - application/json
+      description: Get the yaml for a service based on the filled form and the user
+        data
+      parameters:
+      - description: Form-Result
+        in: body
+        name: formresult
+        required: true
+        schema:
+          type: string
+      - description: Type of service
+        in: path
+        name: servicetype
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.ServiceStoreItemYamlDto'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dtos.HTTPErrorDto'
+      security:
+      - BasicAuth: []
+      summary: Get the yaml for a service
       tags:
       - Servicestore
 schemes:

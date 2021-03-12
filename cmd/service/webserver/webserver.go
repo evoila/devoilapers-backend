@@ -81,7 +81,8 @@ func BuildRouter(appconfig config.RawConfig, core *core.Core) *gin.Engine {
 		servicestore := v1.Group("/servicestore", auth)
 		{
 			servicestore.GET("/info", serviceStoreController.HandleGetServiceStoreOverview)
-			servicestore.GET("/yaml/:servicetype", serviceStoreController.HandleGetServiceStoreItemYaml)
+			servicestore.POST("/yaml/:servicetype", serviceStoreController.HandlePostServiceStoreItemYaml)
+			servicestore.GET("/form/:servicetype", serviceStoreController.HandleGetServiceStoreItemForm)
 		}
 		services := v1.Group("/services", auth)
 		{

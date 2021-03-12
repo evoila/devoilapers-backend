@@ -3,7 +3,6 @@ package dummy
 import (
 	"OperatorAutomation/pkg/core/action"
 	"OperatorAutomation/pkg/core/common"
-	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/dummy/dtos"
 )
 
@@ -11,9 +10,12 @@ type DummyService struct {
 	id                string
 	status            int
 	yaml              string
-	importantSections []string
 	serviceType       string
 	auth              common.IKubernetesAuthInformation
+}
+
+func (es DummyService) GetYamlTemplate() string {
+	return es.yaml
 }
 
 func (es DummyService) GetType() string {
@@ -44,13 +46,6 @@ func (es DummyService) GetActions() []action.IActionGroup {
 
 func (es DummyService) ExecuteDummyAction(dto *dtos.DummyActionDto) (interface{}, error) {
 	return dto.Dummy, nil
-}
-
-func (es DummyService) GetTemplate() service.IServiceTemplate {
-	return service.ServiceTemplate{
-		Yaml:              es.yaml,
-		ImportantSections: es.importantSections,
-	}
 }
 
 func (es DummyService) GetStatus() int {

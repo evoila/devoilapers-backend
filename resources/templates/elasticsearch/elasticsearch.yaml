@@ -1,12 +1,12 @@
 apiVersion: elasticsearch.k8s.elastic.co/v1
 kind: Elasticsearch
 metadata:
-  name: {opa.random.name}
-  namespace: {opa.user.namespace}
+  name: ""
+  namespace: ""
 spec:
   version: 7.10.2
   nodeSets:
     - name: default
-      count: 1
+      count:
       config:
         node.store.allow_mmap: false

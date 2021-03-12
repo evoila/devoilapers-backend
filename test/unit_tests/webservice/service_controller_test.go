@@ -4,6 +4,7 @@ import (
 	"OperatorAutomation/cmd/service/webserver/dtos"
 	"OperatorAutomation/pkg/core/action"
 	"OperatorAutomation/pkg/core/common"
+	provider2 "OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/test/unit_tests/common_test"
 	"errors"
@@ -16,7 +17,7 @@ func Test_ServiceController_HandlePostCreateServiceInstance(t *testing.T) {
 
 	createServiceGotCalled := 0
 	providerError := false
-	var provider service.IServiceProvider = common_test.TestProvider{
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},
@@ -112,7 +113,7 @@ func Test_ServiceController_HandlePostServiceInstanceAction(t *testing.T) {
 	serviceError := false
 
 	// Create provider
-	var provider service.IServiceProvider = common_test.TestProvider{
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},
@@ -245,7 +246,7 @@ func Test_ServiceController_HandleDeleteServiceInstance(t *testing.T) {
 
 	deleteGotCalled := 0
 	deleteError := false
-	var provider service.IServiceProvider = common_test.TestProvider{
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},
@@ -311,7 +312,7 @@ func Test_ServiceController_HandleDeleteServiceInstance(t *testing.T) {
 }
 
 func Test_ServiceController_HandleGetServiceInstanceDetails(t *testing.T) {
-	var provider service.IServiceProvider = common_test.TestProvider{
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},
@@ -410,7 +411,7 @@ func Test_ServiceController_HandleGetServiceInstanceDetails(t *testing.T) {
 func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *testing.T) {
 
 	providerError := false
-	var provider service.IServiceProvider = common_test.TestProvider{
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},
@@ -556,7 +557,7 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 
 func Test_ServiceController_HandleGetServiceInstanceYaml(t *testing.T) {
 	providerError := false
-	var provider service.IServiceProvider = common_test.TestProvider{
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},
@@ -564,10 +565,8 @@ func Test_ServiceController_HandleGetServiceInstanceYaml(t *testing.T) {
 			assert.Equal(t, "TestService", id)
 
 			var service0 service.IService = common_test.TestService{
-				GetTemplateCb: func() service.IServiceTemplate {
-					return service.ServiceTemplate{
-						Yaml: "TestYaml",
-					}
+				GetTemplateCb: func() string {
+					return "TestYaml"
 				},
 			}
 

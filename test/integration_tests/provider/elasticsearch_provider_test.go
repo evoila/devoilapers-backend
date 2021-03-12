@@ -4,10 +4,12 @@ import (
 	"OperatorAutomation/cmd/service/config"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/elasticsearch"
+	"OperatorAutomation/pkg/elasticsearch/dtos"
 	"OperatorAutomation/test/integration_tests/common_test"
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
+	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	"strings"
+	"gopkg.in/yaml.v2"
 	"testing"
 	"time"
 )
@@ -18,7 +20,7 @@ func CreateElasticSearchTestProvider(t *testing.T) (*elasticsearch.Elasticsearch
 	esProvider := elasticsearch.CreateElasticSearchProvider(
 		config.Kubernetes.Server,
 		config.Kubernetes.CertificateAuthority,
-		config.YamlTemplatePath)
+		config.ResourcesTemplatesPath)
 
 	return &esProvider, config
 }
@@ -46,19 +48,37 @@ func Test_Elasticsearch_Provider_GetAttributes(t *testing.T) {
 	assert.Equal(t, "Elasticsearch", esProvider.GetServiceType())
 
 	testUser := unit_test.TestUser{
-		KubernetesNamespace: "A_LONG_NAMESPACE",
+		KubernetesNamespace: "MyNamespace",
 	}
 
-	template := *esProvider.GetTemplate(testUser)
-	assert.True(t, strings.Contains(template.GetYAML(), "namespace: "+testUser.KubernetesNamespace))
-	assert.Equal(t, 1, len(template.GetImportantSections()))
-	assert.Equal(t, "metadata.name", template.GetImportantSections()[0])
+	// Get json form data
+	formDataObj1, err := esProvider.GetJsonForm(testUser)
+	assert.Nil(t, err)
+	assert.NotNil(t, formDataObj1)
+	formDataObj2, err := esProvider.GetJsonForm(testUser)
+	assert.Nil(t, err)
+	assert.NotNil(t, formDataObj2)
 
-	template2 := *esProvider.GetTemplate(testUser)
-	assert.True(t, strings.Contains(template2.GetYAML(), "namespace: "+testUser.KubernetesNamespace))
-	assert.Equal(t, 1, len(template2.GetImportantSections()))
-	assert.Equal(t, "metadata.name", template2.GetImportantSections()[0])
-	assert.NotEqual(t, template2.GetYAML(), template.GetYAML())
+	// Ensure they are not the same (because of the random name)
+	formData1 := formDataObj1.(dtos.FormQueryDto)
+	formData2 := formDataObj2.(dtos.FormQueryDto)
+
+	assert.NotEqual(t,
+		formData1.Properties.Common.Properties.ClusterName.Default,
+		formData2.Properties.Common.Properties.ClusterName.Default)
+
+
+	// Generate yaml from form values
+	filledForm := dtos.FormResponseDto{Common: dtos.FormResponseDtoCommon{ClusterName: "MyCluster"}}
+	filledFormData, err := json.Marshal(filledForm)
+	assert.Nil(t, err)
+	yamlTemplate, err := esProvider.GetYamlTemplate(testUser, filledFormData)
+	assert.Nil(t, err)
+	assert.NotNil(t, yamlTemplate)
+
+	elasticSearchYaml := yamlTemplate.(dtos.ProviderYamlTemplateDto)
+	assert.Equal(t, "MyCluster", elasticSearchYaml.Metadata.Name)
+	assert.Equal(t, "MyNamespace", elasticSearchYaml.Metadata.Namespace)
 }
 
 func Test_Elasticsearch_Provider_End2End(t *testing.T) {
@@ -66,7 +86,11 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 
 	user := config.Users[0]
 	invalidUser := unit_test.TestUser{KubernetesNamespace: "namespace", KubernetesAccessToken: "InvalidToken"}
-	yaml := (*esProvider.GetTemplate(user)).GetYAML()
+	yamlObj, err := esProvider.GetYamlTemplate(user, []byte(""))
+
+	yamlBytes, err := yaml.Marshal(yamlObj)
+	assert.Nil(t, err)
+	yaml := string(yamlBytes)
 
 	// Check if there is no other service
 	services, err := esProvider.GetServices(user)
@@ -127,7 +151,6 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	// Ensure they have the same attributes
 	assert.Equal(t, service0.GetName(), service1.GetName())
 	assert.Equal(t, service0.GetType(), service1.GetType())
-	assert.Equal(t, service0.GetTemplate().GetImportantSections(), service1.GetTemplate().GetImportantSections())
 
 	// Try delete service with invalid id
 	err = esProvider.DeleteService(user, "some-not-existing-id")
