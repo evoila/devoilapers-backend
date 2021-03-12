@@ -19,6 +19,7 @@ type ElasticsearchProvider struct {
 	provider.BasicProvider
 }
 
+
 // Factory method to create an instance of the ElasticsearchProvider
 func CreateElasticSearchProvider(host string, caPath string, templateDirectoryPath string) ElasticsearchProvider {
 	return ElasticsearchProvider{provider.CreateCommonProvider(

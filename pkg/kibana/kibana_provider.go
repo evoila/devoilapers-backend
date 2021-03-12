@@ -15,16 +15,23 @@ import (
 	"strings"
 )
 
+
+
 // Implements IServiceProvider interface
 // Use factory method CreateKibanaProvider to create
 type KibanaProvider struct {
-	esProvider *provider.IServiceProvider
+	sharedKibanaData *sharedKibanaData
 	providerUtils.BasicProvider
+}
+
+// Data holder class to overcome interface pointer problems
+type sharedKibanaData struct {
+	esProvider *provider.IServiceProvider
 }
 
 // Factory method to create an instance of the KibanaProvider
 func CreateKibanaProvider(host string, caPath string, templateDirectoryPath string) KibanaProvider {
-	return KibanaProvider{BasicProvider: providerUtils.CreateCommonProvider(
+	return KibanaProvider{sharedKibanaData: &sharedKibanaData{}, BasicProvider: providerUtils.CreateCommonProvider(
 		host,
 		caPath,
 		path.Join(templateDirectoryPath, "kibana", "kibana.yaml"),
@@ -35,15 +42,15 @@ func CreateKibanaProvider(host string, caPath string, templateDirectoryPath stri
 	)}
 }
 
-func (kb *KibanaProvider) OnCoreInitialized(providers []*provider.IServiceProvider) {
+func (kb KibanaProvider) OnCoreInitialized(providers []*provider.IServiceProvider) {
 	// Safe elasticsearch provider to satisfy form later on
 	for idx, provider := range providers {
 		if strings.ToLower((*provider).GetServiceType()) == "elasticsearch" {
-				kb.esProvider = providers[idx]
+				kb.sharedKibanaData.esProvider = providers[idx]
 		}
 	}
 
-	if kb.esProvider == nil {
+	if kb.sharedKibanaData.esProvider == nil {
 		panic("Elasticsearch provider could not be resolved but is necessary for kibana")
 	}
 }
@@ -79,7 +86,7 @@ func (kb KibanaProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (in
 	}
 
 	// Query elastic search instances
-	esServices, err := (*kb.esProvider).GetServices(auth)
+	esServices, err := (*kb.sharedKibanaData.esProvider).GetServices(auth)
 	if err != nil {
 		return nil, err
 	}
