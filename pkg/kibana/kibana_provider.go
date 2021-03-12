@@ -35,11 +35,11 @@ func CreateKibanaProvider(host string, caPath string, templateDirectoryPath stri
 	)}
 }
 
-func (kb KibanaProvider) OnCoreInitialized(provider []*provider.IServiceProvider) {
+func (kb *KibanaProvider) OnCoreInitialized(providers []*provider.IServiceProvider) {
 	// Safe elasticsearch provider to satisfy form later on
-	for _, provider := range provider {
+	for idx, provider := range providers {
 		if strings.ToLower((*provider).GetServiceType()) == "elasticsearch" {
-				kb.esProvider = provider
+				kb.esProvider = providers[idx]
 		}
 	}
 

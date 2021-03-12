@@ -86,11 +86,17 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 
 	user := config.Users[0]
 	invalidUser := unit_test.TestUser{KubernetesNamespace: "namespace", KubernetesAccessToken: "InvalidToken"}
-	yamlObj, err := esProvider.GetYamlTemplate(user, []byte(""))
+
+	filledForm := dtos.FormResponseDto{Common: dtos.FormResponseDtoCommon{ClusterName: "my-es-test-cluster"}}
+	filledFormBytes, err := json.Marshal(filledForm)
+	assert.Nil(t, err)
+
+	yamlObj, err := esProvider.GetYamlTemplate(user, filledFormBytes)
 
 	yamlBytes, err := yaml.Marshal(yamlObj)
 	assert.Nil(t, err)
 	yaml := string(yamlBytes)
+	assert.True(t, len(yaml) > 10)
 
 	// Check if there is no other service
 	services, err := esProvider.GetServices(user)
@@ -132,8 +138,8 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 
 	// Wait for service to become ok
 	var service1 service.IService
-	for i := 0; i < 10; i++ {
-		time.Sleep(5 * time.Second)
+	for i := 0; i < 100; i++ {
+		time.Sleep(10 * time.Second)
 
 		// Try get service with invalid user data
 		service1Ptr, err := esProvider.GetService(user, service0.GetName())

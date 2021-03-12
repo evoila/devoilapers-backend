@@ -2,12 +2,13 @@ package provider
 
 import (
 	"OperatorAutomation/cmd/service/config"
+	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/elasticsearch"
+	esDtos "OperatorAutomation/pkg/elasticsearch/dtos"
 	"OperatorAutomation/pkg/kibana"
 	"OperatorAutomation/pkg/kibana/dtos"
-	esDtos "OperatorAutomation/pkg/elasticsearch/dtos"
 	"OperatorAutomation/test/integration_tests/common_test"
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
 	"encoding/json"
@@ -45,8 +46,18 @@ func Test_Kibana_Provider_Create_Panic_Template_Not_Found(t *testing.T) {
 
 func Test_Kibana_Provider_GetAttributes(t *testing.T) {
 	kbProvider, _ := CreateKibanaTestProvider(t)
-	kbProvider.OnCoreInitialized([]*provider.IServiceProvider{
 
+	var dummyEsProvider provider.IServiceProvider = unit_test.TestProvider{
+		GetServiceTypeCb: func() string {
+			return "Elasticsearch"
+		},
+		GetServicesCb: func(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
+			return []*service.IService{}, nil
+		},
+	}
+
+	kbProvider.OnCoreInitialized([]*provider.IServiceProvider{
+		&dummyEsProvider,
 	})
 
 	assert.NotEqual(t, "", kbProvider.GetServiceImage())
@@ -54,7 +65,7 @@ func Test_Kibana_Provider_GetAttributes(t *testing.T) {
 	assert.Equal(t, "Kibana", kbProvider.GetServiceType())
 
 	testUser := unit_test.TestUser{
-		KubernetesNamespace: "A_LONG_NAMESPACE",
+		KubernetesNamespace: "MyNamespace",
 	}
 
 	// Get json form data
@@ -122,11 +133,16 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(esServices))
 	esService0 := *esServices[0]
-	time.Sleep(10 * time.Second)
+	time.Sleep(15 * time.Second)
 
 	// Continue with actual kb provider
 	// Generate a form response that would arrive from the frontent
-	filledForm := dtos.FormResponseDto{Common: dtos.FormResponseDtoCommon{ClusterName: "kibana-test"}}
+	filledForm := dtos.FormResponseDto{Common: dtos.FormResponseDtoCommon{
+		ClusterName: "kibana-test",
+		// Reference the elastic search instance
+		ElasticSearchInstance: esFormResponseDto.Common.ClusterName,
+	}}
+
 	jsonFilledForm, err := json.Marshal(filledForm)
 	assert.Nil(t, err)
 
@@ -173,8 +189,8 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 
 	// Wait for service to become ok. Kibana needs some extra time.
 	var service1 service.IService
-	for i := 0; i < 60; i++ {
-		time.Sleep(5 * time.Second)
+	for i := 0; i < 100; i++ {
+		time.Sleep(10 * time.Second)
 
 		// Try get service with invalid user data
 		service1Ptr, err := kbProvider.GetService(user, service0.GetName())
