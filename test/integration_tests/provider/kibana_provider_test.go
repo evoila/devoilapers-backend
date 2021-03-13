@@ -120,7 +120,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	service0 := *services[0]
 	assert.NotEqual(t, "", service0.GetName())
 	assert.Equal(t, kbProvider.GetServiceType(), service0.GetType())
-	assert.Equal(t, 0, len(service0.GetActions()))
+	assert.Equal(t, 1, len(service0.GetActions()))
 
 	// Try get service with invalid user data
 	_, err = kbProvider.GetService(invalidUser, service0.GetName())
@@ -128,7 +128,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 
 	// Wait for service to become ok. Kibana needs some extra time.
 	var service1 service.IService
-	for i := 0; i < 60; i++ {
+	for i := 0; i < 12; i++ {
 		time.Sleep(5 * time.Second)
 
 		// Try get service with invalid user data
@@ -150,7 +150,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	assert.Equal(t, service0.GetTemplate().GetImportantSections(), service1.GetTemplate().GetImportantSections())
 
 	// Check whether service is an Kibana service
-	service2, ok := (service1.(*kibana.KibanaService))
+	service2, ok := service1.(kibana.KibanaService)
 	assert.True(t, ok)
 
 	secret, _ := service2.K8sApi.GetSecret(user.KubernetesNamespace, service2.GetName()+"-kb-http-certs-internal")
@@ -168,7 +168,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	// Check status of service after setting the certificate
 	var service3 *service.IService
 	for i := 0; i < 5; i++ {
-		tmpService, err := esProvider.GetService(user, service0.GetName())
+		tmpService, err := kbProvider.GetService(user, service2.GetName())
 		assert.Nil(t, err)
 		assert.NotNil(t, tmpService)
 		if (*tmpService).GetStatus() == service.ServiceStatusOk {
@@ -201,7 +201,9 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	err = esProvider.DeleteService(user, esService0.GetName())
 	assert.Nil(t, err)
 
+	// Wait till delete service is done
+	time.Sleep(5 * time.Second)
 	// Check whether the secret with associated certificate is also deleted
-	_, err = service2.K8sApi.GetSecret(user.KubernetesNamespace, service2.GetName()+"-kb-http-certs-internal")
+	secret, err = service2.K8sApi.GetSecret(user.KubernetesNamespace, service2.GetName()+"-tls-cert")
 	assert.NotNil(t, err)
 }
