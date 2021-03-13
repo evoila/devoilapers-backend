@@ -12,7 +12,7 @@ import (
 )
 
 type ElasticSearchService struct {
-	k8sApi       *kubernetes.K8sApi
+	K8sApi       *kubernetes.K8sApi
 	crdInstance  *v1.Elasticsearch
 	commonCrdApi *kubernetes.CommonCrdApi
 	status       v1.ElasticsearchHealth
@@ -38,7 +38,7 @@ func (es ElasticSearchService) SetCertificateToService(certDto *dtos.Certificate
 		"tls.crt": []byte(certDto.TlsCrt),
 		"tls.key": []byte(certDto.TlsKey),
 	}
-	if secretName, err := es.k8sApi.CreateTlsSecret(elasticInstance.Namespace, elasticInstance.Name, "Elasticsearch", GroupName+"/"+GroupVersion, string(elasticInstance.UID), tlsCert); err != nil {
+	if secretName, err := es.K8sApi.CreateTlsSecret(elasticInstance.Namespace, elasticInstance.Name, "Elasticsearch", GroupName+"/"+GroupVersion, string(elasticInstance.UID), tlsCert); err != nil {
 		return nil, err
 	} else {
 		elasticInstance.Spec.HTTP.TLS.Certificate.SecretName = secretName

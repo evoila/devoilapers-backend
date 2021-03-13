@@ -4,12 +4,14 @@ import (
 	"OperatorAutomation/cmd/service/config"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/elasticsearch"
+	"OperatorAutomation/pkg/elasticsearch/dtos"
 	"OperatorAutomation/test/integration_tests/common_test"
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func CreateElasticSearchTestProvider(t *testing.T) (*elasticsearch.ElasticsearchProvider, config.RawConfig) {
@@ -129,6 +131,38 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	assert.Equal(t, service0.GetType(), service1.GetType())
 	assert.Equal(t, service0.GetTemplate().GetImportantSections(), service1.GetTemplate().GetImportantSections())
 
+	// Check whether service is an Elasticsearch service
+	service2, ok := (service1.(*elasticsearch.ElasticSearchService))
+	assert.True(t, ok)
+
+	secret, _ := service2.K8sApi.GetSecret(user.KubernetesNamespace, service2.GetName()+"-es-http-certs-internal")
+
+	// Test set certificate to service
+	certDto := &dtos.CertificateDto{
+		CaCrt:  string(secret.Data["ca.crt"]),
+		TlsCrt: string(secret.Data["tls.crt"]),
+		TlsKey: string(secret.Data["tls.key"]),
+	}
+
+	_, err = service2.SetCertificateToService(certDto)
+	assert.Nil(t, err)
+
+	// Check status of service after setting the certificate
+	var service3 *service.IService
+	for i := 0; i < 5; i++ {
+		tmpService, err := esProvider.GetService(user, service0.GetName())
+		assert.Nil(t, err)
+		assert.NotNil(t, tmpService)
+		if (*tmpService).GetStatus() == service.ServiceStatusOk {
+			service3 = tmpService
+			break
+		} else {
+			time.Sleep(5 * time.Second)
+		}
+	}
+	assert.NotNil(t, service3)
+	assert.True(t, service.ServiceStatusOk == (*service3).GetStatus())
+
 	// Try delete service with invalid id
 	err = esProvider.DeleteService(user, "some-not-existing-id")
 	assert.NotNil(t, err)
@@ -140,4 +174,8 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	// Delete service
 	err = esProvider.DeleteService(user, (*services[0]).GetName())
 	assert.Nil(t, err)
+
+	// Check whether the secret with associated certificate is also deleted
+	_, err = service2.K8sApi.GetSecret(user.KubernetesNamespace, service2.GetName()+"-es-http-certs-internal")
+	assert.NotNil(t, err)
 }

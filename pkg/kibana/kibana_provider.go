@@ -114,7 +114,7 @@ func (kb KibanaProvider) CrdInstanceToServiceInstance(auth common.IKubernetesAut
 	}
 
 	var KibanaService service.IService = KibanaService{
-		k8sApi:       api,
+		K8sApi:       api,
 		crdInstance:  crdInstance,
 		commonCrdApi: KibanaCrd,
 		status:       crdInstance.Status.Health,

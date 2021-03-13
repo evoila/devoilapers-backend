@@ -15,7 +15,6 @@ type TestProvider struct {
 	GetServiceCb              func(auth common.IKubernetesAuthInformation, id string) (*service.IService, error)
 	CreateServiceCb           func(auth common.IKubernetesAuthInformation, yaml string) error
 	DeleteServiceCb           func(auth common.IKubernetesAuthInformation, id string) error
-	SetCertificateToServiceCb func(auth common.IKubernetesAuthInformation, id string, tlsCert map[string][]byte) error
 }
 
 func (es TestProvider) GetServiceDescription() string {
@@ -48,8 +47,4 @@ func (es TestProvider) CreateService(auth common.IKubernetesAuthInformation, yam
 
 func (es TestProvider) DeleteService(auth common.IKubernetesAuthInformation, id string) error {
 	return es.DeleteServiceCb(auth, id)
-}
-
-func (es TestProvider) SetCertificateToService(auth common.IKubernetesAuthInformation, id string, tlsCert map[string][]byte) error {
-	return es.SetCertificateToServiceCb(auth, id, tlsCert)
 }

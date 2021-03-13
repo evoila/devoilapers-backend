@@ -109,7 +109,7 @@ func (es ElasticsearchProvider) CrdInstanceToServiceInstance(auth common.IKubern
 		return nil
 	}
 	var elasticSearchService service.IService = ElasticSearchService{
-		k8sApi:       api,
+		K8sApi:       api,
 		commonCrdApi: ElasticCrd,
 		crdInstance:  crdInstance,
 		status:       crdInstance.Status.Health,

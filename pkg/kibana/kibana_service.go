@@ -14,7 +14,7 @@ import (
 )
 
 type KibanaService struct {
-	k8sApi       *kubernetes.K8sApi
+	K8sApi       *kubernetes.K8sApi
 	crdInstance  *v1.Kibana
 	commonCrdApi *kubernetes.CommonCrdApi
 	status       commonV1.DeploymentHealth
@@ -38,7 +38,7 @@ func (kb KibanaService) SetCertificateToService(certDto *dtos.CertificateDto) (i
 		"tls.crt": []byte(certDto.TlsCrt),
 		"tls.key": []byte(certDto.TlsKey),
 	}
-	if secretName, err := kb.k8sApi.CreateTlsSecret(kibanaInstance.Namespace, kibanaInstance.Name, "Kibana", GroupName+"/"+GroupVersion, string(kibanaInstance.UID), tlsCert); err != nil {
+	if secretName, err := kb.K8sApi.CreateTlsSecret(kibanaInstance.Namespace, kibanaInstance.Name, "Kibana", GroupName+"/"+GroupVersion, string(kibanaInstance.UID), tlsCert); err != nil {
 		return nil, err
 	} else {
 		kibanaInstance.Spec.HTTP.TLS.Certificate.SecretName = secretName

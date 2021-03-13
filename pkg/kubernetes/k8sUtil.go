@@ -131,3 +131,8 @@ func (api *K8sApi) CreateTlsSecret(namespace, ownerName, kind, apiVersion, uid s
 	}
 	return secretName, nil
 }
+
+// Get a secret based on provided name and namespace
+func (api *K8sApi) GetSecret(namespace, name string) (*v1.Secret, error) {
+	return api.ClientSet.CoreV1().Secrets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+}
