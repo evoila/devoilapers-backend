@@ -63,7 +63,7 @@ func (api *K8sApi) Apply(b []byte) (*unstructured.Unstructured, error) {
 		mapper := restmapper.NewDiscoveryRESTMapper(gr)
 		mapping, err := mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 		if err != nil {
-			logrus.Error(err)
+			logrus.Error("k8sUtil 1", err)
 			return nil, err
 		}
 
@@ -85,7 +85,7 @@ func (api *K8sApi) Apply(b []byte) (*unstructured.Unstructured, error) {
 				Force:        &force,
 			})
 		if err != nil {
-			logrus.Error(err)
+			logrus.Error("k8sUtil 2", err)
 		} else {
 			logrus.Info((unstructured.Object["spec"].(map[string]interface{}))["version"])
 		}

@@ -7,24 +7,22 @@
     "public_key_file_path": "configs/webserver_ssl_certificates/server.crt"
   },
   "kubernetes": {
-    "server": "https://127.0.0.1:49157",
-    "certificate-authority": "/home/tung/.minikube/ca.crt",
-    "name": "minikube"
+    "server": "$GH_KUBERNETES_HOST",
+    "certificate-authority": "configs/kubernetes_ca.crt",
+    "nginx": {
+      "namespace": "ingress-nginx",
+      "tcp_config_map_name": "tcp-services",
+      "deployment_name": "default-http-backend",
+      "container_name": "default-http-backend"
+    }
   },
   "users": [
     {
-      "name": "admin",
-      "password": "masterkey",
-      "kubernetes_access_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6InYwUndLMVI0QzJyZ0tDNDVvdGJKU2NoSWtPOW1vNEVYZDFlMUI4cnhoZUEifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZC10b2tlbi1nZ3o0ZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjlhYmZmN2Q5LTUwMjAtNDJlZS05OWU4LWM5MzE2MGI1OTI2NCIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlcm5ldGVzLWRhc2hib2FyZDprdWJlcm5ldGVzLWRhc2hib2FyZCJ9.Mx3JCZ_qwt3iB10BNoPh-xhSCYl4mwrXM0BU7elHHxtzV8qLtcvKNDjZZwqMbUj5CoGyj_0ETof15OV8_72rAfpHPyF8Q0_zpgx01wulwveV14lDwQzs9mGa4yeTSyVOl9vrIph_-UZ69NaOZuhYVPx2_Pl6JXjXpRCloH7dv04lTeIzoKd_ZjS2CguLcmNnifHqDh7bCNxCwr_c34joWDE4FPtcp6uPs8d1sm0fTgPT7fVDCSBdMFu-PZRLCz0lWW7P_ZXk6iSG6LaQY61q8oPcc-E9cFBRt9NTfXOFbYufDraQ405VYJ4on4-9sskVK0v12ER0donE_4w684pm2A",
-      "kubernetes_namespace": "kubernetes-dashboard",
+      "name": "root",
+      "password": "toor",
+      "kubernetes_access_token": "$GH_KUBERNETES_TOKEN",
+      "kubernetes_namespace": "$GH_KUBERNETES_NAMESPACE",
       "role": "admin"
-    },
-    {
-      "name": "guest",
-      "password": "guest",
-      "kubernetes_access_token": "MYKUBTOKEN",
-      "kubernetes_namespace": "User2Namespace",
-      "role": "user"
     }
   ]
 }
