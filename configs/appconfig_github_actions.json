@@ -9,7 +9,12 @@
   "kubernetes": {
     "server": "$GH_KUBERNETES_HOST",
     "certificate-authority": "configs/kubernetes_ca.crt",
-    "name": "remote-cluster"
+    "nginx": {
+      "namespace": "ingress-nginx",
+      "tcp_config_map_name": "tcp-services",
+      "deployment_name": "default-http-backend",
+      "container_name": "default-http-backend"
+    }
   },
   "users": [
     {
