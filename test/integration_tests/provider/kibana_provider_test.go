@@ -7,10 +7,11 @@ import (
 	"OperatorAutomation/pkg/kibana"
 	"OperatorAutomation/test/integration_tests/common_test"
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func CreateKibanaTestProvider(t *testing.T) (*kibana.KibanaProvider, config.RawConfig) {
@@ -118,7 +119,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	service0 := *services[0]
 	assert.NotEqual(t, "", service0.GetName())
 	assert.Equal(t, kbProvider.GetServiceType(), service0.GetType())
-	assert.Equal(t, 0, len(service0.GetActions()))
+	assert.Equal(t, 1, len(service0.GetActions()))
 
 	// Try get service with invalid user data
 	_, err = kbProvider.GetService(invalidUser, service0.GetName())

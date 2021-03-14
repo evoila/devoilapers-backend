@@ -6,10 +6,11 @@ import (
 	"OperatorAutomation/pkg/elasticsearch"
 	"OperatorAutomation/test/integration_tests/common_test"
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func CreateElasticSearchTestProvider(t *testing.T) (*elasticsearch.ElasticsearchProvider, config.RawConfig) {
@@ -96,7 +97,7 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	service0 := *services[0]
 	assert.NotEqual(t, "", service0.GetName())
 	assert.Equal(t, esProvider.GetServiceType(), service0.GetType())
-	assert.Equal(t, 0, len(service0.GetActions()))
+	assert.Equal(t, 1, len(service0.GetActions()))
 	assert.True(t,
 		service.ServiceStatusPending == service0.GetStatus() ||
 			service.ServiceStatusOk == service0.GetStatus(),
