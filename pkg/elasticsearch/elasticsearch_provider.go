@@ -5,9 +5,10 @@ import (
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/kubernetes"
 	"OperatorAutomation/pkg/utils/provider"
+	"path"
+
 	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/elasticsearch/v1"
 	"gopkg.in/yaml.v2"
-	"path"
 )
 
 // Implements IServiceProvider interface
@@ -28,8 +29,7 @@ func CreateElasticSearchProvider(host string, caPath string, templateDirectoryPa
 	)}
 }
 
-
-func (es ElasticsearchProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error)  {
+func (es ElasticsearchProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error) {
 	return kubernetes.CreateCommonCrdApi(es.Host, es.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
 }
 
@@ -48,7 +48,7 @@ func (es ElasticsearchProvider) GetServices(auth common.IKubernetesAuthInformati
 
 	var services []*service.IService
 	for _, elasticSearchInstance := range elasticSearchInstances.Items {
-		services = append(services, es.CrdInstanceToServiceInstance(&elasticSearchInstance))
+		services = append(services, es.CrdInstanceToServiceInstance(auth, &elasticSearchInstance, elasticSearchCrd))
 	}
 
 	return services, nil
@@ -66,7 +66,7 @@ func (es ElasticsearchProvider) GetService(auth common.IKubernetesAuthInformatio
 		return nil, err
 	}
 
-	return es.CrdInstanceToServiceInstance(&elasticSearchInstance), nil
+	return es.CrdInstanceToServiceInstance(auth, &elasticSearchInstance, elasticSearchCrd), nil
 }
 
 func (es ElasticsearchProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
@@ -94,22 +94,25 @@ func (es ElasticsearchProvider) DeleteService(auth common.IKubernetesAuthInforma
 }
 
 // Converts a v1.Elasticsearch instance to an service representation
-func (es ElasticsearchProvider) CrdInstanceToServiceInstance(crdInstance *v1.Elasticsearch) *service.IService {
+func (es ElasticsearchProvider) CrdInstanceToServiceInstance(auth common.IKubernetesAuthInformation, crdInstance *v1.Elasticsearch, crdApi *kubernetes.CommonCrdApi) *service.IService {
 	yamlData, err := yaml.Marshal(crdInstance)
 	if err != nil {
 		yamlData = []byte("Unknown")
 	}
 
+	mApi, _ := kubernetes.GenerateK8sApiFromToken(es.Host, es.CaPath, auth.GetKubernetesAccessToken())
 	var elasticSearchService service.IService = ElasticSearchService{
 		status: crdInstance.Status.Health,
 		BasicService: provider.BasicService{
-			Name : crdInstance.Name,
-			ProviderType: es.GetServiceType(),
-			Yaml: string(yamlData),
+			Name:              crdInstance.Name,
+			ProviderType:      es.GetServiceType(),
+			Yaml:              string(yamlData),
 			ImportantSections: (*es.Template).GetImportantSections(),
 		},
+		api:    mApi,
+		crdApi: crdApi,
+		auth:   auth,
 	}
 
 	return &elasticSearchService
 }
-

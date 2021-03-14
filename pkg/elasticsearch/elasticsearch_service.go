@@ -1,16 +1,24 @@
 package elasticsearch
 
 import (
+	"OperatorAutomation/pkg/core/action"
+	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/service"
+	"OperatorAutomation/pkg/elasticsearch/dtos"
 	"OperatorAutomation/pkg/utils/provider"
+
+	"OperatorAutomation/pkg/kubernetes"
+
 	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/elasticsearch/v1"
 )
 
 type ElasticSearchService struct {
 	status v1.ElasticsearchHealth
 	provider.BasicService
+	api    *kubernetes.K8sApi
+	crdApi *kubernetes.CommonCrdApi
+	auth   common.IKubernetesAuthInformation
 }
-
 
 func (es ElasticSearchService) GetStatus() int {
 	if es.status == v1.ElasticsearchGreenHealth {
@@ -22,4 +30,45 @@ func (es ElasticSearchService) GetStatus() int {
 	}
 
 	return service.ServiceStatusPending
+}
+
+func (es ElasticSearchService) GetActions() []action.IActionGroup {
+	return []action.IActionGroup{
+		action.ActionGroup{
+			Name: "Elasticsearch Action Group",
+			Actions: []action.IAction{
+				action.Action{
+					Name:          "ExposeThroughIngress",
+					UniqueCommand: "expose",
+					Placeholder:   &dtos.ExposeInformation{},
+					ActionExecuteCallback: func(i interface{}) (interface{}, error) {
+						return es.ExecuteExposeAction(i.(*dtos.ExposeInformation))
+					},
+				},
+				action.Action{
+					Name:          "UpdateReplicasCount",
+					UniqueCommand: "rescale",
+					Placeholder:   &dtos.ScaleInformation{},
+					ActionExecuteCallback: func(i interface{}) (interface{}, error) {
+						return es.ExecuteRescaleAction(i.(*dtos.ScaleInformation))
+					},
+				},
+			},
+		},
+	}
+}
+
+// ExecuteExposeAction exposes a service through ingress and return error if not successful
+func (es ElasticSearchService) ExecuteExposeAction(dto *dtos.ExposeInformation) (interface{}, error) {
+
+	return es.api.AddServiceToIngress(es.auth.GetKubernetesNamespace(), dto.IngressName, es.Name+"-es-http", dto.HostName, 9200)
+}
+
+// ExecuteRescaleAction rescales es-statefulset and return error if not successful
+func (es ElasticSearchService) ExecuteRescaleAction(dto *dtos.ScaleInformation) (interface{}, error) {
+	instance := v1.Elasticsearch{}
+	es.crdApi.Get(es.auth.GetKubernetesNamespace(), es.Name, RessourceName, &instance)
+	name := es.Name + "-es-" + instance.Spec.NodeSets[0].Name
+
+	return es.api.UpdateScaleStatefulSet(es.auth.GetKubernetesNamespace(), name, dto.ReplicasCount)
 }
