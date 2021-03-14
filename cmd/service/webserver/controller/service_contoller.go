@@ -109,9 +109,11 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 			}
 
 			placeholder := action.GetPlaceholder()
-			if err := json.Unmarshal(jsonData, placeholder); err != nil {
-				utils.NewError(ctx, http.StatusBadRequest, err)
-				return
+			if placeholder != nil {
+				if err := json.Unmarshal(jsonData, placeholder); err != nil {
+					utils.NewError(ctx, http.StatusBadRequest, err)
+					return
+				}
 			}
 
 			val, err := action.GetActionExecuteCallback()(placeholder)
