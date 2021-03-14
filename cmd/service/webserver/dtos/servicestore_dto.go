@@ -13,3 +13,8 @@ type ServiceStoreItemDto struct {
 type ServiceStoreItemYamlDto struct {
 	Yaml string `json:"yaml" example:"item: text"`
 }
+
+
+type ServiceStoreItemFormDto struct {
+	FormJson string `json:"form" example:"{\"MyJsonObj\": \"Value\"}"`
+}

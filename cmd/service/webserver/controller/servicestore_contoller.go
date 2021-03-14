@@ -3,6 +3,7 @@ package controller
 import (
 	"OperatorAutomation/cmd/service/webserver/dtos"
 	"OperatorAutomation/cmd/service/utils"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -117,7 +118,7 @@ func (controller ServiceStoreController) HandlePostServiceStoreItemYaml(ctx *gin
 //
 // @Param servicetype path string true "Type of service"
 //
-// @Success 200 {object} dtos.ServiceStoreItemYamlDto
+// @Success 200 {object} dtos.ServiceStoreItemFormDto
 // @Failure 400 {object} dtos.HTTPErrorDto
 // @Failure 401 {object} dtos.HTTPErrorDto
 // @Failure 500 {object} dtos.HTTPErrorDto
@@ -142,5 +143,11 @@ func (controller ServiceStoreController) HandleGetServiceStoreItemForm(ctx *gin.
 		return
 	}
 
-	ctx.JSON(http.StatusOK, formData)
+	formString, err := json.Marshal(formData)
+	if err != nil {
+		utils.NewError(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dtos.ServiceStoreItemFormDto{FormJson: string(formString)})
 }

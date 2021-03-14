@@ -126,7 +126,10 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": ""
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ServiceInstanceActionResponseDto"
+                        }
                     },
                     "400": {
                         "description": "Bad Request",
@@ -446,7 +449,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dtos.ServiceStoreItemYamlDto"
+                            "$ref": "#/definitions/dtos.ServiceStoreItemFormDto"
                         }
                     },
                     "400": {
@@ -599,10 +602,6 @@ var doc = `{
         "dtos.HTTPErrorDto": {
             "type": "object",
             "properties": {
-                "code": {
-                    "type": "integer",
-                    "example": 400
-                },
                 "message": {
                     "type": "string",
                     "example": "status bad request"
@@ -623,6 +622,12 @@ var doc = `{
                 "name": {
                     "type": "string",
                     "example": "Expose service"
+                },
+                "toggleGroup": {
+                    "type": "string"
+                },
+                "toggleValue": {
+                    "type": "integer"
                 }
             }
         },
@@ -638,6 +643,15 @@ var doc = `{
                 "name": {
                     "type": "string",
                     "example": "Security"
+                }
+            }
+        },
+        "dtos.ServiceInstanceActionResponseDto": {
+            "type": "object",
+            "properties": {
+                "resultJson": {
+                    "type": "string",
+                    "example": "{\"MyJsonObj\": \"Value\"}"
                 }
             }
         },
@@ -689,6 +703,15 @@ var doc = `{
                 "type": {
                     "type": "string",
                     "example": "kibana"
+                }
+            }
+        },
+        "dtos.ServiceStoreItemFormDto": {
+            "type": "object",
+            "properties": {
+                "form": {
+                    "type": "string",
+                    "example": "{\"MyJsonObj\": \"Value\"}"
                 }
             }
         },

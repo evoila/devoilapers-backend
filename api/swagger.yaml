@@ -20,9 +20,6 @@ definitions:
     type: object
   dtos.HTTPErrorDto:
     properties:
-      code:
-        example: 400
-        type: integer
       message:
         example: status bad request
         type: string
@@ -38,6 +35,10 @@ definitions:
       name:
         example: Expose service
         type: string
+      toggleGroup:
+        type: string
+      toggleValue:
+        type: integer
     type: object
   dtos.ServiceInstanceActionGroupDto:
     properties:
@@ -47,6 +48,12 @@ definitions:
         type: array
       name:
         example: Security
+        type: string
+    type: object
+  dtos.ServiceInstanceActionResponseDto:
+    properties:
+      resultJson:
+        example: '{"MyJsonObj": "Value"}'
         type: string
     type: object
   dtos.ServiceInstanceDetailsDto:
@@ -82,6 +89,12 @@ definitions:
         type: string
       type:
         example: kibana
+        type: string
+    type: object
+  dtos.ServiceStoreItemFormDto:
+    properties:
+      form:
+        example: '{"MyJsonObj": "Value"}'
         type: string
     type: object
   dtos.ServiceStoreItemYamlDto:
@@ -207,7 +220,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.ServiceInstanceActionResponseDto'
         "400":
           description: Bad Request
           schema:
@@ -379,7 +394,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dtos.ServiceStoreItemYamlDto'
+            $ref: '#/definitions/dtos.ServiceStoreItemFormDto'
         "400":
           description: Bad Request
           schema:

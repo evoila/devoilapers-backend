@@ -376,7 +376,7 @@ func Test_ServiceController_HandleGetServiceInstanceDetails(t *testing.T) {
 	responseAction := responseActionGroup.Actions[0]
 	assert.Equal(t, "MyAction", responseAction.Name)
 	assert.Equal(t, "MyActionCmd", responseAction.Command)
-	assert.Equal(t, "{\"SomeValue\":\"\"}", responseAction.Placeholder)
+	assert.Equal(t, "{\"SomeValue\":\"\"}", responseAction.FormJson)
 
 	// Invalid credentials
 	statusCode = MakeRequest(
@@ -517,11 +517,11 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 
 	assert.Equal(t, "MyAction0", responseAction0.Name)
 	assert.Equal(t, "MyActionCmd0", responseAction0.Command)
-	assert.Equal(t, "{\"SomeValue\":\"\"}", responseAction0.Placeholder)
+	assert.Equal(t, "{\"SomeValue\":\"\"}", responseAction0.FormJson)
 
 	assert.Equal(t, "MyAction1", responseAction1.Name)
 	assert.Equal(t, "MyActionCmd1", responseAction1.Command)
-	assert.Equal(t, "{\"SomeValue\":\"\"}", responseAction1.Placeholder)
+	assert.Equal(t, "{\"SomeValue\":\"\"}", responseAction1.FormJson)
 
 	// Invalid credentials
 	statusCode = MakeRequest(

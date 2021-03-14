@@ -73,7 +73,7 @@ func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Con
 // @Param servicename path string true "Id of service"
 // @Param actioncommand path string true "action command"
 //
-// @Success 200
+// @Success 200 {object} dtos.ServiceInstanceActionResponseDto
 // @Failure 400 {object} dtos.HTTPErrorDto
 // @Failure 401 {object} dtos.HTTPErrorDto
 // @Failure 500 {object} dtos.HTTPErrorDto
@@ -114,13 +114,19 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 				return
 			}
 
-			val, err := action.GetActionExecuteCallback()(placeholder)
+			actionResult, err := action.GetActionExecuteCallback()(placeholder)
 			if err != nil {
 				utils.NewError(ctx, http.StatusInternalServerError, err)
 				return
 			}
 
-			ctx.JSON(http.StatusOK, val)
+			actionResultJson, err := json.Marshal(actionResult)
+			if err != nil {
+				utils.NewError(ctx, http.StatusInternalServerError, err)
+				return
+			}
+
+			ctx.JSON(http.StatusOK, dtos.ServiceInstanceActionResponseDto{ResultJson: string(actionResultJson)})
 			return
 		}
 	}
@@ -228,9 +234,9 @@ func serviceGroupToDto(servicePtr *service.IService) []dtos.ServiceInstanceActio
 			jsonPlaceholder, _ := json.Marshal(action.GetJsonForm())
 
 			actionDto := dtos.ServiceInstanceActionDto{
-				Name:    action.GetName(),
-				Command: action.GetUniqueCommand(),
-				Form:    string(jsonPlaceholder),
+				Name:     action.GetName(),
+				Command:  action.GetUniqueCommand(),
+				FormJson: string(jsonPlaceholder),
 			}
 
 			groupDto.Actions = append(groupDto.Actions, actionDto)
