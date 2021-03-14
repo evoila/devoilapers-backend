@@ -70,6 +70,5 @@ func Test_AccountController_HandlePostLogin(t *testing.T) {
 	)
 
 	assert.Equal(t, http.StatusBadRequest, statusCode)
-	assert.Equal(t, http.StatusBadRequest, errDto.Code)
 	assert.NotEqual(t, "", errDto.Message)
 }

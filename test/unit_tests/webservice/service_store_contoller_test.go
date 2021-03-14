@@ -78,7 +78,8 @@ func Test_ServiceStoreController_HandleGetServiceStoreForm(t *testing.T) {
 	router := CreateRouter(t, &provider)
 
 	// Authorized
-	var dto common_test.TestSerializableStruct
+
+	var dtoWrapper = dtos.ServiceStoreItemFormDto{}
 	statusCode := MakeRequest(
 		t,
 		router,
@@ -86,8 +87,12 @@ func Test_ServiceStoreController_HandleGetServiceStoreForm(t *testing.T) {
 		http.MethodGet,
 		"/api/v1/servicestore/form/"+provider.GetServiceType(),
 		nil,
-		&dto,
+		&dtoWrapper,
 	)
+
+	var dto common_test.TestSerializableStruct
+	err := json.Unmarshal([]byte(dtoWrapper.FormJson), &dto)
+	assert.Nil(t, err)
 
 	assert.Equal(t, http.StatusOK, statusCode)
 	assert.Equal(t, "MyFormValue", dto.Value)
@@ -185,7 +190,6 @@ func Test_ServiceStoreController_HandleGetServiceStoreItemYaml(t *testing.T) {
 	)
 
 	assert.Equal(t, http.StatusBadRequest, statusCode)
-	assert.Equal(t, http.StatusBadRequest, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 
 	// Invalid payload
@@ -201,7 +205,6 @@ func Test_ServiceStoreController_HandleGetServiceStoreItemYaml(t *testing.T) {
 	)
 
 	assert.Equal(t, http.StatusBadRequest, statusCode)
-	assert.Equal(t, http.StatusBadRequest, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 
 	// Error during yaml generation

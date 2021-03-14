@@ -7,6 +7,7 @@ import (
 	provider2 "OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/test/unit_tests/common_test"
+	"encoding/json"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -84,7 +85,6 @@ func Test_ServiceController_HandlePostCreateServiceInstance(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, statusCode)
 	assert.Equal(t, 1, createServiceGotCalled)
-	assert.Equal(t, http.StatusBadRequest, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 
 	// On provider error
@@ -102,7 +102,6 @@ func Test_ServiceController_HandlePostCreateServiceInstance(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, statusCode)
 	assert.Equal(t, 2, createServiceGotCalled)
-	assert.Equal(t, http.StatusInternalServerError, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 }
 
@@ -158,7 +157,8 @@ func Test_ServiceController_HandlePostServiceInstanceAction(t *testing.T) {
 
 	// Valid credentials
 	requestDto := common_test.TestPlaceholder{SomeValue: "MyTestValue"}
-	responseDto := common_test.TestPlaceholder{}
+	responseWrapperDto := dtos.ServiceInstanceActionResponseDto{}
+
 
 	statusCode := MakeRequest(
 		t,
@@ -167,8 +167,12 @@ func Test_ServiceController_HandlePostServiceInstanceAction(t *testing.T) {
 		http.MethodPost,
 		"/api/v1/services/action/TestType/TestService/TestActionCmd",
 		&requestDto,
-		&responseDto,
+		&responseWrapperDto,
 	)
+
+	responseDto := common_test.TestPlaceholder{}
+	err := json.Unmarshal([]byte(responseWrapperDto.ResultJson), &responseDto)
+	assert.Nil(t, err)
 
 	assert.Equal(t, http.StatusOK, statusCode)
 	assert.Equal(t, requestDto.SomeValue, responseDto.SomeValue)
@@ -202,7 +206,6 @@ func Test_ServiceController_HandlePostServiceInstanceAction(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, statusCode)
 	assert.Equal(t, 1, actionGotCalled)
-	assert.Equal(t, http.StatusBadRequest, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 
 	// On action error
@@ -220,7 +223,6 @@ func Test_ServiceController_HandlePostServiceInstanceAction(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, statusCode)
 	assert.Equal(t, 2, actionGotCalled)
-	assert.Equal(t, http.StatusInternalServerError, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 
 	// On service error
@@ -238,7 +240,6 @@ func Test_ServiceController_HandlePostServiceInstanceAction(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, statusCode)
 	assert.Equal(t, 2, actionGotCalled)
-	assert.Equal(t, http.StatusBadRequest, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 }
 
@@ -307,7 +308,6 @@ func Test_ServiceController_HandleDeleteServiceInstance(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, statusCode)
 	assert.Equal(t, 2, deleteGotCalled)
-	assert.Equal(t, http.StatusInternalServerError, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 }
 
@@ -376,7 +376,7 @@ func Test_ServiceController_HandleGetServiceInstanceDetails(t *testing.T) {
 	responseAction := responseActionGroup.Actions[0]
 	assert.Equal(t, "MyAction", responseAction.Name)
 	assert.Equal(t, "MyActionCmd", responseAction.Command)
-	assert.Equal(t, "{\"SomeValue\":\"\"}", responseAction.FormJson)
+	assert.Equal(t, `{"order":["SomeValue"],"properties":{"SomeValue":{"default":"","title":"SomeValue","type":"string"}}}`, responseAction.FormJson)
 
 	// Invalid credentials
 	statusCode = MakeRequest(
@@ -404,7 +404,6 @@ func Test_ServiceController_HandleGetServiceInstanceDetails(t *testing.T) {
 	)
 
 	assert.Equal(t, http.StatusInternalServerError, statusCode)
-	assert.Equal(t, http.StatusInternalServerError, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 }
 
@@ -517,11 +516,11 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 
 	assert.Equal(t, "MyAction0", responseAction0.Name)
 	assert.Equal(t, "MyActionCmd0", responseAction0.Command)
-	assert.Equal(t, "{\"SomeValue\":\"\"}", responseAction0.FormJson)
+	assert.Equal(t, "{\"order\":[\"SomeValue\"],\"properties\":{\"SomeValue\":{\"default\":\"\",\"title\":\"SomeValue\",\"type\":\"string\"}}}", responseAction0.FormJson)
 
 	assert.Equal(t, "MyAction1", responseAction1.Name)
 	assert.Equal(t, "MyActionCmd1", responseAction1.Command)
-	assert.Equal(t, "{\"SomeValue\":\"\"}", responseAction1.FormJson)
+	assert.Equal(t, "{\"order\":[\"SomeValue\"],\"properties\":{\"SomeValue\":{\"default\":\"\",\"title\":\"SomeValue\",\"type\":\"string\"}}}", responseAction1.FormJson)
 
 	// Invalid credentials
 	statusCode = MakeRequest(
@@ -550,7 +549,6 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 	)
 
 	assert.Equal(t, http.StatusInternalServerError, statusCode)
-	assert.Equal(t, http.StatusInternalServerError, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 }
 
@@ -621,6 +619,5 @@ func Test_ServiceController_HandleGetServiceInstanceYaml(t *testing.T) {
 	)
 
 	assert.Equal(t, http.StatusInternalServerError, statusCode)
-	assert.Equal(t, http.StatusInternalServerError, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 }

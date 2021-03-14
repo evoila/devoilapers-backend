@@ -709,7 +709,7 @@ var doc = `{
         "dtos.ServiceStoreItemFormDto": {
             "type": "object",
             "properties": {
-                "form": {
+                "formJson": {
                     "type": "string",
                     "example": "{\"MyJsonObj\": \"Value\"}"
                 }

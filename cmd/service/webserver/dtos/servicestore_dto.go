@@ -16,5 +16,5 @@ type ServiceStoreItemYamlDto struct {
 
 
 type ServiceStoreItemFormDto struct {
-	FormJson string `json:"form" example:"{\"MyJsonObj\": \"Value\"}"`
+	FormJson string `json:"formJson" example:"{\"MyJsonObj\": \"Value\"}"`
 }
