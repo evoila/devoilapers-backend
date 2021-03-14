@@ -1,17 +1,10 @@
 package utils
 
 import (
-	"OperatorAutomation/pkg/core/common"
 	"github.com/Pallinder/go-randomdata"
 	"strings"
 )
 
-func FillWithData(authInformation common.IKubernetesAuthInformation, template string) string {
-	template = strings.Replace(template, "{opa.random.name}", GetRandomKubernetesResourceName(), -1)
-	template = strings.Replace(template, "{opa.user.namespace}", authInformation.GetKubernetesNamespace(), -1)
-
-	return template
-}
 
 func GetRandomKubernetesResourceName() string {
 	randomName := randomdata.FirstName(randomdata.RandomGender)

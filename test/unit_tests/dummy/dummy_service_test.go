@@ -66,7 +66,7 @@ func Test_DummyProvider_Service_Actions(t *testing.T) {
 	assert.NotEqual(t, "", action0.GetName())
 	assert.NotEqual(t, "", action0.GetUniqueCommand())
 
-	placeholder := action0.GetPlaceholder()
+	placeholder := action0.GetJsonFormResultPlaceholder()
 	placholderData := placeholder.(*dtos.DummyActionDto)
 	placholderData.Dummy = "NewValue"
 	response, err := action0.GetActionExecuteCallback()(placeholder)

@@ -108,7 +108,7 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 				continue
 			}
 
-			placeholder := action.GetPlaceholder()
+			placeholder := action.GetJsonFormResultPlaceholder()
 			if err := json.Unmarshal(jsonData, placeholder); err != nil {
 				utils.NewError(ctx, http.StatusBadRequest, err)
 				return
@@ -225,7 +225,7 @@ func serviceGroupToDto(servicePtr *service.IService) []dtos.ServiceInstanceActio
 
 		for _, action := range group.GetActions() {
 
-			jsonPlaceholder, _ := json.Marshal(action.GetPlaceholder())
+			jsonPlaceholder, _ := json.Marshal(action.GetJsonFormResultPlaceholder())
 
 			actionDto := dtos.ServiceInstanceActionDto{
 				Name: action.GetName(),
