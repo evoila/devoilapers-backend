@@ -44,7 +44,7 @@ func Test_ServiceStoreController_HandleGetServiceStoreOverview(t *testing.T) {
 	serviceStoreItem := dto.ServiceStoreItems[0]
 	assert.Equal(t, "TestType", serviceStoreItem.Type)
 	assert.Equal(t, "TestDescription", serviceStoreItem.Description)
-	assert.Equal(t, "TestImage", serviceStoreItem.ImageBase64)
+	assert.Equal(t, "TestImage", serviceStoreItem.ImageSource)
 
 	// Unauthorized
 	statusCode = MakeRequest(

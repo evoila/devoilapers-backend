@@ -21,11 +21,10 @@ type ServiceInstanceActionGroupDto struct {
 }
 
 type ServiceInstanceActionDto struct {
-	Name        string `json:"name" example:"Expose service"`
-	Command     string `json:"command" example:"cmdExpose"`
-	FormJson    string `json:"form" example:"ngx json form valid data"`
-	ToggleGroup string `json:"toggleGroup"`
-	ToggleValue int    ``
+	Name     string `json:"name" example:"Expose service"`
+	Command  string `json:"command" example:"cmdExpose"`
+	FormJson string `json:"form" example:"ngx json form valid data"`
+	IsToggle bool   `json:"isToggle" example:"false"`
 }
 
 type ServiceInstanceActionResponseDto struct {

@@ -36,7 +36,7 @@ func (controller ServiceStoreController) HandleGetServiceStoreOverview(ctx *gin.
 		serviceStoreItem := dtos.ServiceStoreItemDto{
 			Type:        (*provider).GetServiceType(),
 			Description: (*provider).GetServiceDescription(),
-			ImageBase64: (*provider).GetServiceImage(),
+			ImageSource: (*provider).GetServiceImage(),
 		}
 
 		serviceStoreOverviewData.ServiceStoreItems = append(serviceStoreOverviewData.ServiceStoreItems, serviceStoreItem)

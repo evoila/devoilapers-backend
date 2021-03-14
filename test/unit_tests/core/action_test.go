@@ -22,7 +22,7 @@ func Test_ActionGetter(t *testing.T) {
 	var action1 action.IAction = action.FormAction{
 		Name:          "ActionGroup1Item1Name",
 		UniqueCommand: "ActionGroup1Item1Cmd",
-		Placeholder:   &ActionPlaceholder{},
+		Placeholder:   &ActionPlaceholder{ValueString: "MyString"},
 		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
 			return "", nil
 		},
@@ -58,21 +58,114 @@ func Test_ActionGetter(t *testing.T) {
 	assert.Nil(t, err)
 	jsonText := string(jsonBytes)
 
-	_ = jsonText
-	//assert.Equal(t, `
-	//	{
-	//		"properties":{
-	//			"ValueBool":{"default":false,"title":"ValueBool","type":"bool"},
-	//			"ValueInt":{"default":0,"title":"ValueInt","type":"int"},
-	//			"ValueString":{"default":"","title":"ValueString","type":"string"}
-	//		}
-	//	}
-	//`, jsonText)
+	assert.Equal(t, remarshal(`
+		{
+		  "order": [
+			"value_string_tags",
+			"value_int_tags",
+			"value_bool_tags",
+			"ValueString",
+			"ValueInt",
+			"ValueBool",
+			"ValueFile"
+		  ],
+		  "properties": {
+			"ValueBool": {
+			  "default": false,
+			  "title": "ValueBool",
+			  "type": "boolean"
+			},
+			"ValueFile": {
+			  "default": "",
+			  "title": "ValueFile",
+			  "type": "string",
+			  "widget": "file"
+			},
+			"ValueInt": {
+			  "default": 0,
+			  "title": "ValueInt",
+			  "type": "number"
+			},
+			"ValueString": {
+			  "default": "MyString",
+			  "title": "ValueString",
+			  "type": "string"
+			},
+			"value_bool_tags": {
+			  "default": false,
+			  "title": "My ValueBoolTags",
+			  "type": "boolean"
+			},
+			"value_int_tags": {
+			  "default": 0,
+			  "title": "My ValueIntTags",
+			  "type": "number"
+			},
+			"value_string_tags": {
+			  "default": "",
+			  "title": "My ValueStringTags",
+			  "type": "string"
+			}
+		  }
+		}
+	`), jsonText)
 
 	assert.Equal(t, action2.GetName(), group.GetActions()[1].GetName())
 	assert.Equal(t, action2.GetUniqueCommand(), group.GetActions()[1].GetUniqueCommand())
 	assert.Equal(t, action2.GetJsonFormResultPlaceholder(), group.GetActions()[1].GetJsonFormResultPlaceholder())
 	assert.NotNil(t, action2.GetActionExecuteCallback())
+}
+
+// Unmarshal object and Marshal it again to remove white spaces and new lines
+func remarshal(input string) string {
+	var dynamicObj interface{}
+	err := json.Unmarshal([]byte(input), &dynamicObj)
+
+	if err != nil  {
+		panic(err)
+	}
+
+	jsonBytes, err := json.Marshal(dynamicObj)
+	if err != nil  {
+		panic(err)
+	}
+
+	return string(jsonBytes)
+}
+
+func Test_e(t *testing.T)  {
+	root := map[string]interface{}{
+		"properties": map[string]interface{}{
+			"toggle": map[string]interface{} {
+				"type": "string",
+				"title": "toggle",
+				"widget": "select",
+				"oneOf": []map[string]interface{}{
+					{
+						"enum": []string{"get"},
+						"description": "get",
+					},
+					{
+						"enum": []string{"set"},
+						"description": "set",
+					},
+					{
+						"enum": []string{"unset"},
+						"description": "unset",
+					},
+				},
+			},
+		},
+	}
+
+	jsonBytes, err := json.Marshal(root)
+	assert.Nil(t, err)
+	jsonText := string(jsonBytes)
+
+
+	a := jsonText
+	_ = a
+
 }
 
 func Test_ActionExecution(t *testing.T) {

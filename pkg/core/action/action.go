@@ -7,6 +7,7 @@ type IActionGroup interface {
 	GetActions() []IAction
 }
 
+
 type ActionGroup struct {
 	// Name of the action group
 	Name string
@@ -14,13 +15,21 @@ type ActionGroup struct {
 	Actions []IAction
 }
 
+
+func (ag ActionGroup) GetName() string {
+	return ag.Name
+}
+
+func (ag ActionGroup) GetActions() []IAction {
+	return ag.Actions
+}
+
+
 type IAction interface {
 	// Get action name
 	GetName() string
 	// Get the unique command
 	GetUniqueCommand() string
-	// Get toggle group
-	GetToggleGroup() string
 	// Get placeholder
 	GetJsonFormResultPlaceholder() interface{}
 	// Get action execute callback function for executing an action.
@@ -29,5 +38,7 @@ type IAction interface {
 	GetActionExecuteCallback() func(placeholder interface{}) (interface{}, error)
 	// Get the json form object
 	GetJsonForm() interface{}
+	// Determine if this action is a toggle action
+	GetIsToggleAction() bool
 }
 

@@ -1,12 +1,12 @@
 package dtos
 
 type FormResponseDto struct {
-	Common FormResponseDtoCommon `yaml:"common"`
+	Common FormResponseDtoCommon `json:"common"`
 }
 
 type FormResponseDtoCommon struct {
-	ClusterName           string `yaml:"cluster_name"`
-	ElasticSearchInstance string `yaml:"elastic_search_instance"`
+	ClusterName           string `json:"cluster_name"`
+	ElasticSearchInstance string `json:"elastic_search_instance"`
 }
 
 type OneOf struct {

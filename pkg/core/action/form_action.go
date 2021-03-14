@@ -6,25 +6,16 @@ import (
 	"strconv"
 )
 
-func (ag ActionGroup) GetName() string {
-	return ag.Name
-}
-
-func (ag ActionGroup) GetActions() []IAction {
-	return ag.Actions
-}
-
 // Action
 type FormAction struct {
 	Name                  string
 	UniqueCommand         string
-	ToggleGroup           string
 	Placeholder           interface{}
 	ActionExecuteCallback func(placeholder interface{}) (interface{}, error)
 }
 
-func (a FormAction) GetToggleGroup() string {
-	return a.ToggleGroup
+func (a FormAction) GetIsToggleAction() bool {
+	return false
 }
 
 func (a FormAction) GetName() string {

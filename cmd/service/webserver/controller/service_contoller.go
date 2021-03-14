@@ -237,6 +237,7 @@ func serviceGroupToDto(servicePtr *service.IService) []dtos.ServiceInstanceActio
 				Name:     action.GetName(),
 				Command:  action.GetUniqueCommand(),
 				FormJson: string(jsonPlaceholder),
+				IsToggle: action.GetIsToggleAction(),
 			}
 
 			groupDto.Actions = append(groupDto.Actions, actionDto)
