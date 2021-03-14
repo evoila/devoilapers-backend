@@ -128,7 +128,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 
 	// Wait for service to become ok. Kibana needs some extra time.
 	var service1 service.IService
-	for i := 0; i < 12; i++ {
+	for i := 0; i < 60; i++ {
 		time.Sleep(5 * time.Second)
 
 		// Try get service with invalid user data
