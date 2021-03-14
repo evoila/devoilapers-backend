@@ -3,10 +3,12 @@ package kubernetes
 import (
 	"bytes"
 	"context"
+
 	"github.com/sirupsen/logrus"
 
 	"encoding/json"
 
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -90,4 +92,30 @@ func (api *K8sApi) Apply(b []byte) (*unstructured.Unstructured, error) {
 		return unstructured, err
 
 	}
+}
+
+func (api *K8sApi) GetDeploymentScale(namespace, name string) (*autoscalingv1.Scale, error) {
+	return api.ClientSet.AppsV1().Deployments(namespace).GetScale(context.TODO(), name, metav1.GetOptions{})
+}
+
+func (api *K8sApi) GetStatefulSetScale(namespace, name string) (*autoscalingv1.Scale, error) {
+	return api.ClientSet.AppsV1().StatefulSets(namespace).GetScale(context.TODO(), name, metav1.GetOptions{})
+}
+
+func (api *K8sApi) UpdateScaleDeployment(namespace, name string, num int32) (*autoscalingv1.Scale, error) {
+	scale, err := api.GetDeploymentScale(namespace, name)
+	if err != nil {
+		return nil, err
+	}
+	scale.Spec.Replicas = num
+	return api.ClientSet.AppsV1().Deployments(namespace).UpdateScale(context.TODO(), name, scale, metav1.UpdateOptions{})
+}
+
+func (api *K8sApi) UpdateScaleStatefulSet(namespace, name string, num int32) (*autoscalingv1.Scale, error) {
+	scale, err := api.GetStatefulSetScale(namespace, name)
+	if err != nil {
+		return nil, err
+	}
+	scale.Spec.Replicas = num
+	return api.ClientSet.AppsV1().StatefulSets(namespace).UpdateScale(context.TODO(), name, scale, metav1.UpdateOptions{})
 }

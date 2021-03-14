@@ -2,10 +2,10 @@ package elasticsearch
 
 import (
 	"OperatorAutomation/pkg/core/action"
+	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/elasticsearch/dtos"
 	"OperatorAutomation/pkg/utils/provider"
-	"fmt"
 
 	"OperatorAutomation/pkg/kubernetes"
 
@@ -15,8 +15,9 @@ import (
 type ElasticSearchService struct {
 	status v1.ElasticsearchHealth
 	provider.BasicService
-	api      *kubernetes.K8sApi
-	esCrdApi *kubernetes.CommonCrdApi
+	api    *kubernetes.K8sApi
+	crdApi *kubernetes.CommonCrdApi
+	auth   common.IKubernetesAuthInformation
 }
 
 func (es ElasticSearchService) GetStatus() int {
@@ -44,6 +45,14 @@ func (es ElasticSearchService) GetActions() []action.IActionGroup {
 						return es.ExecuteExposeAction(i.(*dtos.ExposeInformation))
 					},
 				},
+				action.Action{
+					Name:          "UpdateReplicasCount",
+					UniqueCommand: "rescale",
+					Placeholder:   &dtos.ScaleInformation{},
+					ActionExecuteCallback: func(i interface{}) (interface{}, error) {
+						return es.ExecuteRescaleAction(i.(*dtos.ScaleInformation))
+					},
+				},
 			},
 		},
 	}
@@ -52,6 +61,14 @@ func (es ElasticSearchService) GetActions() []action.IActionGroup {
 // ExecuteExposeAction exposes a service through ingress and return error if not successful
 func (es ElasticSearchService) ExecuteExposeAction(dto *dtos.ExposeInformation) (interface{}, error) {
 
-	fmt.Errorf("es_provider_in namespace: ", "default"+" service:"+es.Name, "\n")
-	return es.api.AddServiceToIngress("default", dto.IngressName, es.Name+"-es-http", "myhosst.com", 9200)
+	return es.api.AddServiceToIngress(es.auth.GetKubernetesNamespace(), dto.IngressName, es.Name+"-es-http", dto.HostName, 9200)
+}
+
+// ExecuteRescaleAction rescales es-statefulset and return error if not successful
+func (es ElasticSearchService) ExecuteRescaleAction(dto *dtos.ScaleInformation) (interface{}, error) {
+	instance := v1.Elasticsearch{}
+	es.crdApi.Get(es.auth.GetKubernetesNamespace(), es.Name, RessourceName, &instance)
+	name := es.Name + "-es-" + instance.Spec.NodeSets[0].Name
+
+	return es.api.UpdateScaleStatefulSet(es.auth.GetKubernetesNamespace(), name, dto.ReplicasCount)
 }

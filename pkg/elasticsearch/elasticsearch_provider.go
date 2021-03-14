@@ -48,7 +48,7 @@ func (es ElasticsearchProvider) GetServices(auth common.IKubernetesAuthInformati
 
 	var services []*service.IService
 	for _, elasticSearchInstance := range elasticSearchInstances.Items {
-		services = append(services, es.CrdInstanceToServiceInstance(&elasticSearchInstance, auth.GetKubernetesAccessToken(), elasticSearchCrd))
+		services = append(services, es.CrdInstanceToServiceInstance(auth, &elasticSearchInstance, elasticSearchCrd))
 	}
 
 	return services, nil
@@ -66,7 +66,7 @@ func (es ElasticsearchProvider) GetService(auth common.IKubernetesAuthInformatio
 		return nil, err
 	}
 
-	return es.CrdInstanceToServiceInstance(&elasticSearchInstance, auth.GetKubernetesAccessToken(), elasticSearchCrd), nil
+	return es.CrdInstanceToServiceInstance(auth, &elasticSearchInstance, elasticSearchCrd), nil
 }
 
 func (es ElasticsearchProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
@@ -94,13 +94,13 @@ func (es ElasticsearchProvider) DeleteService(auth common.IKubernetesAuthInforma
 }
 
 // Converts a v1.Elasticsearch instance to an service representation
-func (es ElasticsearchProvider) CrdInstanceToServiceInstance(crdInstance *v1.Elasticsearch, K8sAccessToken string, crdApi *kubernetes.CommonCrdApi) *service.IService {
+func (es ElasticsearchProvider) CrdInstanceToServiceInstance(auth common.IKubernetesAuthInformation, crdInstance *v1.Elasticsearch, crdApi *kubernetes.CommonCrdApi) *service.IService {
 	yamlData, err := yaml.Marshal(crdInstance)
 	if err != nil {
 		yamlData = []byte("Unknown")
 	}
 
-	mApi, _ := kubernetes.GenerateK8sApiFromToken(es.Host, es.CaPath, K8sAccessToken)
+	mApi, _ := kubernetes.GenerateK8sApiFromToken(es.Host, es.CaPath, auth.GetKubernetesAccessToken())
 	var elasticSearchService service.IService = ElasticSearchService{
 		status: crdInstance.Status.Health,
 		BasicService: provider.BasicService{
@@ -109,8 +109,9 @@ func (es ElasticsearchProvider) CrdInstanceToServiceInstance(crdInstance *v1.Ela
 			Yaml:              string(yamlData),
 			ImportantSections: (*es.Template).GetImportantSections(),
 		},
-		api:      mApi,
-		esCrdApi: crdApi,
+		api:    mApi,
+		crdApi: crdApi,
+		auth:   auth,
 	}
 
 	return &elasticSearchService
