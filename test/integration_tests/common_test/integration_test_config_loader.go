@@ -14,7 +14,7 @@ import (
 func tryPathOrJoinWithWorkingDirectory(targetPath string, workingDirectory string, isDirectory bool) string {
 	targetPath = path.Clean(targetPath)
 
-	absoluteTargetPath, err :=  filepath.Abs(targetPath)
+	absoluteTargetPath, err := filepath.Abs(targetPath)
 	if err != nil {
 		absoluteTargetPath = targetPath
 	}

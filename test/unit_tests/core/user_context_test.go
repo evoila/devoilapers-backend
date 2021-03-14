@@ -85,6 +85,3 @@ func Test_UserContext_Create_Get_Delete(t *testing.T) {
 	// Check if core merges the services-lists together
 	assert.Equal(t, 3*2, len(services))
 }
-
-
-

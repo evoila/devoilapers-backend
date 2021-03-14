@@ -11,7 +11,6 @@ type ElasticSearchService struct {
 	provider.BasicService
 }
 
-
 func (es ElasticSearchService) GetStatus() int {
 	if es.status == v1.ElasticsearchGreenHealth {
 		return service.ServiceStatusOk

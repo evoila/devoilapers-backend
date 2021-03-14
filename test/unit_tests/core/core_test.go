@@ -60,4 +60,3 @@ func Test_Core_DuplicateProvider_Panic(t *testing.T) {
 	// Should panic
 	_ = core.CreateCore(providers)
 }
-

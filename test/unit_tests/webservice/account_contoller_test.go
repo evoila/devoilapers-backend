@@ -19,7 +19,7 @@ func Test_AccountController_HandlePostLogin(t *testing.T) {
 	router := CreateRouter(t, &provider)
 
 	// Valid credentials
-	requestDto := dtos.AccountCredentialsDto {
+	requestDto := dtos.AccountCredentialsDto{
 		Password: TEST_PASSWORD,
 		Username: TEST_USERNAME,
 	}
@@ -40,7 +40,7 @@ func Test_AccountController_HandlePostLogin(t *testing.T) {
 	assert.Equal(t, TEST_ROLE, responseDto.Role)
 
 	// Invalid credentials
-	requestDto = dtos.AccountCredentialsDto {
+	requestDto = dtos.AccountCredentialsDto{
 		Password: TEST_PASSWORD + "X",
 		Username: TEST_USERNAME,
 	}
@@ -56,7 +56,6 @@ func Test_AccountController_HandlePostLogin(t *testing.T) {
 	)
 
 	assert.Equal(t, http.StatusUnauthorized, statusCode)
-
 
 	// Invalid body
 	errDto := dtos.HTTPErrorDto{}

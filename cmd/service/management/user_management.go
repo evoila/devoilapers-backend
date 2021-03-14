@@ -33,7 +33,6 @@ func (ctx UserManagement) TryGetUserInformation(username string, password string
 	return user, true
 }
 
-
 // Delivers user information by username and password
 func (ctx UserManagement) GetUserInformation(username string, password string) config.User {
 	user, userCouldBeFound := ctx.TryGetUserInformation(username, password)

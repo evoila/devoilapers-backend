@@ -127,7 +127,7 @@ func Test_ServiceController_HandlePostServiceInstanceAction(t *testing.T) {
 						action.ActionGroup{
 							Name: "TestGroup",
 							Actions: []action.IAction{
-								action.Action{
+								action.FormAction{
 									Name:          "TestAction",
 									Placeholder:   &common_test.TestPlaceholder{},
 									UniqueCommand: "TestActionCmd",
@@ -334,9 +334,9 @@ func Test_ServiceController_HandleGetServiceInstanceDetails(t *testing.T) {
 						action.ActionGroup{
 							Name: "SomeActionGroup",
 							Actions: []action.IAction{
-								action.Action{
-									Name: "MyAction",
-									Placeholder: &common_test.TestPlaceholder{},
+								action.FormAction{
+									Name:          "MyAction",
+									Placeholder:   &common_test.TestPlaceholder{},
 									UniqueCommand: "MyActionCmd",
 								},
 							},
@@ -431,9 +431,9 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 						action.ActionGroup{
 							Name: "SomeActionGroup0",
 							Actions: []action.IAction{
-								action.Action{
-									Name: "MyAction0",
-									Placeholder: &common_test.TestPlaceholder{},
+								action.FormAction{
+									Name:          "MyAction0",
+									Placeholder:   &common_test.TestPlaceholder{},
 									UniqueCommand: "MyActionCmd0",
 								},
 							},
@@ -457,9 +457,9 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 						action.ActionGroup{
 							Name: "SomeActionGroup1",
 							Actions: []action.IAction{
-								action.Action{
-									Name: "MyAction1",
-									Placeholder: &common_test.TestPlaceholder{},
+								action.FormAction{
+									Name:          "MyAction1",
+									Placeholder:   &common_test.TestPlaceholder{},
 									UniqueCommand: "MyActionCmd1",
 								},
 							},
@@ -475,7 +475,6 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 			return []*service.IService{&service0, &service1}, nil
 		},
 	}
-
 
 	router := CreateRouter(t, &provider)
 

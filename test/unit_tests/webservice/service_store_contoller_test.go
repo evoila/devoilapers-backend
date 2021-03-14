@@ -60,7 +60,6 @@ func Test_ServiceStoreController_HandleGetServiceStoreOverview(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, statusCode)
 }
 
-
 func Test_ServiceStoreController_HandleGetServiceStoreForm(t *testing.T) {
 	formTemplateError := false
 	var provider provider2.IServiceProvider = common_test.TestProvider{
@@ -85,7 +84,7 @@ func Test_ServiceStoreController_HandleGetServiceStoreForm(t *testing.T) {
 		router,
 		true,
 		http.MethodGet,
-		"/api/v1/servicestore/form/" + provider.GetServiceType(),
+		"/api/v1/servicestore/form/"+provider.GetServiceType(),
 		nil,
 		&dto,
 	)
@@ -99,7 +98,7 @@ func Test_ServiceStoreController_HandleGetServiceStoreForm(t *testing.T) {
 		router,
 		false,
 		http.MethodGet,
-		"/api/v1/servicestore/form/" + provider.GetServiceType(),
+		"/api/v1/servicestore/form/"+provider.GetServiceType(),
 		nil,
 		nil,
 	)
@@ -114,7 +113,7 @@ func Test_ServiceStoreController_HandleGetServiceStoreForm(t *testing.T) {
 		router,
 		true,
 		http.MethodGet,
-		"/api/v1/servicestore/form/" + provider.GetServiceType(),
+		"/api/v1/servicestore/form/"+provider.GetServiceType(),
 		nil,
 		&errorDto,
 	)
@@ -145,14 +144,14 @@ func Test_ServiceStoreController_HandleGetServiceStoreItemYaml(t *testing.T) {
 	router := CreateRouter(t, &provider)
 
 	// Authorized
-	filledForm := common_test.TestSerializableStruct {Value: "MyFilledFormValue"}
+	filledForm := common_test.TestSerializableStruct{Value: "MyFilledFormValue"}
 	var dto dtos.ServiceStoreItemYamlDto
 	statusCode := MakeRequest(
 		t,
 		router,
 		true,
 		http.MethodPost,
-		"/api/v1/servicestore/yaml/" + provider.GetServiceType(),
+		"/api/v1/servicestore/yaml/"+provider.GetServiceType(),
 		filledForm,
 		&dto,
 	)
@@ -166,13 +165,12 @@ func Test_ServiceStoreController_HandleGetServiceStoreItemYaml(t *testing.T) {
 		router,
 		false,
 		http.MethodPost,
-		"/api/v1/servicestore/yaml/" + provider.GetServiceType(),
+		"/api/v1/servicestore/yaml/"+provider.GetServiceType(),
 		filledForm,
 		nil,
 	)
 
 	assert.Equal(t, http.StatusUnauthorized, statusCode)
-
 
 	// Invalid provider
 	errorDto := dtos.HTTPErrorDto{}
@@ -190,7 +188,6 @@ func Test_ServiceStoreController_HandleGetServiceStoreItemYaml(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 
-
 	// Invalid payload
 	errorDto = dtos.HTTPErrorDto{}
 	statusCode = MakeRequest(
@@ -207,7 +204,6 @@ func Test_ServiceStoreController_HandleGetServiceStoreItemYaml(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 
-
 	// Error during yaml generation
 	getYamlTemplateError = true
 	errorDto = dtos.HTTPErrorDto{}
@@ -216,7 +212,7 @@ func Test_ServiceStoreController_HandleGetServiceStoreItemYaml(t *testing.T) {
 		router,
 		true,
 		http.MethodPost,
-		"/api/v1/servicestore/yaml/" + provider.GetServiceType(),
+		"/api/v1/servicestore/yaml/"+provider.GetServiceType(),
 		filledForm,
 		&errorDto,
 	)

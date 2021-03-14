@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-
 func GetRandomKubernetesResourceName() string {
 	randomName := randomdata.FirstName(randomdata.RandomGender)
 	if randomdata.Boolean() {

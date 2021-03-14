@@ -19,7 +19,6 @@ type ElasticsearchProvider struct {
 	provider.BasicProvider
 }
 
-
 // Factory method to create an instance of the ElasticsearchProvider
 func CreateElasticSearchProvider(host string, caPath string, templateDirectoryPath string) ElasticsearchProvider {
 	return ElasticsearchProvider{provider.CreateCommonProvider(
@@ -42,7 +41,7 @@ func (es ElasticsearchProvider) GetYamlTemplate(auth common.IKubernetesAuthInfor
 
 	// Create form with form default values
 	yamlTemplate := dtos.ProviderYamlTemplateDto{}
-	err =  yaml.Unmarshal([]byte(es.YamlTemplate), &yamlTemplate)
+	err = yaml.Unmarshal([]byte(es.YamlTemplate), &yamlTemplate)
 	if err != nil {
 		return "", err
 	}
@@ -57,7 +56,7 @@ func (es ElasticsearchProvider) GetYamlTemplate(auth common.IKubernetesAuthInfor
 func (es ElasticsearchProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (interface{}, error) {
 	// Create form with form default values
 	formsQuery := dtos.FormQueryDto{}
-	err :=  json.Unmarshal([]byte(es.FormTemplate), &formsQuery)
+	err := json.Unmarshal([]byte(es.FormTemplate), &formsQuery)
 	if err != nil {
 		return "", err
 	}
@@ -67,7 +66,7 @@ func (es ElasticsearchProvider) GetJsonForm(auth common.IKubernetesAuthInformati
 	return formsQuery, nil
 }
 
-func (es ElasticsearchProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error)  {
+func (es ElasticsearchProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error) {
 	return kubernetes.CreateCommonCrdApi(es.Host, es.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
 }
 
@@ -141,12 +140,11 @@ func (es ElasticsearchProvider) CrdInstanceToServiceInstance(crdInstance *v1.Ela
 	var elasticSearchService service.IService = ElasticSearchService{
 		status: crdInstance.Status.Health,
 		BasicService: provider.BasicService{
-			Name : crdInstance.Name,
+			Name:         crdInstance.Name,
 			ProviderType: es.GetServiceType(),
-			Yaml: string(yamlData),
+			Yaml:         string(yamlData),
 		},
 	}
 
 	return &elasticSearchService
 }
-

@@ -84,10 +84,9 @@ func Test_Kibana_Provider_GetAttributes(t *testing.T) {
 		formData1.Properties.Common.Properties.ClusterName.Default,
 		formData2.Properties.Common.Properties.ClusterName.Default)
 
-
 	// Generate yaml from form values and ensure it sets the values from form
 	filledForm := dtos.FormResponseDto{Common: dtos.FormResponseDtoCommon{
-		ClusterName: "MyCluster",
+		ClusterName:           "MyCluster",
 		ElasticSearchInstance: "MyElasticSearchInstance"},
 	}
 

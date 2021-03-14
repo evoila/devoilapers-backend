@@ -22,7 +22,7 @@ func CreateRestConfig(host string, caPath string, token string, groupName string
 		Host:        host,
 		BearerToken: token,
 		TLSClientConfig: rest.TLSClientConfig{
-			CAFile:   caPath,
+			CAFile: caPath,
 		},
 	}
 
@@ -36,7 +36,7 @@ func CreateRestConfig(host string, caPath string, token string, groupName string
 }
 
 // Create a common crd api to get, list and delete a custom resource in a kubernetes cluster
-func CreateCommonCrdApi(host string, caPath string, token string, groupName string, groupVersion string) (*CommonCrdApi, error)  {
+func CreateCommonCrdApi(host string, caPath string, token string, groupName string, groupVersion string) (*CommonCrdApi, error) {
 	crdConfig := CreateRestConfig(host, caPath, token, groupName, groupVersion)
 
 	if restClient, err := rest.UnversionedRESTClientFor(crdConfig); err != nil {

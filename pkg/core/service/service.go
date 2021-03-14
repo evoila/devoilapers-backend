@@ -14,7 +14,7 @@ type IService interface {
 	// Get the template on which the service depends
 	GetYamlTemplate() string
 	// Get service Status. See defined consts.
-    GetStatus() int
+	GetStatus() int
 	// Get type of service i.e. postgres/elasticsearch
 	GetType() string
 	// Name of the deployed service

@@ -15,8 +15,6 @@ import (
 	"strings"
 )
 
-
-
 // Implements IServiceProvider interface
 // Use factory method CreateKibanaProvider to create
 type KibanaProvider struct {
@@ -46,7 +44,7 @@ func (kb KibanaProvider) OnCoreInitialized(providers []*provider.IServiceProvide
 	// Safe elasticsearch provider to satisfy form later on
 	for idx, provider := range providers {
 		if strings.ToLower((*provider).GetServiceType()) == "elasticsearch" {
-				kb.sharedKibanaData.esProvider = providers[idx]
+			kb.sharedKibanaData.esProvider = providers[idx]
 		}
 	}
 
@@ -64,7 +62,7 @@ func (kb KibanaProvider) GetYamlTemplate(auth common.IKubernetesAuthInformation,
 
 	// Create form with form default values
 	yamlTemplate := dtos.ProviderYamlTemplateDto{}
-	err =  yaml.Unmarshal([]byte(kb.YamlTemplate), &yamlTemplate)
+	err = yaml.Unmarshal([]byte(kb.YamlTemplate), &yamlTemplate)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +78,7 @@ func (kb KibanaProvider) GetYamlTemplate(auth common.IKubernetesAuthInformation,
 func (kb KibanaProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (interface{}, error) {
 	// Create form with form default values
 	formsQuery := dtos.FormQueryDto{}
-	err :=  json.Unmarshal([]byte(kb.FormTemplate), &formsQuery)
+	err := json.Unmarshal([]byte(kb.FormTemplate), &formsQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -95,22 +93,21 @@ func (kb KibanaProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (in
 	formsQuery.Properties.Common.Properties.ClusterName.Default = utils.GetRandomKubernetesResourceName()
 
 	// Append elastic search instances as choosable reference
-	for _, esServicePtr := range(esServices) {
+	for _, esServicePtr := range esServices {
 		esService := *esServicePtr
 		formsQuery.Properties.Common.Properties.ElasticSearchInstance.OneOf =
 			append(formsQuery.Properties.Common.Properties.ElasticSearchInstance.OneOf,
-					dtos.OneOf{
-						Description: esService.GetName(),
-						Enum: []string{ esService.GetName() },
-					},
+				dtos.OneOf{
+					Description: esService.GetName(),
+					Enum:        []string{esService.GetName()},
+				},
 			)
 	}
 
 	return formsQuery, nil
 }
 
-
-func (kb KibanaProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error)  {
+func (kb KibanaProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error) {
 	return kubernetes.CreateCommonCrdApi(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
 }
 
@@ -185,9 +182,9 @@ func (kb KibanaProvider) CrdInstanceToServiceInstance(crdInstance *v1.Kibana) *s
 	var KibanaService service.IService = KibanaService{
 		status: crdInstance.Status.Health,
 		BasicService: providerUtils.BasicService{
-			Name:              crdInstance.Name,
-			ProviderType:      kb.GetServiceType(),
-			Yaml:              string(yamlData),
+			Name:         crdInstance.Name,
+			ProviderType: kb.GetServiceType(),
+			Yaml:         string(yamlData),
 		},
 	}
 

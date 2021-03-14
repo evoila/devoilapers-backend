@@ -43,7 +43,6 @@ func (es TestProvider) GetServiceType() string {
 	return es.GetServiceTypeCb()
 }
 
-
 func (es TestProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
 	return es.GetServicesCb(auth)
 }

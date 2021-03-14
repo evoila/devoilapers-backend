@@ -1,15 +1,15 @@
 {
-  "properties":{
-    "common":{
-      "type":"object",
-      "description":"Common settings",
-      "properties":{
-        "cluster_name":{
-          "type":"string",
-          "title":"Cluster name",
+  "properties": {
+    "common": {
+      "type": "object",
+      "description": "Common settings",
+      "properties": {
+        "cluster_name": {
+          "type": "string",
+          "title": "Cluster name",
           "default": "",
-          "widget":{
-            "id":"string"
+          "widget": {
+            "id": "string"
           }
         }
       }

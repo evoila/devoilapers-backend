@@ -7,10 +7,10 @@ import (
 // Service base which implements service.IService interface
 // Provides simple storage based information delivery
 type BasicService struct {
-	ProviderType   string
-	Name   string
-	Yaml string
-	Status int
+	ProviderType string
+	Name         string
+	Yaml         string
+	Status       int
 }
 
 // Returns the service type. Part of service.IService interface
@@ -34,6 +34,6 @@ func (cs BasicService) GetYamlTemplate() string {
 }
 
 // Returns the service status. Part of service.IService interface
-func (cs BasicService) GetStatus() int  {
+func (cs BasicService) GetStatus() int {
 	return cs.Status
 }

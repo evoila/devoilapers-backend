@@ -67,7 +67,6 @@ func Test_Elasticsearch_Provider_GetAttributes(t *testing.T) {
 		formData1.Properties.Common.Properties.ClusterName.Default,
 		formData2.Properties.Common.Properties.ClusterName.Default)
 
-
 	// Generate yaml from form values
 	filledForm := dtos.FormResponseDto{Common: dtos.FormResponseDtoCommon{ClusterName: "MyCluster"}}
 	filledFormData, err := json.Marshal(filledForm)

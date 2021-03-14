@@ -32,11 +32,11 @@ definitions:
       command:
         example: cmdExpose
         type: string
+      form:
+        example: ngx json form valid data
+        type: string
       name:
         example: Expose service
-        type: string
-      placeholder:
-        example: any object
         type: string
     type: object
   dtos.ServiceInstanceActionGroupDto:

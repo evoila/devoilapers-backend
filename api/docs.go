@@ -616,13 +616,13 @@ var doc = `{
                     "type": "string",
                     "example": "cmdExpose"
                 },
+                "form": {
+                    "type": "string",
+                    "example": "ngx json form valid data"
+                },
                 "name": {
                     "type": "string",
                     "example": "Expose service"
-                },
-                "placeholder": {
-                    "type": "string",
-                    "example": "any object"
                 }
             }
         },

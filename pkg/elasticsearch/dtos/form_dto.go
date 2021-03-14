@@ -1,14 +1,12 @@
 package dtos
 
-
 type FormResponseDto struct {
 	Common FormResponseDtoCommon `yaml:"common"`
 }
 
 type FormResponseDtoCommon struct {
-	ClusterName           string `yaml:"cluster_name"`
+	ClusterName string `yaml:"cluster_name"`
 }
-
 
 type FormQueryDto struct {
 	Properties struct {

@@ -9,7 +9,6 @@ type FormResponseDtoCommon struct {
 	ElasticSearchInstance string `yaml:"elastic_search_instance"`
 }
 
-
 type OneOf struct {
 	Description string   `json:"description"`
 	Enum        []string `json:"enum"`
@@ -22,10 +21,10 @@ type FormQueryDto struct {
 			Description string `json:"description"`
 			Properties  struct {
 				ClusterName struct {
-					Type   string `json:"type"`
-					Title  string `json:"title"`
+					Type    string `json:"type"`
+					Title   string `json:"title"`
 					Default string `json:"default"`
-					Widget struct {
+					Widget  struct {
 						ID string `json:"id"`
 					} `json:"widget"`
 				} `json:"cluster_name"`

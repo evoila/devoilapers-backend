@@ -7,11 +7,11 @@ import (
 )
 
 type DummyService struct {
-	id                string
-	status            int
-	yaml              string
-	serviceType       string
-	auth              common.IKubernetesAuthInformation
+	id          string
+	status      int
+	yaml        string
+	serviceType string
+	auth        common.IKubernetesAuthInformation
 }
 
 func (es DummyService) GetYamlTemplate() string {
@@ -31,7 +31,7 @@ func (es DummyService) GetActions() []action.IActionGroup {
 		action.ActionGroup{
 			Name: "Dummy Action Group",
 			Actions: []action.IAction{
-				action.Action{
+				action.FormAction{
 					Name:          "Dummy Action",
 					UniqueCommand: "cmd_dummy_action",
 					Placeholder:   &dtos.DummyActionDto{},

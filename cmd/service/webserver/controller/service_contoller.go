@@ -225,12 +225,12 @@ func serviceGroupToDto(servicePtr *service.IService) []dtos.ServiceInstanceActio
 
 		for _, action := range group.GetActions() {
 
-			jsonPlaceholder, _ := json.Marshal(action.GetJsonFormResultPlaceholder())
+			jsonPlaceholder, _ := json.Marshal(action.GetJsonForm())
 
 			actionDto := dtos.ServiceInstanceActionDto{
-				Name: action.GetName(),
+				Name:    action.GetName(),
 				Command: action.GetUniqueCommand(),
-				Placeholder: string(jsonPlaceholder),
+				Form:    string(jsonPlaceholder),
 			}
 
 			groupDto.Actions = append(groupDto.Actions, actionDto)
@@ -298,7 +298,6 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 		serviceDto.ActionGroups = serviceGroupToDto(servicePtr)
 		instanceDetailsOverview.Instances = append(instanceDetailsOverview.Instances, serviceDto)
 	}
-
 
 	ctx.JSON(http.StatusOK, instanceDetailsOverview)
 	return

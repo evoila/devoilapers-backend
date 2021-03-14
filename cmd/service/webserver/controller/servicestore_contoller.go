@@ -104,8 +104,6 @@ func (controller ServiceStoreController) HandlePostServiceStoreItemYaml(ctx *gin
 	ctx.JSON(http.StatusOK, serviceYaml)
 }
 
-
-
 // Get json form for a provider godoc
 // @Summary Get the json form for a service-template
 // @Description Get the default yaml file for a service-template

@@ -17,7 +17,7 @@ type Core struct {
 // the user-context-management and services
 func CreateCore(providers []*provider.IServiceProvider) *Core {
 	core := Core{provider.ServiceProviderRegistry{Providers: map[string]*provider.IServiceProvider{}}}
-	for _,provider := range providers {
+	for _, provider := range providers {
 		providerType := (*provider).GetServiceType()
 
 		if _, ok := core.Providers[providerType]; ok {
@@ -27,7 +27,7 @@ func CreateCore(providers []*provider.IServiceProvider) *Core {
 		core.Providers[providerType] = provider
 	}
 
-	for _,provider := range providers {
+	for _, provider := range providers {
 		(*provider).OnCoreInitialized(providers)
 	}
 
@@ -38,4 +38,3 @@ func CreateCore(providers []*provider.IServiceProvider) *Core {
 func (core Core) CrateUserContext(userInformation common.IKubernetesAuthInformation) *users.UserContext {
 	return &users.UserContext{ServiceProviderRegistry: &core.ServiceProviderRegistry, Auth: userInformation}
 }
-

@@ -23,6 +23,5 @@ type ServiceInstanceActionGroupDto struct {
 type ServiceInstanceActionDto struct {
 	Name    string `json:"name" example:"Expose service"`
 	Command string `json:"command" example:"cmdExpose"`
-	Placeholder string `json:"placeholder" example:"any object"`
+	Form    string `json:"form" example:"ngx json form valid data"`
 }
-

@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func Test_DummyProvider_Get_Attributes(t *testing.T)  {
+func Test_DummyProvider_Get_Attributes(t *testing.T) {
 	dummyProvider := dummy.CreateDummyProvider()
 	user := common_test.TestUser{}
 
@@ -40,29 +40,28 @@ func Test_DummyProvider_Get_Attributes(t *testing.T)  {
 	assert.Equal(t, yaml1, yaml2)
 }
 
-
 func Test_DummyProvider_Create_Services(t *testing.T) {
 	dummyProvider := dummy.CreateDummyProvider()
-	assert.Nil(t, dummyProvider.CreateService(common_test.TestUser{},"test: yaml"))
+	assert.Nil(t, dummyProvider.CreateService(common_test.TestUser{}, "test: yaml"))
 }
 
 func Test_DummyProvider_Get_Services(t *testing.T) {
 	auth := common_test.TestUser{}
 	dummyProvider := dummy.CreateDummyProvider()
 
-	err := dummyProvider.CreateService(auth,"1")
+	err := dummyProvider.CreateService(auth, "1")
 	assert.Nil(t, err)
 	services, err := dummyProvider.GetServices(auth)
 	services0 := *services[0]
 	assert.Equal(t, "1", services0.GetYamlTemplate())
 
-	err = dummyProvider.CreateService(auth,"2")
+	err = dummyProvider.CreateService(auth, "2")
 	assert.Nil(t, err)
 
 	// Get all services
 	services, err = dummyProvider.GetServices(auth)
 	assert.NotNil(t, services)
-	assert.Equal(t, 2,len(services))
+	assert.Equal(t, 2, len(services))
 	services1 := *services[1]
 	assert.Equal(t, 1, len(services1.GetActions()))
 	// Ensure values refer to other objects
@@ -84,7 +83,6 @@ func Test_DummyProvider_Get_Services(t *testing.T) {
 	assert.NotEqual(t, "", service0.GetActions()[0].GetName())
 	assert.Equal(t, 1, len(service0.GetActions()[0].GetActions()))
 
-
 	assert.Equal(t, service0.GetName(), services1.GetName())
 	assert.Equal(t, service0.GetStatus(), services1.GetStatus())
 	assert.Equal(t, service0.GetType(), services1.GetType())
@@ -103,8 +101,8 @@ func Test_DummyProvider_Delete_Services(t *testing.T) {
 	assert.NotNil(t, err)
 
 	// Create 2
-	assert.Nil(t, dummyProvider.CreateService(auth,"1"))
-	assert.Nil(t, dummyProvider.CreateService(auth,"2"))
+	assert.Nil(t, dummyProvider.CreateService(auth, "1"))
+	assert.Nil(t, dummyProvider.CreateService(auth, "2"))
 
 	// Get both
 	services, err := dummyProvider.GetServices(auth)
@@ -126,4 +124,3 @@ func Test_DummyProvider_Delete_Services(t *testing.T) {
 	err = dummyProvider.DeleteService(auth, createdService1.GetName())
 	assert.Nil(t, err)
 }
-

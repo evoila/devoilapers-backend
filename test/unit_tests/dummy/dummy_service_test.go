@@ -14,7 +14,7 @@ func CreateProviderAndService(t *testing.T) (*provider.IServiceProvider, *servic
 	auth := common_test.TestUser{}
 	var dummyProvider provider.IServiceProvider = dummy.CreateDummyProvider()
 
-	err := dummyProvider.CreateService(auth,"1")
+	err := dummyProvider.CreateService(auth, "1")
 	assert.Nil(t, err)
 
 	// Get a service. Since the name is random we get it by querying all
@@ -42,11 +42,8 @@ func Test_DummyProvider_Service_Attributes(t *testing.T) {
 	// Group has a name
 	assert.NotEqual(t, "", actionGroup0.GetName())
 
-
 	assert.Equal(t, "1", service0.GetYamlTemplate())
 }
-
-
 
 func Test_DummyProvider_Service_Actions(t *testing.T) {
 	_, service0Ptr := CreateProviderAndService(t)
@@ -75,5 +72,3 @@ func Test_DummyProvider_Service_Actions(t *testing.T) {
 
 	assert.Equal(t, "1", service0.GetYamlTemplate())
 }
-
-
