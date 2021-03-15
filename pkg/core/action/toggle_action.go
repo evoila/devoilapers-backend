@@ -1,9 +1,28 @@
 package action
 
-import "errors"
+import (
+	"errors"
+)
 
 type toggleActionPlaceholder struct {
 	Toggle string `json:"toggle"`
+}
+
+func CreateToggleAction(
+	name string,
+	uniqueCommand string,
+	queryExecuteCallback func() (bool, error),
+	setExecuteCallback func() (interface{}, error),
+	unsetExecuteCallback func() (interface{}, error)) ToggleAction {
+
+	return ToggleAction{
+		Name: name,
+		UniqueCommand: uniqueCommand,
+		QueryExecuteCallback: queryExecuteCallback,
+		SetExecuteCallback: setExecuteCallback,
+		UnsetExecuteCallback: unsetExecuteCallback,
+		placeholder: &toggleActionPlaceholder{},
+	}
 }
 
 // Action

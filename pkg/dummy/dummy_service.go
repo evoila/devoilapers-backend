@@ -12,6 +12,7 @@ type DummyService struct {
 	yaml        string
 	serviceType string
 	auth        common.IKubernetesAuthInformation
+	state		*bool
 }
 
 func (es DummyService) GetYamlTemplate() string {
@@ -37,6 +38,23 @@ func (es DummyService) GetActions() []action.IActionGroup {
 					Placeholder:   &dtos.DummyActionDto{},
 					ActionExecuteCallback: func(i interface{}) (interface{}, error) {
 						return es.ExecuteDummyAction(i.(*dtos.DummyActionDto))
+					},
+				},
+				action.ToggleAction{
+					Name:          "Dummy Toggle",
+					UniqueCommand: "cmd_dummy_toggle_action",
+					QueryExecuteCallback: func() (bool, error) {
+						return *es.state, nil
+					},
+					SetExecuteCallback: func() (interface{}, error) {
+						t := true
+						es.state = &t
+						return nil, nil
+					},
+					UnsetExecuteCallback: func() (interface{}, error) {
+						t := false
+						es.state = &t
+						return nil, nil
 					},
 				},
 			},
