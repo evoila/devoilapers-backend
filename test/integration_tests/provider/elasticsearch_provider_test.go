@@ -7,6 +7,7 @@ import (
 	"OperatorAutomation/pkg/elasticsearch/dtos"
 	"OperatorAutomation/test/integration_tests/common_test"
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
+	"encoding/base64"
 	"strings"
 	"testing"
 	"time"
@@ -139,9 +140,9 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 
 	// Test set certificate to service
 	certDto := &dtos.CertificateDto{
-		CaCrt:  string(secret.Data["ca.crt"]),
-		TlsCrt: string(secret.Data["tls.crt"]),
-		TlsKey: string(secret.Data["tls.key"]),
+		CaCrt:  base64.StdEncoding.EncodeToString(secret.Data["ca.crt"]),
+		TlsCrt: base64.StdEncoding.EncodeToString(secret.Data["tls.crt"]),
+		TlsKey: base64.StdEncoding.EncodeToString(secret.Data["tls.key"]),
 	}
 
 	_, err = service2.SetCertificateToService(certDto)
