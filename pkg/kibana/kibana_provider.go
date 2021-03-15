@@ -46,9 +46,21 @@ func (kb KibanaProvider) GetServices(auth common.IKubernetesAuthInformation) ([]
 		return nil, err
 	}
 
+	api, err := kubernetes.GenerateK8sApiFromToken(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken())
+
+	if err != nil {
+		return nil, err
+	}
+
+	commonCrdApi, err := kb.createCrdApi(auth)
+
+	if err != nil {
+		return nil, err
+	}
+
 	var services []*service.IService
 	for _, kibanaInstance := range kibanaInstances.Items {
-		services = append(services, kb.CrdInstanceToServiceInstance(auth, &kibanaInstance))
+		services = append(services, kb.CrdInstanceToServiceInstance(api, commonCrdApi, &kibanaInstance))
 	}
 
 	return services, nil
@@ -67,7 +79,19 @@ func (kb KibanaProvider) GetService(auth common.IKubernetesAuthInformation, id s
 		return nil, err
 	}
 
-	return kb.CrdInstanceToServiceInstance(auth, &kibanaInstance), nil
+	api, err := kubernetes.GenerateK8sApiFromToken(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken())
+
+	if err != nil {
+		return nil, err
+	}
+
+	commonCrdApi, err := kb.createCrdApi(auth)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return kb.CrdInstanceToServiceInstance(api, commonCrdApi, &kibanaInstance), nil
 }
 
 func (kb KibanaProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
@@ -95,28 +119,16 @@ func (kb KibanaProvider) DeleteService(auth common.IKubernetesAuthInformation, i
 }
 
 // Converts a v1.Kibana instance to an service reprkbentation
-func (kb KibanaProvider) CrdInstanceToServiceInstance(auth common.IKubernetesAuthInformation, crdInstance *v1.Kibana) *service.IService {
+func (kb KibanaProvider) CrdInstanceToServiceInstance(api *kubernetes.K8sApi, commonCrdApi *kubernetes.CommonCrdApi, crdInstance *v1.Kibana) *service.IService {
 	yamlData, err := yaml.Marshal(crdInstance)
 	if err != nil {
 		yamlData = []byte("Unknown")
 	}
 
-	api, err := kubernetes.GenerateK8sApiFromToken(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken())
-
-	if err != nil {
-		return nil
-	}
-
-	KibanaCrd, err := kb.createCrdApi(auth)
-
-	if err != nil {
-		return nil
-	}
-
 	var KibanaService service.IService = KibanaService{
 		K8sApi:       api,
 		crdInstance:  crdInstance,
-		commonCrdApi: KibanaCrd,
+		commonCrdApi: commonCrdApi,
 		status:       crdInstance.Status.Health,
 		BasicService: provider.BasicService{
 			Name:              crdInstance.Name,

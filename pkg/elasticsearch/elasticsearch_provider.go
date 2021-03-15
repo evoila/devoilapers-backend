@@ -47,9 +47,18 @@ func (es ElasticsearchProvider) GetServices(auth common.IKubernetesAuthInformati
 		return nil, err
 	}
 
+	api, err := kubernetes.GenerateK8sApiFromToken(es.Host, es.CaPath, auth.GetKubernetesAccessToken())
+	if err != nil {
+		return nil, err
+	}
+	commonCrdApi, err := es.createCrdApi(auth)
+	if err != nil {
+		return nil, err
+	}
+
 	var services []*service.IService
 	for _, elasticSearchInstance := range elasticSearchInstances.Items {
-		services = append(services, es.CrdInstanceToServiceInstance(auth, &elasticSearchInstance))
+		services = append(services, es.CrdInstanceToServiceInstance(api, commonCrdApi, &elasticSearchInstance))
 	}
 
 	return services, nil
@@ -67,7 +76,16 @@ func (es ElasticsearchProvider) GetService(auth common.IKubernetesAuthInformatio
 		return nil, err
 	}
 
-	return es.CrdInstanceToServiceInstance(auth, &elasticSearchInstance), nil
+	api, err := kubernetes.GenerateK8sApiFromToken(es.Host, es.CaPath, auth.GetKubernetesAccessToken())
+	if err != nil {
+		return nil, err
+	}
+	commonCrdApi, err := es.createCrdApi(auth)
+	if err != nil {
+		return nil, err
+	}
+
+	return es.CrdInstanceToServiceInstance(api, commonCrdApi, &elasticSearchInstance), nil
 }
 
 func (es ElasticsearchProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
@@ -95,22 +113,15 @@ func (es ElasticsearchProvider) DeleteService(auth common.IKubernetesAuthInforma
 }
 
 // Converts a v1.Elasticsearch instance to an service representation
-func (es ElasticsearchProvider) CrdInstanceToServiceInstance(auth common.IKubernetesAuthInformation, crdInstance *v1.Elasticsearch) *service.IService {
+func (es ElasticsearchProvider) CrdInstanceToServiceInstance(api *kubernetes.K8sApi, commonCrdApi *kubernetes.CommonCrdApi, crdInstance *v1.Elasticsearch) *service.IService {
 	yamlData, err := yaml.Marshal(crdInstance)
 	if err != nil {
 		yamlData = []byte("Unknown")
 	}
-	api, err := kubernetes.GenerateK8sApiFromToken(es.Host, es.CaPath, auth.GetKubernetesAccessToken())
-	if err != nil {
-		return nil
-	}
-	ElasticCrd, err := es.createCrdApi(auth)
-	if err != nil {
-		return nil
-	}
+
 	var elasticSearchService service.IService = ElasticSearchService{
 		K8sApi:       api,
-		commonCrdApi: ElasticCrd,
+		commonCrdApi: commonCrdApi,
 		crdInstance:  crdInstance,
 		status:       crdInstance.Status.Health,
 		BasicService: provider.BasicService{

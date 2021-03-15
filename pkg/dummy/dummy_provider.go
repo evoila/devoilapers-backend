@@ -77,7 +77,3 @@ func (es DummyProvider) CreateService(auth common.IKubernetesAuthInformation, ya
 func (es DummyProvider) DeleteService(auth common.IKubernetesAuthInformation, id string) error {
 	return es.DummyKubernetes.Delete(id)
 }
-
-func (es DummyProvider) SetCertificateToService(auth common.IKubernetesAuthInformation, id string, tlsCert map[string][]byte) error {
-	return nil
-}

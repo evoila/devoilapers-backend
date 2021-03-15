@@ -31,8 +31,14 @@ func (kb KibanaService) GetStatus() int {
 	return service.ServiceStatusPending
 }
 
+// Set certificate to the kibana service
+// The CertificateDto certDto contains base64 strings
 func (kb KibanaService) SetCertificateToService(certDto *dtos.CertificateDto) (interface{}, error) {
 	kibanaInstance := kb.crdInstance
+	certDto, err := certDto.EncodeFromBase64ToString()
+	if err != nil {
+		return nil, err
+	}
 	tlsCert := map[string][]byte{
 		"ca.crt":  []byte(certDto.CaCrt),
 		"tls.crt": []byte(certDto.TlsCrt),

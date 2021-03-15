@@ -31,8 +31,14 @@ func (es ElasticSearchService) GetStatus() int {
 	return service.ServiceStatusPending
 }
 
+// Set certificate to elastic search service
+// The CertificateDto certDto contains base64 strings
 func (es ElasticSearchService) SetCertificateToService(certDto *dtos.CertificateDto) (interface{}, error) {
 	elasticInstance := es.crdInstance
+	certDto, err := certDto.EncodeFromBase64ToString()
+	if err != nil {
+		return nil, err
+	}
 	tlsCert := map[string][]byte{
 		"ca.crt":  []byte(certDto.CaCrt),
 		"tls.crt": []byte(certDto.TlsCrt),
