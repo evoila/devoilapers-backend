@@ -5,9 +5,10 @@ import (
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/kubernetes"
 	"OperatorAutomation/pkg/utils/provider"
+	"path"
+
 	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/kibana/v1"
 	"gopkg.in/yaml.v2"
-	"path"
 )
 
 // Implements IServiceProvider interface
@@ -28,7 +29,7 @@ func CreateKibanaProvider(host string, caPath string, templateDirectoryPath stri
 	)}
 }
 
-func (kb KibanaProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error)  {
+func (kb KibanaProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error) {
 	return kubernetes.CreateCommonCrdApi(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
 }
 
@@ -45,9 +46,21 @@ func (kb KibanaProvider) GetServices(auth common.IKubernetesAuthInformation) ([]
 		return nil, err
 	}
 
+	api, err := kubernetes.GenerateK8sApiFromToken(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken())
+
+	if err != nil {
+		return nil, err
+	}
+
+	commonCrdApi, err := kb.createCrdApi(auth)
+
+	if err != nil {
+		return nil, err
+	}
+
 	var services []*service.IService
 	for _, kibanaInstance := range kibanaInstances.Items {
-		services = append(services, kb.CrdInstanceToServiceInstance(&kibanaInstance))
+		services = append(services, kb.CrdInstanceToServiceInstance(api, commonCrdApi, &kibanaInstance))
 	}
 
 	return services, nil
@@ -66,7 +79,19 @@ func (kb KibanaProvider) GetService(auth common.IKubernetesAuthInformation, id s
 		return nil, err
 	}
 
-	return kb.CrdInstanceToServiceInstance(&kibanaInstance), nil
+	api, err := kubernetes.GenerateK8sApiFromToken(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken())
+
+	if err != nil {
+		return nil, err
+	}
+
+	commonCrdApi, err := kb.createCrdApi(auth)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return kb.CrdInstanceToServiceInstance(api, commonCrdApi, &kibanaInstance), nil
 }
 
 func (kb KibanaProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
@@ -94,14 +119,17 @@ func (kb KibanaProvider) DeleteService(auth common.IKubernetesAuthInformation, i
 }
 
 // Converts a v1.Kibana instance to an service reprkbentation
-func (kb KibanaProvider) CrdInstanceToServiceInstance(crdInstance *v1.Kibana) *service.IService {
+func (kb KibanaProvider) CrdInstanceToServiceInstance(api *kubernetes.K8sApi, commonCrdApi *kubernetes.CommonCrdApi, crdInstance *v1.Kibana) *service.IService {
 	yamlData, err := yaml.Marshal(crdInstance)
 	if err != nil {
 		yamlData = []byte("Unknown")
 	}
 
 	var KibanaService service.IService = KibanaService{
-		status: crdInstance.Status.Health,
+		K8sApi:       api,
+		crdInstance:  crdInstance,
+		commonCrdApi: commonCrdApi,
+		status:       crdInstance.Status.Health,
 		BasicService: provider.BasicService{
 			Name:              crdInstance.Name,
 			ProviderType:      kb.GetServiceType(),

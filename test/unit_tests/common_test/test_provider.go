@@ -7,14 +7,14 @@ import (
 
 // Do not initialize use provided CreateTestProvider function
 type TestProvider struct {
-	GetDescriptionCb  func() string
-	GetServiceImageCb func() string
-	GetServiceTypeCb  func() string
-	GetTemplateCb     func() *service.IServiceTemplate
-	GetServicesCb     func(auth common.IKubernetesAuthInformation) ([]*service.IService, error)
-	GetServiceCb      func(auth common.IKubernetesAuthInformation, id string) (*service.IService, error)
-	CreateServiceCb   func(auth common.IKubernetesAuthInformation, yaml string) error
-	DeleteServiceCb   func(auth common.IKubernetesAuthInformation, id string) error
+	GetDescriptionCb          func() string
+	GetServiceImageCb         func() string
+	GetServiceTypeCb          func() string
+	GetTemplateCb             func() *service.IServiceTemplate
+	GetServicesCb             func(auth common.IKubernetesAuthInformation) ([]*service.IService, error)
+	GetServiceCb              func(auth common.IKubernetesAuthInformation, id string) (*service.IService, error)
+	CreateServiceCb           func(auth common.IKubernetesAuthInformation, yaml string) error
+	DeleteServiceCb           func(auth common.IKubernetesAuthInformation, id string) error
 }
 
 func (es TestProvider) GetServiceDescription() string {

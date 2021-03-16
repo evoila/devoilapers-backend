@@ -55,7 +55,7 @@ func (es DummyProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*
 
 func (es DummyProvider) GetService(auth common.IKubernetesAuthInformation, id string) (*service.IService, error) {
 	data, err := es.DummyKubernetes.GetService(id)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 

@@ -14,7 +14,7 @@ type IService interface {
 	// Get the template on which the service depends
 	GetTemplate() IServiceTemplate
 	// Get IService Status
-    GetStatus() int
+	GetStatus() int
 
 	GetType() string
 

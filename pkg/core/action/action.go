@@ -32,14 +32,15 @@ type IAction interface {
 	// Getaction execute callback function for executing an action.
 	// Placeholder value equals the placeholder of action.
 	// Return value could be any struct
-	GetActionExecuteCallback() func(placeholder interface{}) (interface{},error)
+	GetActionExecuteCallback() func(placeholder interface{}) (interface{}, error)
 }
+
 // Action
-type Action struct{
-	Name string
-	UniqueCommand string
-	Placeholder interface{}
-	ActionExecuteCallback func(placeholder interface{}) (interface{},error)
+type Action struct {
+	Name                  string
+	UniqueCommand         string
+	Placeholder           interface{}
+	ActionExecuteCallback func(placeholder interface{}) (interface{}, error)
 }
 
 func (a Action) GetName() string {
