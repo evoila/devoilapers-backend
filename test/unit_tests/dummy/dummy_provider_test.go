@@ -81,7 +81,7 @@ func Test_DummyProvider_Get_Services(t *testing.T) {
 	assert.Equal(t, service.ServiceStatusOk, service0.GetStatus())
 	assert.Equal(t, 1, len(service0.GetActions()))
 	assert.NotEqual(t, "", service0.GetActions()[0].GetName())
-	assert.Equal(t, 1, len(service0.GetActions()[0].GetActions()))
+	assert.Equal(t, 2, len(service0.GetActions()[0].GetActions()))
 
 	assert.Equal(t, service0.GetName(), services1.GetName())
 	assert.Equal(t, service0.GetStatus(), services1.GetStatus())

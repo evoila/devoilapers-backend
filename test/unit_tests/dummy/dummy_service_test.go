@@ -57,7 +57,7 @@ func Test_DummyProvider_Service_Actions(t *testing.T) {
 	// Group has a name
 	assert.NotEqual(t, "", actionGroup0.GetName())
 	actions := actionGroup0.GetActions()
-	assert.Equal(t, 1, len(actions))
+	assert.Equal(t, 2, len(actions))
 	action0 := actions[0]
 
 	assert.NotEqual(t, "", action0.GetName())

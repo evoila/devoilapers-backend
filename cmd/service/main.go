@@ -8,12 +8,18 @@ import (
 	"OperatorAutomation/pkg/dummy"
 	"OperatorAutomation/pkg/elasticsearch"
 	"OperatorAutomation/pkg/kibana"
+	"OperatorAutomation/pkg/kubernetes"
+	"OperatorAutomation/pkg/postgres"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
+	"math/rand"
 	"os"
+	"time"
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
 	app := cli.NewApp()
 	app.EnableBashCompletion = true
 	app.Commands = []*cli.Command{
@@ -108,9 +114,17 @@ func InitializeCore(appconfig config.RawConfig) *core.Core {
 		appconfig.ResourcesTemplatesPath,
 	)
 
+	var pg provider.IServiceProvider = postgres.CreatePostgresProvider(
+		appconfig.Kubernetes.Server,
+		appconfig.Kubernetes.CertificateAuthority,
+		appconfig.ResourcesTemplatesPath,
+		kubernetes.NginxInformation(appconfig.Kubernetes.Nginx),
+	)
+
 	return core.CreateCore([]*provider.IServiceProvider{
 		&esp,
 		&kb,
+		&pg,
 	})
 }
 func InitializeDemoCore(appconfig config.RawConfig) *core.Core {

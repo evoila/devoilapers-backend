@@ -61,13 +61,22 @@ func (api CommonCrdApi) Get(namespace string, name string, resource string, out 
 // Get a all custom resource of given type resource in given namespace with
 // given name an pass into given out (list)-object
 func (api CommonCrdApi) List(namespace string, resource string, out runtime.Object) error {
+	return api.ListWithOptions(namespace, resource, &metav1.ListOptions{}, out)
+}
+
+
+// Get a all custom resource of given type resource in given namespace with
+// given name an pass into given out (list)-object
+func (api CommonCrdApi) ListWithOptions(namespace string, resource string, listOptions *metav1.ListOptions, out runtime.Object) error {
 	return api.Client.Get().
 		Namespace(namespace).
 		Resource(resource).
-		VersionedParams(&metav1.ListOptions{}, scheme.ParameterCodec).
+		VersionedParams(listOptions, scheme.ParameterCodec).
 		Do(context.TODO()).
 		Into(out)
 }
+
+
 
 // Delete a custom resource of given type resource in given namespace with given name
 func (api CommonCrdApi) Delete(namespace string, name string, resource string) error {
