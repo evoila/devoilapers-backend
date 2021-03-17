@@ -122,13 +122,19 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 				return
 			}
 
-			actionResultJson, err := json.Marshal(actionResult)
-			if err != nil {
-				utils.NewError(ctx, http.StatusInternalServerError, err)
-				return
+			actionResultJson := ""
+			if actionResult != nil {
+				actionResultBytes, err := json.Marshal(actionResult)
+				if err != nil {
+					utils.NewError(ctx, http.StatusInternalServerError, err)
+					return
+				}
+
+				actionResultJson = string(actionResultBytes)
 			}
 
-			ctx.JSON(http.StatusOK, dtos.ServiceInstanceActionResponseDto{ResultJson: string(actionResultJson)})
+
+			ctx.JSON(http.StatusOK, dtos.ServiceInstanceActionResponseDto{ResultJson: actionResultJson})
 			return
 		}
 	}

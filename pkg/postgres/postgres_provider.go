@@ -79,6 +79,7 @@ func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformatio
 func (pg PostgresProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (interface{}, error) {
 	// Create form with form default values
 	formsQuery := dtos.FormQueryDto{}
+	//formsQuery := map[string]interface{}{}
 	err := json.Unmarshal([]byte(pg.FormTemplate), &formsQuery)
 	if err != nil {
 		return nil, err

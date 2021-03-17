@@ -36,7 +36,13 @@
           },
           "default":1
         }
-      }
+      },
+      "order": [
+        "clusterName",
+        "username",
+        "inClusterPort",
+        "clusterCtorageSize"
+      ]
     },
     "tls":{
       "type":"object",
@@ -71,7 +77,7 @@
             }
           ],
           "visibleIf":{
-            "use_tls":[
+            "useTls":[
               true
             ]
           }
@@ -79,14 +85,14 @@
         "tlsModeFromSecret":{
           "type":"object",
           "properties":{
-            "ca_secret":{
+            "caSecret":{
               "type":"string",
               "title":"CA kubernetes secret",
               "widget":{
                 "id":"string"
               }
             },
-            "tls_secret":{
+            "tlsSecret":{
               "type":"string",
               "title":"TLS keypair kubernetes secret",
               "widget":{
@@ -104,7 +110,7 @@
           "type":"object",
           "name":"",
           "properties":{
-            "ca_cert":{
+            "caCert":{
               "type":"string",
               "title":"Choose CA certificate",
               "widget":{
@@ -132,7 +138,13 @@
             ]
           }
         }
-      }
+      },
+      "order": [
+        "useTls",
+        "tlsMode",
+        "tlsModeFromSecret",
+        "tlsModeFromFile"
+      ]
     },
     "backup":{
       "type":"object",
@@ -252,7 +264,14 @@
             ]
           }
         }
-      }
+      },
+      "order": [
+        "performBackup",
+        "commonS3data",
+        "backupMode",
+        "backupModeFromSecret",
+        "backupModeFromNewCredentials"
+      ]
     }
   }
 }

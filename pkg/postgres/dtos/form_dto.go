@@ -9,8 +9,8 @@ type FormResponseDto struct {
 		ClusterCtorageSize int    `json:"clusterCtorageSize"`
 	} `json:"common"`
 	TLS struct {
-		UseTLS  bool   `json:"useTls"`
-		TLSMode string `json:"tlsMode"`
+		UseTLS            bool   `json:"useTls"`
+		TLSMode           string `json:"tlsMode"`
 		TLSModeFromSecret struct {
 			CaSecret  string `json:"caSecret"`
 			TLSSecret string `json:"tlsSecret"`
@@ -75,6 +75,7 @@ type FormQueryDto struct {
 					Default int `json:"default"`
 				} `json:"clusterCtorageSize"`
 			} `json:"properties"`
+			Order []string `json:"order"`
 		} `json:"common"`
 		TLS struct {
 			Type        string `json:"type"`
@@ -128,13 +129,13 @@ type FormQueryDto struct {
 					Type       string `json:"type"`
 					Name       string `json:"name"`
 					Properties struct {
-						CaCertificate struct {
+						CaCert struct {
 							Type   string `json:"type"`
 							Title  string `json:"title"`
 							Widget struct {
 								ID string `json:"id"`
 							} `json:"widget"`
-						} `json:"caCertificate"`
+						} `json:"caCert"`
 						TLSPrivateKey struct {
 							Type   string `json:"type"`
 							Title  string `json:"title"`
@@ -155,6 +156,7 @@ type FormQueryDto struct {
 					} `json:"visibleIf"`
 				} `json:"tlsModeFromFile"`
 			} `json:"properties"`
+			Order []string `json:"order"`
 		} `json:"tls"`
 		Backup struct {
 			Type        string `json:"type"`
@@ -257,6 +259,7 @@ type FormQueryDto struct {
 					} `json:"visibleIf"`
 				} `json:"backupModeFromNewCredentials"`
 			} `json:"properties"`
+			Order []string `json:"order"`
 		} `json:"backup"`
 	} `json:"properties"`
 }

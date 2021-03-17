@@ -53,6 +53,13 @@ func (a FormAction) GetJsonForm() interface{} {
 	// Get type of placeholder
 	placeholderType := reflect.ValueOf(placeholder)
 
+	// Check if the action requires data
+	if placeholderType.Kind() == reflect.Invalid {
+		return map[string]interface{}{
+			"properties": map[string]interface{}{},
+		}
+	}
+
 	// Ensure we only allow pointers
 	if placeholderType.Kind() != reflect.Ptr {
 		panic("Placeholder is not of type pointer")
