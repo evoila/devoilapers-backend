@@ -15,17 +15,8 @@ jobs:
         with:
           go-version: ^1.15
 
-
       - name: Start minikube
         uses: medyagh/setup-minikube@master
-
-#      - name: Install kubectl
-#        run: |
-#          sudo apt-get update && sudo apt-get install -y apt-transport-https
-#          curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-#          echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
-#          sudo apt-get update
-#          sudo apt-get install -y kubectl
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
@@ -46,17 +37,6 @@ jobs:
           envsubst < ../.github/create_service_account.yaml > create_service_account.yaml
           cd ..
 
-#      - name: Write .kubeconfig to file
-#        run: |
-#          cd temp
-#          echo $GHKUBECONFIG | base64 -di > kubeconfig
-#          mkdir ~/.kube
-#          mv kubeconfig ~/.kube/config
-#          echo "Installed kubeconfig"
-#          cd ..
-#        env:
-#          GHKUBECONFIG: ${{ secrets.GH_KUBE_CONFIG }}
-
       - name: Create opa config
         run: |
           cd temp
@@ -71,12 +51,10 @@ jobs:
           echo Export host
 
           cat ~/.kube/config | grep server | awk -F ' ' '{print $2}' > host
-#          cat ~/.kube/config | grep server | awk -F '"' '{print $2}'> host
 
           echo Export ca
 
           cat ~/.minikube/ca.crt > ca.crt
-#          cat ~/.kube/config | grep certificate-authority-data | awk -F ': ' '{print $2}' | base64 -d > ca.crt
           mv ca.crt ../configs/kubernetes_ca.crt
 
           export GH_KUBERNETES_HOST=`cat host`
