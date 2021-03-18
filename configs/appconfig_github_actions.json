@@ -10,9 +10,9 @@
     "server": "$GH_KUBERNETES_HOST",
     "certificate-authority": "configs/kubernetes_ca.crt",
     "nginx": {
-      "namespace": "ingress-nginx",
+      "namespace": "kube-system",
       "tcp_config_map_name": "tcp-services",
-      "deployment_name": "nginx-ingress-ingress-nginx-controller",
+      "deployment_name": "ingress-nginx-controller",
       "container_name": "controller"
     }
   },
