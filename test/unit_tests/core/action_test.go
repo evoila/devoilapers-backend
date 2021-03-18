@@ -133,41 +133,6 @@ func remarshal(input string) string {
 	return string(jsonBytes)
 }
 
-func Test_e(t *testing.T)  {
-	root := map[string]interface{}{
-		"properties": map[string]interface{}{
-			"toggle": map[string]interface{} {
-				"type": "string",
-				"title": "toggle",
-				"widget": "select",
-				"oneOf": []map[string]interface{}{
-					{
-						"enum": []string{"get"},
-						"description": "get",
-					},
-					{
-						"enum": []string{"set"},
-						"description": "set",
-					},
-					{
-						"enum": []string{"unset"},
-						"description": "unset",
-					},
-				},
-			},
-		},
-	}
-
-	jsonBytes, err := json.Marshal(root)
-	assert.Nil(t, err)
-	jsonText := string(jsonBytes)
-
-
-	a := jsonText
-	_ = a
-
-}
-
 func Test_ActionExecution(t *testing.T) {
 
 	counter := 0

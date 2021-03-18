@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"context"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -64,7 +65,6 @@ func (api CommonCrdApi) List(namespace string, resource string, out runtime.Obje
 	return api.ListWithOptions(namespace, resource, &metav1.ListOptions{}, out)
 }
 
-
 // Get a all custom resource of given type resource in given namespace with
 // given name an pass into given out (list)-object
 func (api CommonCrdApi) ListWithOptions(namespace string, resource string, listOptions *metav1.ListOptions, out runtime.Object) error {
@@ -76,8 +76,6 @@ func (api CommonCrdApi) ListWithOptions(namespace string, resource string, listO
 		Into(out)
 }
 
-
-
 // Delete a custom resource of given type resource in given namespace with given name
 func (api CommonCrdApi) Delete(namespace string, name string, resource string) error {
 	return api.Client.Delete().
@@ -86,4 +84,17 @@ func (api CommonCrdApi) Delete(namespace string, name string, resource string) e
 		VersionedParams(&metav1.DeleteOptions{}, scheme.ParameterCodec).
 		Name(name).
 		Do(context.TODO()).Error()
+}
+
+// Update a custom resource of given type resource in given namespace with given name
+func (api CommonCrdApi) Update(namespace, name, resource string, obj runtime.Object) error {
+	err := api.Client.Put().
+		Namespace(namespace).
+		Resource(resource).
+		Name(name).
+		VersionedParams(&metav1.UpdateOptions{}, scheme.ParameterCodec).
+		Body(obj).
+		Do(context.TODO()).
+		Error()
+	return err
 }

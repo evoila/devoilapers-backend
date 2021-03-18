@@ -46,12 +46,14 @@ func (es DummyProvider) GetServiceType() string {
 func (es DummyProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
 	var services []*service.IService
 	for id, data := range es.DummyKubernetes.GetServices() {
+
 		var service service.IService = DummyService{
 			id:          id,
 			status:      data.status,
 			yaml:        data.yaml,
 			serviceType: es.GetServiceType(),
 			auth:        auth,
+			state: data.toggleState,
 		}
 		services = append(services, &service)
 	}
@@ -63,13 +65,13 @@ func (es DummyProvider) GetService(auth common.IKubernetesAuthInformation, id st
 	if err != nil {
 		return nil, err
 	}
-
 	var service service.IService = DummyService{
 		id:          id,
 		status:      data.status,
 		yaml:        data.yaml,
 		serviceType: es.GetServiceType(),
 		auth:        auth,
+		state: data.toggleState,
 	}
 
 	return &service, nil

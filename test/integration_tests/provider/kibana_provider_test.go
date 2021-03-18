@@ -11,6 +11,7 @@ import (
 	"OperatorAutomation/pkg/kibana/dtos"
 	"OperatorAutomation/test/integration_tests/common_test"
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
+	"encoding/base64"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	yamlSerializer "gopkg.in/yaml.v2"
@@ -77,18 +78,17 @@ func Test_Kibana_Provider_GetAttributes(t *testing.T) {
 	assert.NotNil(t, formDataObj2)
 
 	// Ensure they are not the same (because of the random name)
-	formData1 := formDataObj1.(dtos.FormQueryDto)
-	formData2 := formDataObj2.(dtos.FormQueryDto)
+	formData1 := formDataObj1.(dtos.ServiceCreationFormDto)
+	formData2 := formDataObj2.(dtos.ServiceCreationFormDto)
 
 	assert.NotEqual(t,
 		formData1.Properties.Common.Properties.ClusterName.Default,
 		formData2.Properties.Common.Properties.ClusterName.Default)
 
 	// Generate yaml from form values and ensure it sets the values from form
-	filledForm := dtos.FormResponseDto{Common: dtos.FormResponseDtoCommon{
-		ClusterName:           "MyCluster",
-		ElasticSearchInstance: "MyElasticSearchInstance"},
-	}
+	filledForm := dtos.ServiceCreationFormResponseDto{}
+	filledForm.Common.ClusterName = "MyCluster"
+	filledForm.Common.ElasticSearchInstance = "MyElasticSearchInstance"
 
 	filledFormData, err := json.Marshal(filledForm)
 	assert.Nil(t, err)
@@ -119,7 +119,8 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	kbProvider.OnCoreInitialized([]*provider.IServiceProvider{&esProvider})
 
 	// Create a new es instance
-	esFormResponseDto := esDtos.FormResponseDto{Common: esDtos.FormResponseDtoCommon{ClusterName: "kibana-es-test"}}
+	esFormResponseDto := esDtos.ServiceCreationFormResponseDto{}
+	esFormResponseDto.Common.ClusterName = "kibana-es-test"
 	esFormResponseDtoBytes, err := json.Marshal(esFormResponseDto)
 	assert.Nil(t, err)
 	esYamlObj, err := esProvider.GetYamlTemplate(user, esFormResponseDtoBytes)
@@ -136,11 +137,9 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 
 	// Continue with actual kb provider
 	// Generate a form response that would arrive from the frontent
-	filledForm := dtos.FormResponseDto{Common: dtos.FormResponseDtoCommon{
-		ClusterName: "kibana-test",
-		// Reference the elastic search instance
-		ElasticSearchInstance: esFormResponseDto.Common.ClusterName,
-	}}
+	filledForm := dtos.ServiceCreationFormResponseDto{}
+	filledForm.Common.ClusterName = "kibana-test"
+	filledForm.Common.ElasticSearchInstance = esFormResponseDto.Common.ClusterName
 
 	jsonFilledForm, err := json.Marshal(filledForm)
 	assert.Nil(t, err)
@@ -180,7 +179,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	service0 := *services[0]
 	assert.NotEqual(t, "", service0.GetName())
 	assert.Equal(t, kbProvider.GetServiceType(), service0.GetType())
-	assert.Equal(t, 0, len(service0.GetActions()))
+	assert.Equal(t, 1, len(service0.GetActions()))
 
 	// Try get service with invalid user data
 	_, err = kbProvider.GetService(invalidUser, service0.GetName())
@@ -208,6 +207,42 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	assert.Equal(t, service0.GetName(), service1.GetName())
 	assert.Equal(t, service0.GetType(), service1.GetType())
 
+	// Check whether service is an Kibana service
+	service2, ok := service1.(kibana.KibanaService)
+	assert.True(t, ok)
+
+	secret, _ := service2.K8sApi.GetSecret(user.KubernetesNamespace, service2.GetName()+"-kb-http-certs-internal")
+
+	// Test set certificate to service
+	certDto := &dtos.CertificateDto{
+		CaCrt:  base64.StdEncoding.EncodeToString(secret.Data["ca.crt"]),
+		TlsCrt: base64.StdEncoding.EncodeToString(secret.Data["tls.crt"]),
+		TlsKey: base64.StdEncoding.EncodeToString(secret.Data["tls.key"]),
+	}
+
+	_, err = service2.SetCertificateToService(certDto)
+	assert.Nil(t, err)
+
+	// Check status of service after setting the certificate
+	var service3 *service.IService
+	for i := 0; i < 5; i++ {
+		tmpService, err := kbProvider.GetService(user, service2.GetName())
+		assert.Nil(t, err)
+		assert.NotNil(t, tmpService)
+		if (*tmpService).GetStatus() == service.ServiceStatusOk {
+			service3 = tmpService
+			break
+		} else {
+			time.Sleep(5 * time.Second)
+		}
+	}
+
+	// Check whether service is not nil
+	assert.NotNil(t, service3)
+
+	// Check whether status of service is ok after setting the certificate
+	assert.True(t, service.ServiceStatusOk == (*service3).GetStatus())
+
 	// Try delete service with invalid id
 	err = kbProvider.DeleteService(user, "some-not-existing-id")
 	assert.NotNil(t, err)
@@ -223,4 +258,10 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	// Delete es instance
 	err = esProvider.DeleteService(user, esService0.GetName())
 	assert.Nil(t, err)
+
+	// Wait till delete service is done
+	time.Sleep(5 * time.Second)
+	// Check whether the secret with associated certificate is also deleted
+	secret, err = service2.K8sApi.GetSecret(user.KubernetesNamespace, service2.GetName()+"-tls-cert")
+	assert.NotNil(t, err)
 }

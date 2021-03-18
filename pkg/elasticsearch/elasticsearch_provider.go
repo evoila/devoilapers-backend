@@ -33,7 +33,7 @@ func CreateElasticSearchProvider(host string, caPath string, templateDirectoryPa
 }
 
 func (es ElasticsearchProvider) GetYamlTemplate(auth common.IKubernetesAuthInformation, jsonFormResult []byte) (interface{}, error) {
-	form := dtos.FormResponseDto{}
+	form := dtos.ServiceCreationFormResponseDto{}
 	err := json.Unmarshal(jsonFormResult, &form)
 	if err != nil {
 		return "", err
@@ -55,7 +55,7 @@ func (es ElasticsearchProvider) GetYamlTemplate(auth common.IKubernetesAuthInfor
 
 func (es ElasticsearchProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (interface{}, error) {
 	// Create form with form default values
-	formsQuery := dtos.FormQueryDto{}
+	formsQuery := dtos.ServiceCreationFormDto{}
 	err := json.Unmarshal([]byte(es.FormTemplate), &formsQuery)
 	if err != nil {
 		return "", err
@@ -83,9 +83,14 @@ func (es ElasticsearchProvider) GetServices(auth common.IKubernetesAuthInformati
 		return nil, err
 	}
 
+	api, err := kubernetes.GenerateK8sApiFromToken(es.Host, es.CaPath, auth.GetKubernetesAccessToken())
+	if err != nil {
+		return nil, err
+	}
+
 	var services []*service.IService
 	for _, elasticSearchInstance := range elasticSearchInstances.Items {
-		services = append(services, es.CrdInstanceToServiceInstance(&elasticSearchInstance))
+		services = append(services, es.CrdInstanceToServiceInstance(api, elasticSearchCrd, &elasticSearchInstance))
 	}
 
 	return services, nil
@@ -103,7 +108,12 @@ func (es ElasticsearchProvider) GetService(auth common.IKubernetesAuthInformatio
 		return nil, err
 	}
 
-	return es.CrdInstanceToServiceInstance(&elasticSearchInstance), nil
+	api, err := kubernetes.GenerateK8sApiFromToken(es.Host, es.CaPath, auth.GetKubernetesAccessToken())
+	if err != nil {
+		return nil, err
+	}
+
+	return es.CrdInstanceToServiceInstance(api, elasticSearchCrd, &elasticSearchInstance), nil
 }
 
 func (es ElasticsearchProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
@@ -131,14 +141,17 @@ func (es ElasticsearchProvider) DeleteService(auth common.IKubernetesAuthInforma
 }
 
 // Converts a v1.Elasticsearch instance to an service representation
-func (es ElasticsearchProvider) CrdInstanceToServiceInstance(crdInstance *v1.Elasticsearch) *service.IService {
+func (es ElasticsearchProvider) CrdInstanceToServiceInstance(api *kubernetes.K8sApi, commonCrdApi *kubernetes.CommonCrdApi, crdInstance *v1.Elasticsearch) *service.IService {
 	yamlData, err := yaml.Marshal(crdInstance)
 	if err != nil {
 		yamlData = []byte("Unknown")
 	}
 
 	var elasticSearchService service.IService = ElasticSearchService{
-		status: crdInstance.Status.Health,
+		K8sApi:       api,
+		commonCrdApi: commonCrdApi,
+		crdInstance:  crdInstance,
+		status:       crdInstance.Status.Health,
 		BasicService: provider.BasicService{
 			Name:         crdInstance.Name,
 			ProviderType: es.GetServiceType(),
@@ -148,3 +161,4 @@ func (es ElasticsearchProvider) CrdInstanceToServiceInstance(crdInstance *v1.Ela
 
 	return &elasticSearchService
 }
+

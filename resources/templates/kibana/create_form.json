@@ -4,14 +4,14 @@
       "type": "object",
       "description": "Common settings",
       "properties": {
-        "cluster_name": {
+        "clusterName": {
           "type": "string",
           "title": "Cluster name",
           "widget": {
             "id": "string"
           }
         },
-        "elastic_search_instance": {
+        "elasticsearchInstance": {
           "type": "string",
           "title": "Elasticsearch instance name",
           "widget": {

@@ -4,9 +4,10 @@ import (
 	"OperatorAutomation/pkg/core"
 	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/test/unit_tests/common_test"
-	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Core_GetProvider(t *testing.T) {

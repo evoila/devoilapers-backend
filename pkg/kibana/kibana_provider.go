@@ -54,7 +54,7 @@ func (kb KibanaProvider) OnCoreInitialized(providers []*provider.IServiceProvide
 }
 
 func (kb KibanaProvider) GetYamlTemplate(auth common.IKubernetesAuthInformation, jsonFormResult []byte) (interface{}, error) {
-	form := dtos.FormResponseDto{}
+	form := dtos.ServiceCreationFormResponseDto{}
 	err := json.Unmarshal(jsonFormResult, &form)
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func (kb KibanaProvider) GetYamlTemplate(auth common.IKubernetesAuthInformation,
 
 func (kb KibanaProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (interface{}, error) {
 	// Create form with form default values
-	formsQuery := dtos.FormQueryDto{}
+	formsQuery := dtos.ServiceCreationFormDto{}
 	err := json.Unmarshal([]byte(kb.FormTemplate), &formsQuery)
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func (kb KibanaProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (in
 		esService := *esServicePtr
 		formsQuery.Properties.Common.Properties.ElasticSearchInstance.OneOf =
 			append(formsQuery.Properties.Common.Properties.ElasticSearchInstance.OneOf,
-				dtos.OneOf{
+				dtos.OneOfElasticSearchInstance{
 					Description: esService.GetName(),
 					Enum:        []string{esService.GetName()},
 				},
@@ -124,9 +124,14 @@ func (kb KibanaProvider) GetServices(auth common.IKubernetesAuthInformation) ([]
 		return nil, err
 	}
 
+	api, err := kubernetes.GenerateK8sApiFromToken(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken())
+	if err != nil {
+		return nil, err
+	}
+
 	var services []*service.IService
 	for _, kibanaInstance := range kibanaInstances.Items {
-		services = append(services, kb.CrdInstanceToServiceInstance(&kibanaInstance))
+		services = append(services, kb.CrdInstanceToServiceInstance(api, KibanaCrd, &kibanaInstance))
 	}
 
 	return services, nil
@@ -145,7 +150,12 @@ func (kb KibanaProvider) GetService(auth common.IKubernetesAuthInformation, id s
 		return nil, err
 	}
 
-	return kb.CrdInstanceToServiceInstance(&kibanaInstance), nil
+	api, err := kubernetes.GenerateK8sApiFromToken(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken())
+	if err != nil {
+		return nil, err
+	}
+
+	return kb.CrdInstanceToServiceInstance(api, KibanaCrd, &kibanaInstance), nil
 }
 
 func (kb KibanaProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
@@ -173,14 +183,17 @@ func (kb KibanaProvider) DeleteService(auth common.IKubernetesAuthInformation, i
 }
 
 // Converts a v1.Kibana instance to an service reprkbentation
-func (kb KibanaProvider) CrdInstanceToServiceInstance(crdInstance *v1.Kibana) *service.IService {
+func (kb KibanaProvider) CrdInstanceToServiceInstance(api *kubernetes.K8sApi, commonCrdApi *kubernetes.CommonCrdApi, crdInstance *v1.Kibana) *service.IService {
 	yamlData, err := yaml.Marshal(crdInstance)
 	if err != nil {
 		yamlData = []byte("Unknown")
 	}
 
 	var KibanaService service.IService = KibanaService{
-		status: crdInstance.Status.Health,
+		K8sApi:       api,
+		crdInstance:  crdInstance,
+		commonCrdApi: commonCrdApi,
+		status:       crdInstance.Status.Health,
 		BasicService: providerUtils.BasicService{
 			Name:         crdInstance.Name,
 			ProviderType: kb.GetServiceType(),

@@ -10,8 +10,10 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
+	"encoding/base64"
 	"testing"
 	"time"
+
 )
 
 func CreateElasticSearchTestProvider(t *testing.T) (*elasticsearch.ElasticsearchProvider, config.RawConfig) {
@@ -60,15 +62,16 @@ func Test_Elasticsearch_Provider_GetAttributes(t *testing.T) {
 	assert.NotNil(t, formDataObj2)
 
 	// Ensure they are not the same (because of the random name)
-	formData1 := formDataObj1.(dtos.FormQueryDto)
-	formData2 := formDataObj2.(dtos.FormQueryDto)
+	formData1 := formDataObj1.(dtos.ServiceCreationFormDto)
+	formData2 := formDataObj2.(dtos.ServiceCreationFormDto)
 
 	assert.NotEqual(t,
 		formData1.Properties.Common.Properties.ClusterName.Default,
 		formData2.Properties.Common.Properties.ClusterName.Default)
 
 	// Generate yaml from form values
-	filledForm := dtos.FormResponseDto{Common: dtos.FormResponseDtoCommon{ClusterName: "MyCluster"}}
+	filledForm := dtos.ServiceCreationFormResponseDto{}
+	filledForm.Common.ClusterName = "MyCluster"
 	filledFormData, err := json.Marshal(filledForm)
 	assert.Nil(t, err)
 	yamlTemplate, err := esProvider.GetYamlTemplate(testUser, filledFormData)
@@ -86,7 +89,8 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	user := config.Users[0]
 	invalidUser := unit_test.TestUser{KubernetesNamespace: "namespace", KubernetesAccessToken: "InvalidToken"}
 
-	filledForm := dtos.FormResponseDto{Common: dtos.FormResponseDtoCommon{ClusterName: "my-es-test-cluster"}}
+	filledForm := dtos.ServiceCreationFormResponseDto{}
+	filledForm.Common.ClusterName = "es-test-cluster"
 	filledFormBytes, err := json.Marshal(filledForm)
 	assert.Nil(t, err)
 
@@ -125,7 +129,7 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	service0 := *services[0]
 	assert.NotEqual(t, "", service0.GetName())
 	assert.Equal(t, esProvider.GetServiceType(), service0.GetType())
-	assert.Equal(t, 0, len(service0.GetActions()))
+	assert.Equal(t, 1, len(service0.GetActions()))
 	assert.True(t,
 		service.ServiceStatusPending == service0.GetStatus() ||
 			service.ServiceStatusOk == service0.GetStatus(),
@@ -157,6 +161,38 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	assert.Equal(t, service0.GetName(), service1.GetName())
 	assert.Equal(t, service0.GetType(), service1.GetType())
 
+	// Check whether service is an Elasticsearch service
+	service2, ok := service1.(elasticsearch.ElasticSearchService)
+	assert.True(t, ok)
+
+	secret, _ := service2.K8sApi.GetSecret(user.KubernetesNamespace, service2.GetName()+"-es-http-certs-internal")
+
+	// Test set certificate to service
+	certDto := &dtos.CertificateDto{
+		CaCrt:  base64.StdEncoding.EncodeToString(secret.Data["ca.crt"]),
+		TlsCrt: base64.StdEncoding.EncodeToString(secret.Data["tls.crt"]),
+		TlsKey: base64.StdEncoding.EncodeToString(secret.Data["tls.key"]),
+	}
+
+	_, err = service2.SetCertificateToService(certDto)
+	assert.Nil(t, err)
+
+	// Check status of service after setting the certificate
+	var service3 service.IService
+	for i := 0; i < 10; i++ {
+		tmpService, err := esProvider.GetService(user, service0.GetName())
+		assert.Nil(t, err)
+		assert.NotNil(t, tmpService)
+		if (*tmpService).GetStatus() == service.ServiceStatusOk {
+			service3 = *tmpService
+			break
+		} else {
+			time.Sleep(5 * time.Second)
+		}
+	}
+	assert.NotNil(t, service3)
+	assert.True(t, service.ServiceStatusOk == service3.GetStatus())
+
 	// Try delete service with invalid id
 	err = esProvider.DeleteService(user, "some-not-existing-id")
 	assert.NotNil(t, err)
@@ -168,4 +204,10 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	// Delete service
 	err = esProvider.DeleteService(user, (*services[0]).GetName())
 	assert.Nil(t, err)
+
+	// Wait till delete service is done
+	time.Sleep(5 * time.Second)
+	// Check whether the secret with associated certificate is also deleted
+	secret, err = service2.K8sApi.GetSecret(user.KubernetesNamespace, service2.GetName()+"-tls-cert")
+	assert.NotNil(t, err)
 }

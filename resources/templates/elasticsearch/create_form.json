@@ -4,7 +4,7 @@
       "type": "object",
       "description": "Common settings",
       "properties": {
-        "cluster_name": {
+        "clusterName": {
           "type": "string",
           "title": "Cluster name",
           "default": "",

@@ -6,13 +6,14 @@ import (
 	"OperatorAutomation/pkg/dummy/dtos"
 )
 
+
 type DummyService struct {
 	id          string
 	status      int
 	yaml        string
 	serviceType string
 	auth        common.IKubernetesAuthInformation
-	state		*bool
+	state       *bool
 }
 
 func (es DummyService) GetYamlTemplate() string {
@@ -28,6 +29,8 @@ func (es DummyService) GetName() string {
 }
 
 func (es DummyService) GetActions() []action.IActionGroup {
+
+
 	return []action.IActionGroup{
 		action.ActionGroup{
 			Name: "Dummy Action Group",
@@ -40,23 +43,20 @@ func (es DummyService) GetActions() []action.IActionGroup {
 						return es.ExecuteDummyAction(i.(*dtos.DummyActionDto))
 					},
 				},
-				action.ToggleAction{
-					Name:          "Dummy Toggle",
-					UniqueCommand: "cmd_dummy_toggle_action",
-					QueryExecuteCallback: func() (bool, error) {
+				action.CreateToggleAction(
+					"Dummy Toggle",
+					"cmd_dummy_toggle_action",
+					func() (bool, error) {
 						return *es.state, nil
 					},
-					SetExecuteCallback: func() (interface{}, error) {
-						t := true
-						es.state = &t
+					func() (interface{}, error) {
+						*es.state = true
 						return nil, nil
 					},
-					UnsetExecuteCallback: func() (interface{}, error) {
-						t := false
-						es.state = &t
+					func() (interface{}, error) {
+						*es.state = false
 						return nil, nil
-					},
-				},
+					}),
 			},
 		},
 	}
