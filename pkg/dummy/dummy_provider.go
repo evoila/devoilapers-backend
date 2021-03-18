@@ -21,7 +21,9 @@ func (es DummyProvider) GetYamlTemplate(auth common.IKubernetesAuthInformation, 
 }
 
 func (es DummyProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (interface{}, error) {
-	return "{\"properties\":{}}", nil
+	return map[string]interface{}{
+		"properties": map[string]interface{}{},
+	}, nil;
 }
 
 func CreateDummyProvider() DummyProvider {
