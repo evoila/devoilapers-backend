@@ -39,7 +39,7 @@ jobs:
           head -1 <(fold -w 20  <(tr -dc 'a-z' < /dev/urandom)) >> randomuser
           export KUB_TEMP_PREFIX=`cat randomuser`
           echo "New user prefix is" $KUB_TEMP_PREFIX
-          export NGINX_NAMESPACE=ingress-nginx
+          export NGINX_NAMESPACE=kube-system
           echo "Use nginx namespace" $NGINX_NAMESPACE
           envsubst < ../.github/create_service_account.yaml > create_service_account.yaml
           cd ..
@@ -107,7 +107,7 @@ jobs:
           echo Deleting kubernetes namespace
           export KUB_TEMP_PREFIX=`cat randomuser`
           kubectl delete namespace $KUB_TEMP_PREFIX-namespace
-          kubectl delete rolebinding $KUB_TEMP_PREFIX-nginx-rolebinding -n ingress-nginx
+          kubectl delete rolebinding $KUB_TEMP_PREFIX-nginx-rolebinding -n kube-system
           kubectl delete clusterrole $KUB_TEMP_PREFIX-role
           kubectl delete clusterrole $KUB_TEMP_PREFIX-nginx-role
           cd ..
