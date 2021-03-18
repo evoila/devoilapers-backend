@@ -28,6 +28,16 @@ jobs:
           minikube start --wait=all
           minikube addons enable ingress
 
+      - name: Install operators
+        run: |
+          kubectl apply -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.17.0/crds.yaml
+          kubectl apply -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.17.0/olm.yaml
+          kubectl create namespace pgo
+          ping 127.0.0.1 -n 6 > nul
+          kubectl apply -f https://raw.githubusercontent.com/CrunchyData/postgres-operator/v4.6.1/installers/kubectl/postgres-operator.yml
+          kubectl apply -f https://download.elastic.co/downloads/eck/1.4.0/all-in-one.yaml
+          ping 127.0.0.1 -n 12 > nul
+
       - name: Create temp working dir
         run: |
           mkdir temp
