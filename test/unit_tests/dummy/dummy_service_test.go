@@ -36,7 +36,7 @@ func Test_DummyProvider_Service_Attributes(t *testing.T) {
 	assert.Equal(t, provider.GetServiceType(), service0.GetType())
 
 	// Get action groups
-	actionGroups := service0.GetActions()
+	actionGroups := service0.GetActionGroups()
 	assert.Equal(t, 1, len(actionGroups))
 	actionGroup0 := actionGroups[0]
 
@@ -52,7 +52,7 @@ func Test_DummyProvider_Service_Actions(t *testing.T) {
 	assert.Equal(t, "1", service0.GetYamlTemplate())
 
 	// Get action groups
-	actionGroups := service0.GetActions()
+	actionGroups := service0.GetActionGroups()
 	assert.Equal(t, 1, len(actionGroups))
 	actionGroup0 := actionGroups[0]
 

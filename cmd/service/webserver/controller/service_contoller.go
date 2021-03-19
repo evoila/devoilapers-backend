@@ -102,7 +102,7 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 
 	jsonData, err := ioutil.ReadAll(ctx.Request.Body)
 
-	for _, group := range (*service).GetActions() {
+	for _, group := range (*service).GetActionGroups() {
 		for _, action := range group.GetActions() {
 			if action.GetUniqueCommand() != serviceActionCommand {
 				continue
@@ -233,7 +233,7 @@ func serviceGroupToDto(servicePtr *service.IService) []dtos.ServiceInstanceActio
 	actionGroups := []dtos.ServiceInstanceActionGroupDto{}
 	service := *servicePtr
 
-	for _, group := range service.GetActions() {
+	for _, group := range service.GetActionGroups() {
 		groupDto := dtos.ServiceInstanceActionGroupDto{Actions: []dtos.ServiceInstanceActionDto{}}
 		groupDto.GroupName = group.GetName()
 

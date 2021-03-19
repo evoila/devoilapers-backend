@@ -11,8 +11,9 @@ import (
 	"testing"
 )
 
-func CommonProviderStart(t *testing.T, provider provider.IServiceProvider, user common.IKubernetesAuthInformation, creationForm interface{}) *service.IService {
+func CommonProviderStart(t *testing.T, providerPtr *provider.IServiceProvider, user common.IKubernetesAuthInformation, creationForm interface{}, expectedNumberOfActionGroups int) *service.IService {
 	invalidUser := unit_test.TestUser{KubernetesNamespace: "namespace", KubernetesAccessToken: "InvalidToken"}
+	provider := *providerPtr
 
 	filledFormBytes, err := json.Marshal(creationForm)
 	assert.Nil(t, err)
@@ -52,7 +53,7 @@ func CommonProviderStart(t *testing.T, provider provider.IServiceProvider, user 
 	service0 := *services[0]
 	assert.NotEqual(t, "", service0.GetName())
 	assert.Equal(t, provider.GetServiceType(), service0.GetType())
-	assert.Equal(t, 1, len(service0.GetActions()))
+	assert.Equal(t, expectedNumberOfActionGroups, len(service0.GetActionGroups()))
 
 	// Try get service with invalid user data
 	_, err = provider.GetService(invalidUser, service0.GetName())
@@ -73,15 +74,16 @@ func CommonProviderStart(t *testing.T, provider provider.IServiceProvider, user 
 	return service1Ptr
 }
 
-func CommonProviderStop(t *testing.T, provider provider.IServiceProvider, user common.IKubernetesAuthInformation)  {
+func CommonProviderStop(t *testing.T, providerPtr *provider.IServiceProvider, user common.IKubernetesAuthInformation)  {
 	invalidUser := unit_test.TestUser{KubernetesNamespace: "namespace", KubernetesAccessToken: "InvalidToken"}
+	provider := *providerPtr
 
 	// Try delete service with invalid id
 	err := provider.DeleteService(user, "some-not-existing-id")
 	assert.NotNil(t, err)
 
 	services, err := provider.GetServices(user)
-	assert.NotNil(t, err)
+	assert.Nil(t, err)
 	assert.True(t, len(services) > 0)
 
 	// Try delete service with invalid user

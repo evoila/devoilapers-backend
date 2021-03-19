@@ -57,7 +57,7 @@ func (es ElasticSearchService) SetCertificateToService(certDto *dtos.Certificate
 	}
 }
 
-func (es ElasticSearchService) GetActions() []action.IActionGroup {
+func (es ElasticSearchService) GetActionGroups() []action.IActionGroup {
 	return []action.IActionGroup{
 		action.ActionGroup{
 			Name: "Secure",

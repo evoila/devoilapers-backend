@@ -24,7 +24,7 @@ func (es TestService) GetName() string {
 	return es.GetNameCb()
 }
 
-func (es TestService) GetActions() []action.IActionGroup {
+func (es TestService) GetActionGroups() []action.IActionGroup {
 	return es.GetActionGroupCb()
 }
 

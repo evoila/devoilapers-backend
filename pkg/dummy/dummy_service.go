@@ -28,7 +28,7 @@ func (es DummyService) GetName() string {
 	return es.id
 }
 
-func (es DummyService) GetActions() []action.IActionGroup {
+func (es DummyService) GetActionGroups() []action.IActionGroup {
 
 
 	return []action.IActionGroup{

@@ -15,7 +15,7 @@ type PostgresService struct {
 }
 
 // Returns the action groups. Part of service.IService interface
-func (pg PostgresService) GetActions() []action.IActionGroup {
+func (pg PostgresService) GetActionGroups() []action.IActionGroup {
 	return []action.IActionGroup{
 		action.ActionGroup{
 			Name: "Informations",

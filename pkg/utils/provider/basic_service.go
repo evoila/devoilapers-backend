@@ -24,7 +24,7 @@ func (cs BasicService) GetName() string {
 }
 
 // Returns the action groups. Part of service.IService interface
-func (cs BasicService) GetActions() []action.IActionGroup {
+func (cs BasicService) GetActionGroups() []action.IActionGroup {
 	return []action.IActionGroup{}
 }
 

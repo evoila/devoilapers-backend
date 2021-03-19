@@ -3,6 +3,7 @@ package provider
 import (
 	"OperatorAutomation/cmd/service/config"
 	"OperatorAutomation/pkg/core/action"
+	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/kubernetes"
 	"OperatorAutomation/pkg/postgres"
@@ -12,20 +13,19 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v2"
 	"testing"
 	"time"
 )
 
-func CreatePostgresTestProvider(t *testing.T) (*postgres.PostgresProvider, config.RawConfig) {
+func CreatePostgresTestProvider(t *testing.T) (*provider.IServiceProvider, config.RawConfig) {
 	config := common_test.GetConfig(t)
 
-	pgProvider := postgres.CreatePostgresProvider(
+	var pgProvider provider.IServiceProvider = postgres.CreatePostgresProvider(
 		config.Kubernetes.Server,
 		config.Kubernetes.CertificateAuthority,
 		config.ResourcesTemplatesPath,
-		kubernetes.NginxInformation(config.Kubernetes.Nginx), 
-		)
+		kubernetes.NginxInformation(config.Kubernetes.Nginx),
+	)
 
 	return &pgProvider, config
 }
@@ -47,7 +47,8 @@ func Test_Postgres_Provider_Create_Panic_Template_Not_Found(t *testing.T) {
 }
 
 func Test_Postgres_Provider_GetAttributes(t *testing.T) {
-	pgProvider, _ := CreatePostgresTestProvider(t)
+	pgProviderPtr, _ := CreatePostgresTestProvider(t)
+	pgProvider := *pgProviderPtr
 
 	assert.NotEqual(t, "", pgProvider.GetServiceImage())
 	assert.NotEqual(t, "", pgProvider.GetServiceDescription())
@@ -56,7 +57,6 @@ func Test_Postgres_Provider_GetAttributes(t *testing.T) {
 	testUser := unit_test.TestUser{
 		KubernetesNamespace: "MyNamespace",
 	}
-
 
 	// Get json form data
 	formDataObj1, err := pgProvider.GetJsonForm(testUser)
@@ -88,9 +88,9 @@ func Test_Postgres_Provider_GetAttributes(t *testing.T) {
 
 	// Ensure values are set by form as expected
 	expectedClusterName := "MyCluster"
-	assert.Equal(t, expectedClusterName, yamlObject.Metadata.Annotations.CurrentPrimary )
-	assert.Equal(t, expectedClusterName, yamlObject.Metadata.Labels.CrunchyPghaScope  )
-	assert.Equal(t, expectedClusterName, yamlObject.Metadata.Labels.DeploymentName )
+	assert.Equal(t, expectedClusterName, yamlObject.Metadata.Annotations.CurrentPrimary)
+	assert.Equal(t, expectedClusterName, yamlObject.Metadata.Labels.CrunchyPghaScope)
+	assert.Equal(t, expectedClusterName, yamlObject.Metadata.Labels.DeploymentName)
 	assert.Equal(t, expectedClusterName, yamlObject.Metadata.Labels.Name)
 	assert.Equal(t, expectedClusterName, yamlObject.Metadata.Labels.PgCluster)
 	assert.Equal(t, expectedClusterName, yamlObject.Metadata.Name)
@@ -105,7 +105,7 @@ func Test_Postgres_Provider_GetAttributes(t *testing.T) {
 }
 
 func get_action(service *service.IService, groupname string, actioncommand string) (*action.IAction, error) {
-	actionGroups := (*service).GetActions()
+	actionGroups := (*service).GetActionGroups()
 
 	for _, actionGroup := range actionGroups {
 		if actionGroup.GetName() != groupname {
@@ -124,88 +124,21 @@ func get_action(service *service.IService, groupname string, actioncommand strin
 }
 
 func Test_Postgres_Provider_End2End(t *testing.T) {
-	pgProvider, config := CreatePostgresTestProvider(t)
+	pgProviderPtr, config := CreatePostgresTestProvider(t)
+	pgProvider := *pgProviderPtr
 
 	user := config.Users[0]
-	invalidUser := unit_test.TestUser{KubernetesNamespace: "namespace", KubernetesAccessToken: "InvalidToken"}
 
 	// Prepare form
 	filledForm := dtos.FormResponseDto{}
 	filledForm.Common.ClusterName = "pg-test-cluster"
 
-	filledFormBytes, err := json.Marshal(filledForm)
-	assert.Nil(t, err)
-
-	// Get yaml template based on form
-	yamlObj, err := pgProvider.GetYamlTemplate(user, filledFormBytes)
-	assert.Nil(t, err)
-
-	// Convert yaml into a string
-	yamlBytes, err := yaml.Marshal(yamlObj)
-	assert.Nil(t, err)
-	yaml := string(yamlBytes)
-	assert.True(t, len(yaml) > 10)
-
-	// Check if there is no other service
-	services, err := pgProvider.GetServices(user)
-	assert.Nil(t, err)
-	assert.Equal(t, 0, len(services))
-
-	// Try create a service with invalid yaml
-	err = pgProvider.CreateService(user, "something")
-	assert.NotNil(t, err)
-
-	// Try create a service with invalid user data
-	err = pgProvider.CreateService(invalidUser, yaml)
-	assert.NotNil(t, err)
-
-	// Create a service
-	err = pgProvider.CreateService(user, yaml)
-	assert.Nil(t, err)
-
-	// Try check if created with invalid user data
-	services, err = pgProvider.GetServices(invalidUser)
-	assert.NotNil(t, err)
-
-	// Check if created
-	services, err = pgProvider.GetServices(user)
-	assert.Nil(t, err)
-	assert.Equal(t, 1, len(services))
-	service0 := *services[0]
-	assert.NotEqual(t, "", service0.GetName())
-	assert.Equal(t, pgProvider.GetServiceType(), service0.GetType())
-	assert.Equal(t, 3, len(service0.GetActions()))
-
-	// Try get service with invalid user data
-	_, err = pgProvider.GetService(invalidUser, service0.GetName())
-	assert.NotNil(t, err)
-
-	// Wait for service to become ok. Postgres needs some extra time.
-	var service1 service.IService
-	for i := 0; i < 60; i++ {
-		time.Sleep(5 * time.Second)
-
-		// Try get service with invalid user data
-		service1Ptr, err := pgProvider.GetService(user, service0.GetName())
-		assert.Nil(t, err)
-		service1 = *service1Ptr
-
-		if service1.GetStatus() == service.ServiceStatusOk {
-			break
-		}
-	}
-
-	// Ensure service is ok
-	assert.Equal(t, service.ServiceStatusOk, service1.GetStatus())
-
-	// Ensure they have the same attributes
-	assert.Equal(t, service0.GetName(), service1.GetName())
-	assert.Equal(t, service0.GetType(), service1.GetType())
-
+	service1Ptr := common_test.CommonProviderStart(t, pgProviderPtr, user, filledForm, 3)
+	service1 := *service1Ptr
 
 	// Testing actions
 	// Get database credentials
-	actionPtr, err := get_action(&service0, "Informations", "cmd_pg_get_credentials")
+	actionPtr, err := get_action(service1Ptr, "Informations", "cmd_pg_get_credentials")
 	assert.Nil(t, err)
 	action := *actionPtr
 	assert.Nil(t, action.GetJsonFormResultPlaceholder())
@@ -217,14 +150,14 @@ func Test_Postgres_Provider_End2End(t *testing.T) {
 	assert.True(t, clusterCredentials.InternalPort > 1)
 
 	// Exposure
-	actionPtr, err = get_action(&service0, "Security", "cmd_pg_get_expose_info")
+	actionPtr, err = get_action(service1Ptr, "Security", "cmd_pg_get_expose_info")
 	assert.Nil(t, err)
 	action = *actionPtr
 	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
 	assert.NotNil(t, err) // Not exposed
 
 	// Expose it
-	actionPtr, err = get_action(&service0, "Security", "cmd_pg_expose")
+	actionPtr, err = get_action(service1Ptr, "Security", "cmd_pg_expose")
 	assert.Nil(t, err)
 	action = *actionPtr
 	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
@@ -233,7 +166,7 @@ func Test_Postgres_Provider_End2End(t *testing.T) {
 	assert.True(t, clusterExposeResult.Port > 1)
 
 	// Check again if it is exposed
-	serviceTemp, err := pgProvider.GetService(user, service0.GetName())
+	serviceTemp, err := pgProvider.GetService(user, service1.GetName())
 	assert.Nil(t, err)
 	actionPtr, err = get_action(serviceTemp, "Security", "cmd_pg_get_expose_info")
 	assert.Nil(t, err)
@@ -244,14 +177,14 @@ func Test_Postgres_Provider_End2End(t *testing.T) {
 	assert.Equal(t, clusterExposeResult.Port, clusterExposeInformation.Port)
 
 	// Hide it again
-	actionPtr, err = get_action(&service0, "Security", "cmd_pg_hide")
+	actionPtr, err = get_action(service1Ptr, "Security", "cmd_pg_hide")
 	assert.Nil(t, err)
 	action = *actionPtr
 	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
 	assert.Nil(t, err)
 
 	// Check again if it is hidden
-	serviceTemp, err = pgProvider.GetService(user, service0.GetName())
+	serviceTemp, err = pgProvider.GetService(user, service1.GetName())
 	assert.Nil(t, err)
 	actionPtr, err = get_action(serviceTemp, "Security", "cmd_pg_get_expose_info")
 	assert.Nil(t, err)
@@ -260,7 +193,7 @@ func Test_Postgres_Provider_End2End(t *testing.T) {
 	assert.NotNil(t, err) // Not exposed
 
 	// Scale the cluster
-	actionPtr, err = get_action(&service0, "Features", "cmd_pg_scale")
+	actionPtr, err = get_action(service1Ptr, "Features", "cmd_pg_scale")
 	assert.Nil(t, err)
 	action = *actionPtr
 	clusterScale := *(action.GetJsonFormResultPlaceholder().(*dtos.ClusterScaleDto))
@@ -282,7 +215,7 @@ func Test_Postgres_Provider_End2End(t *testing.T) {
 	assert.Nil(t, result)
 	time.Sleep(5 * time.Second)
 	// Ensure we have 2 replicas now
-	serviceTemp, err = pgProvider.GetService(user, service0.GetName())
+	serviceTemp, err = pgProvider.GetService(user, service1.GetName())
 	assert.Nil(t, err)
 	actionPtr, err = get_action(serviceTemp, "Features", "cmd_pg_scale")
 	assert.Nil(t, err)
@@ -296,7 +229,7 @@ func Test_Postgres_Provider_End2End(t *testing.T) {
 	assert.Nil(t, result)
 	time.Sleep(5 * time.Second)
 	// Ensure we have only 1 replica now
-	serviceTemp, err = pgProvider.GetService(user, service0.GetName())
+	serviceTemp, err = pgProvider.GetService(user, service1.GetName())
 	assert.Nil(t, err)
 	actionPtr, err = get_action(serviceTemp, "Features", "cmd_pg_scale")
 	assert.Nil(t, err)
@@ -304,16 +237,5 @@ func Test_Postgres_Provider_End2End(t *testing.T) {
 	clusterScale = *(action.GetJsonFormResultPlaceholder().(*dtos.ClusterScaleDto))
 	assert.Equal(t, 1, clusterScale.NumberOfReplicas)
 
-
-	// Try delete service with invalid id
-	err = pgProvider.DeleteService(user, "some-not-existing-id")
-	assert.NotNil(t, err)
-
-	// Try delete service with invalid user
-	err = pgProvider.DeleteService(invalidUser, (*services[0]).GetName())
-	assert.NotNil(t, err)
-
-	// Delete service
-	err = pgProvider.DeleteService(user, (*services[0]).GetName())
-	assert.Nil(t, err)
+	common_test.CommonProviderStop(t, pgProviderPtr, user)
 }

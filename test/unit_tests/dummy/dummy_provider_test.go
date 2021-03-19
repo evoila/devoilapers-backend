@@ -66,9 +66,9 @@ func Test_DummyProvider_Get_Services(t *testing.T) {
 	assert.NotNil(t, services)
 	assert.Equal(t, 2, len(services))
 	services1 := *services[1]
-	assert.Equal(t, 1, len(services1.GetActions()))
+	assert.Equal(t, 1, len(services1.GetActionGroups()))
 	// Ensure values refer to other objects
-	assert.NotEqual(t, services1.GetActions(), services1.GetActions())
+	assert.NotEqual(t, services1.GetActionGroups(), services1.GetActionGroups())
 
 	// Get single service
 	servicePtr, err := dummyProvider.GetService(auth, services1.GetName())
@@ -82,9 +82,9 @@ func Test_DummyProvider_Get_Services(t *testing.T) {
 	// Compare values of GetServices and GetService
 	assert.NotEqual(t, "", service0.GetName())
 	assert.Equal(t, service.ServiceStatusOk, service0.GetStatus())
-	assert.Equal(t, 1, len(service0.GetActions()))
-	assert.NotEqual(t, "", service0.GetActions()[0].GetName())
-	assert.Equal(t, 2, len(service0.GetActions()[0].GetActions()))
+	assert.Equal(t, 1, len(service0.GetActionGroups()))
+	assert.NotEqual(t, "", service0.GetActionGroups()[0].GetName())
+	assert.Equal(t, 2, len(service0.GetActionGroups()[0].GetActions()))
 
 	assert.Equal(t, service0.GetName(), services1.GetName())
 	assert.Equal(t, service0.GetStatus(), services1.GetStatus())
