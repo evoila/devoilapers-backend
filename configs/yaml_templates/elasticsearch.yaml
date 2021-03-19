@@ -10,3 +10,4 @@ spec:
       count: 1
       config:
         node.store.allow_mmap: false
+        path.repo: ["/usr/share/elasticsearch/backups"]

@@ -109,6 +109,17 @@ func (es ElasticsearchProvider) DeleteService(auth common.IKubernetesAuthInforma
 	}
 
 	//TODO: Check if there is an associated ingress
+	// Before removing service, the service in ingress has to be removed as well
+	service, err := es.GetService(auth, id)
+	if err != nil {
+		return err
+	}
+	esService := (*service).(ElasticSearchService)
+	_, err = esService.HideExposedService(nil)
+	if err != nil {
+		return err
+	}
+
 	return elasticSearchCrd.Delete(auth.GetKubernetesNamespace(), id, RessourceName)
 }
 
@@ -120,6 +131,7 @@ func (es ElasticsearchProvider) CrdInstanceToServiceInstance(api *kubernetes.K8s
 	}
 
 	var elasticSearchService service.IService = ElasticSearchService{
+		Host:         es.Host,
 		K8sApi:       api,
 		commonCrdApi: commonCrdApi,
 		crdInstance:  crdInstance,

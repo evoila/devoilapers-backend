@@ -8,7 +8,7 @@ type CertificateDto struct {
 	TlsKey string
 }
 
-// 
+// Convert from CertificateDto containing base64 string to CertificateDto with decoded strin
 func (certDto *CertificateDto) EncodeFromBase64ToString() (*CertificateDto, error) {
 	caCrt, err := base64.StdEncoding.DecodeString(certDto.CaCrt)
 	if err != nil {

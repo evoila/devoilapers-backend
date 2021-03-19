@@ -14,6 +14,7 @@ import (
 )
 
 type KibanaService struct {
+	Host         string
 	K8sApi       *kubernetes.K8sApi
 	crdInstance  *v1.Kibana
 	commonCrdApi *kubernetes.CommonCrdApi
@@ -29,6 +30,60 @@ func (kb KibanaService) GetStatus() int {
 	}
 
 	return service.ServiceStatusPending
+}
+
+func (kb KibanaService) GetActions() []action.IActionGroup {
+	return []action.IActionGroup{
+		action.ActionGroup{
+			Name: "Secure",
+			Actions: []action.IAction{
+				action.Action{
+					Name:          "Set Certificate",
+					UniqueCommand: "cmd_set_cert_action",
+					Placeholder:   &dtos.CertificateDto{},
+					ActionExecuteCallback: func(i interface{}) (interface{}, error) {
+						return kb.SetCertificateToService(i.(*dtos.CertificateDto))
+					},
+				},
+			},
+		},
+		action.ActionGroup{
+			Name: "Expose",
+			Actions: []action.IAction{
+				action.Action{
+					Name:          "Expose Via Ingress",
+					UniqueCommand: "cmd_expose_action",
+					Placeholder:   nil,
+					ActionExecuteCallback: func(i interface{}) (interface{}, error) {
+						return kb.ExposeService(i)
+					},
+				},
+				action.Action{
+					Name:          "Hide",
+					UniqueCommand: "cmd_hide_action",
+					Placeholder:   nil,
+					ActionExecuteCallback: func(i interface{}) (interface{}, error) {
+						return kb.HideExposedService(i)
+					},
+				},
+			},
+		},
+	}
+}
+
+func (kb KibanaService) GetName() string {
+	return kb.crdInstance.Name
+}
+
+func (kb KibanaService) GetType() string {
+	return kb.crdInstance.Kind
+}
+
+func (kb KibanaService) GetTemplate() service.IServiceTemplate {
+	return service.ServiceTemplate{
+		Yaml:              kb.Yaml,
+		ImportantSections: kb.ImportantSections,
+	}
 }
 
 // Set certificate to the kibana service
@@ -57,20 +112,25 @@ func (kb KibanaService) SetCertificateToService(certDto *dtos.CertificateDto) (i
 	}
 }
 
-func (kb KibanaService) GetActions() []action.IActionGroup {
-	return []action.IActionGroup{
-		action.ActionGroup{
-			Name: "Secure",
-			Actions: []action.IAction{
-				action.Action{
-					Name:          "Set Certificate",
-					UniqueCommand: "cmd_set_cert_action",
-					Placeholder:   &dtos.CertificateDto{},
-					ActionExecuteCallback: func(i interface{}) (interface{}, error) {
-						return kb.SetCertificateToService(i.(*dtos.CertificateDto))
-					},
-				},
-			},
-		},
+// ExecuteExposeAction exposes a service through ingress and return error if not successful
+func (kb KibanaService) ExposeService(_ interface{}) (interface{}, error) {
+	namespace := kb.crdInstance.Namespace
+
+	// Default http port of kibana
+	const port int32 = 5601
+
+	// In a namespace, we rule to have only a ingress with convention name: <namespace>-ingress
+	return kb.K8sApi.AddServiceToIngress(namespace, namespace+"-ingress", kb.Name+"-kb-http", kb.Host, port)
+}
+
+func (kb KibanaService) HideExposedService(_ interface{}) (interface{}, error) {
+	namespace := kb.crdInstance.Namespace
+
+	// Check whether ingress exists
+	if _, err := kb.K8sApi.GetIngress(namespace, namespace+"-ingress"); err == nil {
+		// Delete service from ingress with name convention: <namespace>-ingress
+		return nil, kb.K8sApi.DeleteServiceFromIngress(namespace, namespace+"-ingress", kb.Name+"-kb-http")
+	} else {
+		return nil, nil
 	}
 }

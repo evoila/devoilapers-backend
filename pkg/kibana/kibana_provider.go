@@ -115,6 +115,17 @@ func (kb KibanaProvider) DeleteService(auth common.IKubernetesAuthInformation, i
 	}
 
 	//TODO: Check if there is an associated ingress
+	// Before removing service, the service in ingress has to be removed as well
+	service, err := kb.GetService(auth, id)
+	if err != nil {
+		return err
+	}
+	kbService := (*service).(KibanaService)
+	_, err = kbService.HideExposedService(nil)
+	if err != nil {
+		return err
+	}
+
 	return KibanaCrd.Delete(auth.GetKubernetesNamespace(), id, ResourceName)
 }
 
@@ -126,6 +137,7 @@ func (kb KibanaProvider) CrdInstanceToServiceInstance(api *kubernetes.K8sApi, co
 	}
 
 	var KibanaService service.IService = KibanaService{
+		Host:         kb.Host,
 		K8sApi:       api,
 		crdInstance:  crdInstance,
 		commonCrdApi: commonCrdApi,
