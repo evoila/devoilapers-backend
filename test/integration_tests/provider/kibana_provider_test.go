@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"k8s.io/api/extensions/v1beta1"
 )
 
 func CreateKibanaTestProvider(t *testing.T) (*kibana.KibanaProvider, config.RawConfig) {
@@ -121,7 +122,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	service0 := *services[0]
 	assert.NotEqual(t, "", service0.GetName())
 	assert.Equal(t, kbProvider.GetServiceType(), service0.GetType())
-	assert.Equal(t, 1, len(service0.GetActions()))
+	assert.Equal(t, 2, len(service0.GetActions()))
 
 	// Try get service with invalid user data
 	_, err = kbProvider.GetService(invalidUser, service0.GetName())
@@ -163,17 +164,20 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 		TlsKey: base64.StdEncoding.EncodeToString(secret.Data["tls.key"]),
 	}
 
-	_, err = service2.SetCertificateToService(certDto)
+	action := getAction(service2, "Secure", "cmd_set_cert_action")
+	assert.NotNil(t, action)
+
+	_, err = action.GetActionExecuteCallback()(certDto)
 	assert.Nil(t, err)
 
 	// Check status of service after setting the certificate
-	var service3 *service.IService
+	var service3 service.IService
 	for i := 0; i < 5; i++ {
 		tmpService, err := kbProvider.GetService(user, service2.GetName())
 		assert.Nil(t, err)
 		assert.NotNil(t, tmpService)
 		if (*tmpService).GetStatus() == service.ServiceStatusOk {
-			service3 = tmpService
+			service3 = *tmpService
 			break
 		} else {
 			time.Sleep(5 * time.Second)
@@ -184,7 +188,40 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	assert.NotNil(t, service3)
 
 	// Check whether status of service is ok after setting the certificate
-	assert.True(t, service.ServiceStatusOk == (*service3).GetStatus())
+	assert.True(t, service.ServiceStatusOk == service3.GetStatus())
+
+	// Just for local testing: set host to defined host in proxy file
+	service4 := service3.(kibana.KibanaService)
+	service4.Host = "ganmo.com"
+
+	// Get expose ation
+	action1 := getAction(service4, "Expose", "cmd_expose_action")
+	assert.NotNil(t, action1)
+
+	// Execute the expose action
+	_, err = action1.GetActionExecuteCallback()(nil)
+	assert.Nil(t, err)
+
+	ingressname := user.KubernetesNamespace + "-ingress"
+	var ingress *v1beta1.Ingress
+
+	// Wait for ingress pending address to finish
+	for i := 0; i < 12; i++ {
+		ingress, err = service4.K8sApi.GetIngress(user.GetKubernetesNamespace(), ingressname)
+		assert.Nil(t, err)
+		assert.NotNil(t, ingress)
+		ingresses := ingress.Status.LoadBalancer.Ingress
+		if ingresses != nil && len(ingresses) > 0 {
+			break
+		} else {
+			time.Sleep(5 * time.Second)
+		}
+	}
+
+	assert.NotNil(t, ingress)
+
+	// Check whether service is already added into ingress
+	assert.True(t, service4.K8sApi.ExistingServiceInIngress(ingress, service4.Name+"-kb-http"))
 
 	// Try delete service with invalid id
 	err = kbProvider.DeleteService(user, "some-not-existing-id")
@@ -206,5 +243,9 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	time.Sleep(5 * time.Second)
 	// Check whether the secret with associated certificate is also deleted
 	secret, err = service2.K8sApi.GetSecret(user.KubernetesNamespace, service2.GetName()+"-tls-cert")
+	assert.NotNil(t, err)
+
+	// Check whether the associated ingress is cascading removed as well
+	_, err = service4.K8sApi.GetIngress(user.KubernetesNamespace, user.KubernetesNamespace+"-ingress")
 	assert.NotNil(t, err)
 }
