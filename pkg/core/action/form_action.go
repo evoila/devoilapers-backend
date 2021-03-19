@@ -53,7 +53,7 @@ func (a FormAction) GetJsonForm() interface{} {
 	// Get type of placeholder
 	placeholderType := reflect.ValueOf(placeholder)
 
-	// Check if the action requires data
+	// Check if the action requires data/Check for nil
 	if placeholderType.Kind() == reflect.Invalid {
 		return map[string]interface{}{
 			"properties": map[string]interface{}{},

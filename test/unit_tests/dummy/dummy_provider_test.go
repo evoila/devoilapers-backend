@@ -1,6 +1,7 @@
 package dummy
 
 import (
+	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/dummy"
 	"OperatorAutomation/test/unit_tests/common_test"
@@ -11,6 +12,8 @@ import (
 
 func Test_DummyProvider_Get_Attributes(t *testing.T) {
 	dummyProvider := dummy.CreateDummyProvider()
+	dummyProvider.OnCoreInitialized([]*provider.IServiceProvider{})
+
 	user := common_test.TestUser{}
 
 	// Get json form data
