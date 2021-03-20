@@ -112,6 +112,7 @@ func (es ElasticsearchProvider) CrdInstanceToServiceInstance(auth common.IKubern
 		api:    mApi,
 		crdApi: crdApi,
 		auth:   auth,
+		host:   es.Host,
 	}
 
 	return &elasticSearchService

@@ -77,7 +77,7 @@ func Test_Kibana_Expose(t *testing.T) {
 	service, infos, esProvider, esname := CreateKbDummyService(t, provider, user)
 	servicename := infos[0] + "-kb-http"
 	ingressname := "my-test-ingress"
-	exposeinfo := dtos.ExposeInformation{IngressName: ingressname, HostName: "myhosst.com"}
+	exposeinfo := dtos.ExposeInformation{IngressName: ingressname}
 	url, _ := service.ExecuteExposeAction(&exposeinfo)
 	t.Log("exposed with url", url)
 

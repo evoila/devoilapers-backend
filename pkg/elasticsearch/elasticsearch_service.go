@@ -6,6 +6,7 @@ import (
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/elasticsearch/dtos"
 	"OperatorAutomation/pkg/utils/provider"
+	"strings"
 
 	"OperatorAutomation/pkg/kubernetes"
 
@@ -18,6 +19,7 @@ type ElasticSearchService struct {
 	api    *kubernetes.K8sApi
 	crdApi *kubernetes.CommonCrdApi
 	auth   common.IKubernetesAuthInformation
+	host   string
 }
 
 func (es ElasticSearchService) GetStatus() int {
@@ -60,8 +62,9 @@ func (es ElasticSearchService) GetActions() []action.IActionGroup {
 
 // ExecuteExposeAction exposes a service through ingress and return error if not successful
 func (es ElasticSearchService) ExecuteExposeAction(dto *dtos.ExposeInformation) (interface{}, error) {
-
-	return es.api.AddServiceToIngress(es.auth.GetKubernetesNamespace(), dto.IngressName, es.Name+"-es-http", dto.HostName, 9200)
+	address := strings.Split(es.host, "/")
+	host := strings.Split(address[2], ":")
+	return es.api.AddServiceToIngress(es.auth.GetKubernetesNamespace(), dto.IngressName, es.Name+"-es-http", host[0], 9200)
 }
 
 // ExecuteRescaleAction rescales es-statefulset and return error if not successful

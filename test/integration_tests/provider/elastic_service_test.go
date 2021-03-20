@@ -70,7 +70,7 @@ func Test_Elastic_Expose(t *testing.T) {
 	service, infos := CreateEsDummyService(t, provider, user)
 	servicename := infos[0] + "-es-http"
 	ingressname := "my-test-ingress"
-	exposeinfo := dtos.ExposeInformation{IngressName: ingressname, HostName: "myhosst.com"}
+	exposeinfo := dtos.ExposeInformation{IngressName: ingressname}
 	service.ExecuteExposeAction(&exposeinfo)
 
 	ingress, _ := k8sapi.GetIngress(user.GetKubernetesNamespace(), ingressname)

@@ -41,7 +41,9 @@ func (api *K8sApi) createIngress(namespace, ingressName, serviceName, hostname s
 				"nginx.ingress.kubernetes.io/secure-backends":  "true",
 				"ingress.kubernetes.io/ssl-passthrough":        "true",
 				"kubernetes.io/ingress.class":                  "nginx",
-				"nginx.ingress.kubernetes.io/rewrite-target":   "/$2",
+				"nginx.ingress.kubernetes.io/rewrite-target":   "$2",
+				"nginx.ingress.kubernetes.io/affinity":         "cookie",
+				"nginx.ingress.kubernetes.io/ssl-redirect":     "false",
 			},
 		},
 		Spec: v1.IngressSpec{
@@ -81,8 +83,9 @@ func (api *K8sApi) createIngress(namespace, ingressName, serviceName, hostname s
 // AddServiceToIngress adds service to ingress, so that requests, which come to service, should be loaded via ingress
 func (api *K8sApi) AddServiceToIngress(namespace, ingressName, serviceName, hostname string, servicePort int32) (string, error) {
 	ingress, err := api.GetIngress(namespace, ingressName)
+	var url string
 	if err != nil {
-		url, _, err := api.createIngress(namespace, ingressName, serviceName, hostname, servicePort)
+		url, _, err = api.createIngress(namespace, ingressName, serviceName, hostname, servicePort)
 		return url, err
 	}
 	existing := api.ExistingServiceInIngress(ingress, serviceName)
@@ -99,8 +102,11 @@ func (api *K8sApi) AddServiceToIngress(namespace, ingressName, serviceName, host
 		}
 		ingress.Spec.Rules[0].HTTP.Paths = append(ingress.Spec.Rules[0].HTTP.Paths, new_path)
 		_, err = api.V1beta1Client.Ingresses(namespace).Update(context.TODO(), ingress, metav1.UpdateOptions{})
+		url = (hostname + "/" + namespace + "/" + serviceName)
+	} else {
+		url = "already exist in ingress"
 	}
-	return (hostname + "/" + namespace + "/" + serviceName), err
+	return url, err
 }
 
 // DeleteServiceFromIngress deletes service from ingress when service is deleted

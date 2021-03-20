@@ -7,6 +7,7 @@ import (
 	"OperatorAutomation/pkg/kibana/dtos"
 	"OperatorAutomation/pkg/kubernetes"
 	"OperatorAutomation/pkg/utils/provider"
+	"strings"
 
 	commonV1 "github.com/elastic/cloud-on-k8s/pkg/apis/common/v1"
 	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/kibana/v1"
@@ -18,6 +19,7 @@ type KibanaService struct {
 	api    *kubernetes.K8sApi
 	crdApi *kubernetes.CommonCrdApi
 	auth   common.IKubernetesAuthInformation
+	host   string
 }
 
 func (kb KibanaService) GetStatus() int {
@@ -58,8 +60,9 @@ func (kb KibanaService) GetActions() []action.IActionGroup {
 
 // ExecuteExposeAction exposes a service through ingress and return error if not successful
 func (kb KibanaService) ExecuteExposeAction(dto *dtos.ExposeInformation) (interface{}, error) {
-
-	return kb.api.AddServiceToIngress(kb.auth.GetKubernetesNamespace(), dto.IngressName, kb.Name+"-kb-http", dto.HostName, 5601)
+	address := strings.Split(kb.host, "/")
+	host := strings.Split(address[2], ":")
+	return kb.api.AddServiceToIngress(kb.auth.GetKubernetesNamespace(), dto.IngressName, kb.Name+"-kb-http", host[0], 5601)
 }
 
 // ExecuteRescaleAction rescales a kb-deployment and return error if not successful

@@ -112,6 +112,7 @@ func (kb KibanaProvider) CrdInstanceToServiceInstance(auth common.IKubernetesAut
 		api:    mApi,
 		crdApi: crdApi,
 		auth:   auth,
+		host:   kb.Host,
 	}
 
 	return &KibanaService

@@ -31,7 +31,7 @@ func GenerateK8sApiFromToken(host string, caPath string, token string) (*K8sApi,
 		TLSClientConfig: rest.TLSClientConfig{
 			//CertFile: CertPath,
 			//KeyFile:  KeyPath,
-			CAFile:   caPath,
+			CAFile: caPath,
 		},
 	}
 	clientSet, dif, err := GetClientSet(config)
