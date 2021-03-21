@@ -175,6 +175,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	assert.True(t, service.ServiceStatusOk == service3.GetStatus())
 
 	common_test.CommonProviderStop(t, kbProviderPtr, user)
+	common_test.CommonProviderStop(t, &esProvider, user)
 
 	// Wait till delete service is done
 	time.Sleep(5 * time.Second)

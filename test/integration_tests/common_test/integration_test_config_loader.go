@@ -86,12 +86,19 @@ func loadConfigAndResolveToAbsolutePaths(t *testing.T, pathFromRoot string) opaC
 
 func GetConfig(t *testing.T) opaConfig.RawConfig {
 	var config opaConfig.RawConfig
-	if os.Getenv("ENV_GITHUB_ACTION") == "" {
-		fmt.Println("Using local appconfig")
+	configType := os.Getenv("ENV_GITHUB_ACTION")
+
+
+	if configType == "" {
 		// Local
+		fmt.Println("Using local appconfig")
 		config = loadConfigAndResolveToAbsolutePaths(t, "configs/appconfig.json")
+	} else if configType == "remote" {
+		// Remote
+		fmt.Println("Using remote appconfig")
+		config = loadConfigAndResolveToAbsolutePaths(t, "configs/appconfig_remote.json")
 	} else {
-		// remote/github action
+		// Github action
 		fmt.Println("Using github appconfig")
 		config = loadConfigAndResolveToAbsolutePaths(t, "configs/appconfig_github_actions.json")
 	}

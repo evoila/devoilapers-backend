@@ -13,6 +13,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"path"
 	"strconv"
+	"strings"
 )
 
 // Implements IServiceProvider interface
@@ -71,7 +72,7 @@ func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformatio
 	yamlTemplate.Spec.Database = form.Common.ClusterName
 	yamlTemplate.Spec.Name = form.Common.ClusterName
 
-	yamlTemplate.Spec.User = form.Common.Username
+	yamlTemplate.Spec.User = strings.ToLower(form.Common.Username)
 	yamlTemplate.Spec.Port = strconv.Itoa(form.Common.InClusterPort)
 	yamlTemplate.Spec.PrimaryStorage.Size = strconv.Itoa(form.Common.ClusterStorageSize) + "G"
 	yamlTemplate.Spec.BackrestStorage.Size = yamlTemplate.Spec.PrimaryStorage.Size

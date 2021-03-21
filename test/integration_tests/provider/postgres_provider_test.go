@@ -132,6 +132,9 @@ func Test_Postgres_Provider_End2End(t *testing.T) {
 	// Prepare form
 	filledForm := dtos.FormResponseDto{}
 	filledForm.Common.ClusterName = "pg-test-cluster"
+	filledForm.Common.InClusterPort = 5432
+	filledForm.Common.Username = "testuser"
+	filledForm.Common.ClusterStorageSize = 1
 
 	service1Ptr := common_test.CommonProviderStart(t, pgProviderPtr, user, filledForm, 3)
 	service1 := *service1Ptr
