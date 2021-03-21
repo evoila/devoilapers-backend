@@ -74,7 +74,7 @@ func loadConfigAndResolveToAbsolutePaths(t *testing.T, pathFromRoot string) opaC
 		false,
 	)
 
-	fmt.Println("Try resolve config.YamlTemplatePath")
+	fmt.Println("Try resolve config.ResourcesTemplatesPath")
 	config.ResourcesTemplatesPath = tryPathOrJoinWithWorkingDirectory(
 		config.ResourcesTemplatesPath,
 		rootDirectoryPath,

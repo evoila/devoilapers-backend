@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"time"
 )
 
 func CreateElasticSearchTestProvider(t *testing.T) (*provider.IServiceProvider, config.RawConfig) {
@@ -120,8 +119,6 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	// Delete everything
 	common_test.CommonProviderStop(t, esProviderPtr, user)
 
-	// Wait till delete service is done
-	time.Sleep(5 * time.Second)
 	// Check whether the secret with associated certificate is also deleted
 	secret, err = service1es.K8sApi.GetSecret(user.KubernetesNamespace, service1es.GetName()+"-tls-cert")
 	assert.NotNil(t, err)

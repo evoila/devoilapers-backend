@@ -15,31 +15,16 @@ jobs:
         with:
           go-version: ^1.15
 
+      - name: Install kubectl
+        run: |
+          sudo apt-get update && sudo apt-get install -y apt-transport-https
+          curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+          echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+          sudo apt-get update
+          sudo apt-get install -y kubectl
+
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
-
-      - name: Install minikube
-        run: |
-          curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube
-          sudo cp minikube /usr/local/bin && rm minikube
-
-      - name: Start minikube
-        run: |
-          minikube start --wait=all
-          minikube addons enable ingress
-
-      - name: Install operators
-        run: |
-          sleep 10
-          kubectl apply -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.17.0/crds.yaml
-          sleep 10
-          kubectl apply -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.17.0/olm.yaml
-          sleep 10
-          kubectl create namespace pgo
-          kubectl apply -f https://raw.githubusercontent.com/CrunchyData/postgres-operator/v4.6.1/installers/kubectl/postgres-operator.yml
-          sleep 10
-          kubectl apply -f https://download.elastic.co/downloads/eck/1.4.0/all-in-one.yaml
-          sleep 30
 
       - name: Create temp working dir
         run: |
@@ -52,10 +37,21 @@ jobs:
           head -1 <(fold -w 20  <(tr -dc 'a-z' < /dev/urandom)) >> randomuser
           export KUB_TEMP_PREFIX=`cat randomuser`
           echo "New user prefix is" $KUB_TEMP_PREFIX
-          export NGINX_NAMESPACE=kube-system
+          export NGINX_NAMESPACE=ingress-nginx
           echo "Use nginx namespace" $NGINX_NAMESPACE
           envsubst < ../.github/create_service_account.yaml > create_service_account.yaml
           cd ..
+
+      - name: Write .kubeconfig to file
+        run: |
+          cd temp
+          echo $GHKUBECONFIG | base64 -di > kubeconfig
+          mkdir ~/.kube
+          mv kubeconfig ~/.kube/config
+          echo "Installed kubeconfig"
+          cd ..
+        env:
+          GHKUBECONFIG: ${{ secrets.GH_KUBE_CONFIG }}
 
       - name: Create opa config
         run: |
@@ -69,12 +65,10 @@ jobs:
           kubectl -n $KUB_TEMP_PREFIX-namespace describe secret $(kubectl -n $KUB_TEMP_PREFIX-namespace get secret | (grep $KUB_TEMP_PREFIX-user || echo "$_") | awk '{print $1}') | grep token: | awk '{print $2}' > usertoken
 
           echo Export host
-
-          cat ~/.kube/config | grep server | awk -F ' ' '{print $2}' > host
+          cat ~/.kube/config | grep server | awk -F '"' '{print $2}'> host
 
           echo Export ca
-
-          cat ~/.minikube/ca.crt > ca.crt
+          cat ~/.kube/config | grep certificate-authority-data | awk -F ': ' '{print $2}' | base64 -d > ca.crt
           mv ca.crt ../configs/kubernetes_ca.crt
 
           export GH_KUBERNETES_HOST=`cat host`
@@ -120,7 +114,7 @@ jobs:
           echo Deleting kubernetes namespace
           export KUB_TEMP_PREFIX=`cat randomuser`
           kubectl delete namespace $KUB_TEMP_PREFIX-namespace
-          kubectl delete rolebinding $KUB_TEMP_PREFIX-nginx-rolebinding -n kube-system
+          kubectl delete rolebinding $KUB_TEMP_PREFIX-nginx-rolebinding -n ingress-nginx
           kubectl delete clusterrole $KUB_TEMP_PREFIX-role
           kubectl delete clusterrole $KUB_TEMP_PREFIX-nginx-role
           cd ..

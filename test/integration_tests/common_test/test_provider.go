@@ -6,9 +6,11 @@ import (
 	"OperatorAutomation/pkg/core/service"
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
 	"encoding/json"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 	"testing"
+	"time"
 )
 
 func CommonProviderStart(t *testing.T, providerPtr *provider.IServiceProvider, user common.IKubernetesAuthInformation, creationForm interface{}, expectedNumberOfActionGroups int) *service.IService {
@@ -91,8 +93,13 @@ func CommonProviderStop(t *testing.T, providerPtr *provider.IServiceProvider, us
 	assert.NotNil(t, err)
 
 	// Delete service
-	for _, service := range services {
-		err = provider.DeleteService(user, (*service).GetName())
+	for _, runningServicePtr := range services {
+		runningService := *runningServicePtr
+		logrus.Info("Delting service " + runningService.GetName())
+		err = provider.DeleteService(user, runningService.GetName())
 		assert.Nil(t, err)
 	}
+
+	// Give the deletion some time
+	time.Sleep(10 * time.Second)
 }
