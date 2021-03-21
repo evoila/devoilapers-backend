@@ -85,7 +85,11 @@ func (es *ElasticSearchService) ExecuteUnexposeAction(dto *dtos.ExposeInformatio
 func (es *ElasticSearchService) ExecuteRescaleAction(dto *dtos.ScaleInformation) (interface{}, error) {
 	instance := v1.Elasticsearch{}
 	es.crdApi.Get(es.auth.GetKubernetesNamespace(), es.Name, RessourceName, &instance)
-	name := es.Name + "-es-" + instance.Spec.NodeSets[0].Name
+	var err error
+	for _, nodeset := range instance.Spec.NodeSets {
+		name := es.Name + "-es-" + nodeset.Name
+		_, err = es.api.UpdateScaleStatefulSet(es.auth.GetKubernetesNamespace(), name, dto.ReplicasCount)
+	}
 
-	return es.api.UpdateScaleStatefulSet(es.auth.GetKubernetesNamespace(), name, dto.ReplicasCount)
+	return nil, err
 }

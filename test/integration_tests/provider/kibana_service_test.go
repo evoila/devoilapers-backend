@@ -85,7 +85,7 @@ func Test_Kibana_Expose(t *testing.T) {
 	t.Log("ingress instance has been created ", ingress)
 	assert.True(t, k8sapi.ExistingServiceInIngress(ingress, servicename), "ingress not found")
 
-	service.ExecuteUnexposeAction()
+	service.ExecuteUnexposeAction(&exposeinfo)
 	ingress, _ = k8sapi.GetIngress(user.GetKubernetesNamespace(), ingressname)
 	assert.False(t, k8sapi.ExistingServiceInIngress(ingress, servicename), "ingress should have been removed")
 
