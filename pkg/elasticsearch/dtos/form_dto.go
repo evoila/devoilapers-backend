@@ -2,7 +2,7 @@ package dtos
 
 type ServiceCreationFormResponseDto struct {
 	Common struct{
-		ClusterName string `json:"cluster_name"`
+		ClusterName string `json:"clusterName"`
 	} `json:"common"`
 }
 

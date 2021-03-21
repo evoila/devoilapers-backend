@@ -4,8 +4,8 @@ package dtos
 //NGX schema form result
 type ServiceCreationFormResponseDto struct {
 	Common struct{
-		ClusterName           string `json:"cluster_name"`
-		ElasticSearchInstance string `json:"elastic_search_instance"`
+		ClusterName           string `json:"clusterName"`
+		ElasticSearchInstance string `json:"elasticsearchInstance"`
 	} `json:"common"`
 }
 
