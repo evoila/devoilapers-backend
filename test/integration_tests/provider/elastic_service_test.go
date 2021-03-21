@@ -7,6 +7,7 @@ import (
 	"OperatorAutomation/pkg/elasticsearch"
 	"OperatorAutomation/pkg/elasticsearch/dtos"
 	"OperatorAutomation/test/integration_tests/common_test"
+	"context"
 	"fmt"
 
 	"OperatorAutomation/pkg/kubernetes"
@@ -15,6 +16,7 @@ import (
 
 	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/elasticsearch/v1"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func CreateElasticSearchProvider(t *testing.T) (*elasticsearch.ElasticsearchProvider, config.RawConfig) {
@@ -71,11 +73,14 @@ func Test_Elastic_Expose(t *testing.T) {
 	servicename := infos[0] + "-es-http"
 	ingressname := "my-test-ingress"
 	exposeinfo := dtos.ExposeInformation{IngressName: ingressname}
-	service.ExecuteExposeAction(&exposeinfo)
 
+	service.ExecuteExposeAction(&exposeinfo)
 	ingress, _ := k8sapi.GetIngress(user.GetKubernetesNamespace(), ingressname)
-	t.Log("ingress instance has been created ", ingress)
 	assert.True(t, k8sapi.ExistingServiceInIngress(ingress, servicename), "ingress not found")
+
+	service.ExecuteUnexposeAction(&exposeinfo)
+	ingress, _ = k8sapi.GetIngress(user.GetKubernetesNamespace(), ingressname)
+	assert.False(t, k8sapi.ExistingServiceInIngress(ingress, servicename), "ingress should have been removed")
 
 	k8sapi.DeleteServiceFromIngress(user.KubernetesNamespace, ingressname, servicename)
 	provider.DeleteService(user, infos[0])
@@ -110,6 +115,37 @@ func WaitForEsTobeReady(provider *elasticsearch.ElasticsearchProvider, user comm
 		esCrdAPI.Get(user.GetKubernetesNamespace(), esname, elasticsearch.RessourceName, &instance)
 		if instance.Status.Health == v1.ElasticsearchGreenHealth {
 			break
+		}
+	}
+}
+func Test_Elastic_Other(t *testing.T) {
+	t.Log("Start other test")
+	provider, config := CreateElasticSearchProvider(t)
+	user := config.Users[0]
+	api, _ := kubernetes.GenerateK8sApiFromToken(provider.Host, provider.CaPath, user.GetKubernetesAccessToken())
+	ingressName := "test-ingress"
+	serviceName := "elasticsearch-sample-es-http"
+	namespace := user.KubernetesNamespace
+	ingress, err := api.GetIngress(namespace, ingressName)
+	if err != nil {
+	}
+	l := len(ingress.Spec.Rules[0].HTTP.Paths)
+	t.Log("ingress:", l)
+	if l > 1 {
+		t.Log("before:", ingress.Spec.Rules[0].HTTP.Paths)
+		for i, path := range ingress.Spec.Rules[0].HTTP.Paths {
+			if path.Backend.ServiceName == serviceName {
+				t.Log("foundsth")
+				ingress.Spec.Rules[0].HTTP.Paths[i] = ingress.Spec.Rules[0].HTTP.Paths[l-1]
+				ingress.Spec.Rules[0].HTTP.Paths = ingress.Spec.Rules[0].HTTP.Paths[:l-1]
+				break
+			}
+		}
+		t.Log("after:", ingress.Spec.Rules[0].HTTP.Paths)
+		_, err = api.V1beta1Client.Ingresses(namespace).Update(context.TODO(), ingress, metav1.UpdateOptions{})
+	} else if l == 1 {
+		if ingress.Spec.Rules[0].HTTP.Paths[0].Backend.ServiceName == serviceName {
+			err = api.V1beta1Client.Ingresses(namespace).Delete(context.TODO(), ingressName, metav1.DeleteOptions{})
 		}
 	}
 }

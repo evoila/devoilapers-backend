@@ -78,12 +78,16 @@ func Test_Kibana_Expose(t *testing.T) {
 	servicename := infos[0] + "-kb-http"
 	ingressname := "my-test-ingress"
 	exposeinfo := dtos.ExposeInformation{IngressName: ingressname}
+
 	url, _ := service.ExecuteExposeAction(&exposeinfo)
 	t.Log("exposed with url", url)
-
 	ingress, _ := k8sapi.GetIngress(user.GetKubernetesNamespace(), ingressname)
 	t.Log("ingress instance has been created ", ingress)
 	assert.True(t, k8sapi.ExistingServiceInIngress(ingress, servicename), "ingress not found")
+
+	service.ExecuteUnexposeAction()
+	ingress, _ = k8sapi.GetIngress(user.GetKubernetesNamespace(), ingressname)
+	assert.False(t, k8sapi.ExistingServiceInIngress(ingress, servicename), "ingress should have been removed")
 
 	k8sapi.DeleteServiceFromIngress(user.KubernetesNamespace, ingressname, servicename)
 	provider.DeleteService(user, infos[0])

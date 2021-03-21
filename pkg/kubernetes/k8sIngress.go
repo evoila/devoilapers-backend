@@ -2,7 +2,6 @@ package kubernetes
 
 import (
 	"context"
-	"fmt"
 
 	v1 "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -115,20 +114,20 @@ func (api *K8sApi) DeleteServiceFromIngress(namespace, ingressName, serviceName 
 	if err != nil {
 		return err
 	}
-	l := len(ingress.Spec.Rules)
+	l := len(ingress.Spec.Rules[0].HTTP.Paths)
 	if l > 1 {
-		fmt.Println(ingress.Spec.Rules[0].HTTP.Paths)
 		for i, path := range ingress.Spec.Rules[0].HTTP.Paths {
 			if path.Backend.ServiceName == serviceName {
 				ingress.Spec.Rules[0].HTTP.Paths[i] = ingress.Spec.Rules[0].HTTP.Paths[l-1]
-				ingress.Spec.Rules[0].HTTP.Paths = ingress.Spec.Rules[0].HTTP.Paths[:l]
+				ingress.Spec.Rules[0].HTTP.Paths = ingress.Spec.Rules[0].HTTP.Paths[:l-1]
 				break
 			}
 		}
-		fmt.Println(ingress.Spec.Rules[0].HTTP.Paths)
 		_, err = api.V1beta1Client.Ingresses(namespace).Update(context.TODO(), ingress, metav1.UpdateOptions{})
 	} else if l == 1 {
-		err = api.V1beta1Client.Ingresses(namespace).Delete(context.TODO(), ingressName, metav1.DeleteOptions{})
+		if ingress.Spec.Rules[0].HTTP.Paths[0].Backend.ServiceName == serviceName {
+			err = api.V1beta1Client.Ingresses(namespace).Delete(context.TODO(), ingressName, metav1.DeleteOptions{})
+		}
 	}
 	return err
 }

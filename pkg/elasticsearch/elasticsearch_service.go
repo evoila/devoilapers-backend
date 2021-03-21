@@ -48,6 +48,14 @@ func (es ElasticSearchService) GetActions() []action.IActionGroup {
 					},
 				},
 				action.Action{
+					Name:          "UnexposeThroughIngress",
+					UniqueCommand: "unexpose",
+					Placeholder:   &dtos.ExposeInformation{},
+					ActionExecuteCallback: func(i interface{}) (interface{}, error) {
+						return es.ExecuteUnexposeAction(i.(*dtos.ExposeInformation))
+					},
+				},
+				action.Action{
 					Name:          "UpdateReplicasCount",
 					UniqueCommand: "rescale",
 					Placeholder:   &dtos.ScaleInformation{},
@@ -61,14 +69,20 @@ func (es ElasticSearchService) GetActions() []action.IActionGroup {
 }
 
 // ExecuteExposeAction exposes a service through ingress and return error if not successful
-func (es ElasticSearchService) ExecuteExposeAction(dto *dtos.ExposeInformation) (interface{}, error) {
+func (es *ElasticSearchService) ExecuteExposeAction(dto *dtos.ExposeInformation) (interface{}, error) {
 	address := strings.Split(es.host, "/")
 	host := strings.Split(address[2], ":")
 	return es.api.AddServiceToIngress(es.auth.GetKubernetesNamespace(), dto.IngressName, es.Name+"-es-http", host[0], 9200)
 }
 
+// ExecuteUnexposeAction unexposes a service through ingress and return error if not successful
+func (es *ElasticSearchService) ExecuteUnexposeAction(dto *dtos.ExposeInformation) (interface{}, error) {
+
+	return nil, es.api.DeleteServiceFromIngress(es.auth.GetKubernetesNamespace(), dto.IngressName, es.Name+"-es-http")
+}
+
 // ExecuteRescaleAction rescales es-statefulset and return error if not successful
-func (es ElasticSearchService) ExecuteRescaleAction(dto *dtos.ScaleInformation) (interface{}, error) {
+func (es *ElasticSearchService) ExecuteRescaleAction(dto *dtos.ScaleInformation) (interface{}, error) {
 	instance := v1.Elasticsearch{}
 	es.crdApi.Get(es.auth.GetKubernetesNamespace(), es.Name, RessourceName, &instance)
 	name := es.Name + "-es-" + instance.Spec.NodeSets[0].Name
