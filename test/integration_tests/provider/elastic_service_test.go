@@ -7,7 +7,6 @@ import (
 	"OperatorAutomation/pkg/elasticsearch"
 	"OperatorAutomation/pkg/elasticsearch/dtos"
 	"OperatorAutomation/test/integration_tests/common_test"
-	"context"
 	"fmt"
 
 	"OperatorAutomation/pkg/kubernetes"
@@ -16,7 +15,6 @@ import (
 
 	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/elasticsearch/v1"
 	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func CreateElasticSearchProvider(t *testing.T) (*elasticsearch.ElasticsearchProvider, config.RawConfig) {
@@ -118,7 +116,8 @@ func WaitForEsTobeReady(provider *elasticsearch.ElasticsearchProvider, user comm
 		}
 	}
 }
-func Test_Elastic_Other(t *testing.T) {
+
+/*func Test_Elastic_Other(t *testing.T) {
 	t.Log("Start other test")
 	provider, config := CreateElasticSearchProvider(t)
 	user := config.Users[0]
@@ -148,4 +147,4 @@ func Test_Elastic_Other(t *testing.T) {
 			err = api.V1beta1Client.Ingresses(namespace).Delete(context.TODO(), ingressName, metav1.DeleteOptions{})
 		}
 	}
-}
+}*/
