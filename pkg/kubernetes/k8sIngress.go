@@ -90,7 +90,7 @@ func (api *K8sApi) AddServiceToIngress(namespace, ingressName, serviceName, host
 	existing := api.ExistingServiceInIngress(ingress, serviceName)
 	if !existing {
 		new_path := v1.HTTPIngressPath{
-			Path: "/" + namespace + "/" + serviceName + "/?(.*)",
+			Path: "/" + namespace + "/" + serviceName + "(/|$)(.*)",
 			Backend: v1.IngressBackend{
 				ServiceName: serviceName,
 				ServicePort: intstr.IntOrString{
