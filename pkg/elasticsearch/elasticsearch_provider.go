@@ -89,7 +89,8 @@ func (es ElasticsearchProvider) GetServices(auth common.IKubernetesAuthInformati
 	}
 
 	var services []*service.IService
-	for _, elasticSearchInstance := range elasticSearchInstances.Items {
+	for _, elasticSearchInstanceIterator := range elasticSearchInstances.Items {
+		elasticSearchInstance := elasticSearchInstanceIterator
 		services = append(services, es.CrdInstanceToServiceInstance(api, elasticSearchCrd, &elasticSearchInstance))
 	}
 

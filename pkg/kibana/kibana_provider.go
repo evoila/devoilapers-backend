@@ -130,7 +130,8 @@ func (kb KibanaProvider) GetServices(auth common.IKubernetesAuthInformation) ([]
 	}
 
 	var services []*service.IService
-	for _, kibanaInstance := range kibanaInstances.Items {
+	for _, kibanaInstanceIterator := range kibanaInstances.Items {
+		kibanaInstance := kibanaInstanceIterator
 		services = append(services, kb.CrdInstanceToServiceInstance(api, KibanaCrd, &kibanaInstance))
 	}
 

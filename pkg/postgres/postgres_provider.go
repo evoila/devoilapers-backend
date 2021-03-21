@@ -113,7 +113,8 @@ func (pg PostgresProvider) GetServices(auth common.IKubernetesAuthInformation) (
 	}
 
 	var services []*service.IService
-	for _, postgresInstance := range postgresInstances.Items {
+	for _, postgresInstanceIterator := range postgresInstances.Items {
+		postgresInstance := postgresInstanceIterator
 		services = append(services, pg.CrdInstanceToServiceInstance(postgresCrd, auth, &postgresInstance))
 	}
 
