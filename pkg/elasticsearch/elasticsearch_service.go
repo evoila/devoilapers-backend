@@ -89,6 +89,9 @@ func (es *ElasticSearchService) ExecuteRescaleAction(dto *dtos.ScaleInformation)
 	for _, nodeset := range instance.Spec.NodeSets {
 		name := es.Name + "-es-" + nodeset.Name
 		_, err = es.api.UpdateScaleStatefulSet(es.auth.GetKubernetesNamespace(), name, dto.ReplicasCount)
+		if err != nil {
+			break
+		}
 	}
 
 	return nil, err
