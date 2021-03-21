@@ -100,7 +100,7 @@ jobs:
           cd ../..
 
       - name: Test
-        run: go test -v -coverpkg ./pkg/...,./cmd/... -coverprofile=profile.cov ./test/...
+        run: go test -timeout 20m -v -coverpkg ./pkg/...,./cmd/... -coverprofile=profile.cov ./test/...
         env:
           ENV_GITHUB_ACTION: "TRUE"
 
