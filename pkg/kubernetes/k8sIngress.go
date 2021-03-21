@@ -40,7 +40,7 @@ func (api *K8sApi) createIngress(namespace, ingressName, serviceName, hostname s
 				"nginx.ingress.kubernetes.io/secure-backends":         "true",
 				"nginx.ingress.kubernetes.io/ssl-passthrough":         "true",
 				"kubernetes.io/ingress.class":                         "nginx",
-				"nginx.ingress.kubernetes.io/rewrite-target":          "$2",
+				"nginx.ingress.kubernetes.io/rewrite-target":          "/$2",
 				"nginx.ingress.kubernetes.io/affinity":                "cookie",
 				"nginx.ingress.kubernetes.io/ssl-redirect":            "false",
 				"service.beta.kubernetes.io/do-loadbalancer-hostname": hostname,
