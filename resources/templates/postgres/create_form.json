@@ -1,139 +1,139 @@
 {
-  "properties":{
-    "common":{
-      "type":"object",
-      "description":"Common settings",
-      "properties":{
-        "clusterName":{
-          "type":"string",
-          "title":"Cluster name",
-          "default":"pg1",
-          "widget":{
-            "id":"string"
+  "properties": {
+    "common": {
+      "type": "object",
+      "description": "Common settings",
+      "properties": {
+        "clusterName": {
+          "type": "string",
+          "title": "Cluster name",
+          "default": "pg1",
+          "widget": {
+            "id": "string"
           }
         },
-        "username":{
-          "type":"string",
-          "title":"Database user name",
-          "widget":{
-            "id":"string"
+        "username": {
+          "type": "string",
+          "title": "Database user name",
+          "widget": {
+            "id": "string"
           },
-          "default":"Maintainer"
+          "default": "Maintainer"
         },
-        "inClusterPort":{
-          "type":"number",
-          "title":"Cluster internal database port",
-          "widget":{
-            "id":"string"
+        "inClusterPort": {
+          "type": "number",
+          "title": "Cluster internal database port",
+          "widget": {
+            "id": "string"
           },
-          "default":5432
+          "default": 5432
         },
-        "clusterCtorageSize":{
-          "type":"number",
-          "title":"Database storage size in GB",
-          "widget":{
-            "id":"string"
+        "clusterStorageSize": {
+          "type": "number",
+          "title": "Database storage size in GB",
+          "widget": {
+            "id": "string"
           },
-          "default":1
+          "default": 1
         }
       },
       "order": [
         "clusterName",
         "username",
         "inClusterPort",
-        "clusterCtorageSize"
+        "clusterStorageSize"
       ]
     },
-    "tls":{
-      "type":"object",
-      "description":"TLS options",
-      "properties":{
-        "useTls":{
-          "type":"boolean",
-          "widget":{
-            "id":"checkbox"
+    "tls": {
+      "type": "object",
+      "description": "TLS options",
+      "properties": {
+        "useTls": {
+          "type": "boolean",
+          "widget": {
+            "id": "checkbox"
           },
-          "description":"Use in cluster tls",
-          "default":true
+          "description": "Use in cluster tls",
+          "default": true
         },
-        "tlsMode":{
-          "type":"string",
-          "default":"TlsFromFile",
-          "widget":{
-            "id":"radio"
+        "tlsMode": {
+          "type": "string",
+          "default": "TlsFromFile",
+          "widget": {
+            "id": "radio"
           },
-          "oneOf":[
+          "oneOf": [
             {
-              "enum":[
+              "enum": [
                 "TlsFromFile"
               ],
-              "description":"Certificate from file"
+              "description": "Certificate from file"
             },
             {
-              "enum":[
+              "enum": [
                 "TlsFromSecret"
               ],
-              "description":"Certificate from kubernetes secret"
+              "description": "Certificate from kubernetes secret"
             }
           ],
-          "visibleIf":{
-            "useTls":[
+          "visibleIf": {
+            "useTls": [
               true
             ]
           }
         },
-        "tlsModeFromSecret":{
-          "type":"object",
-          "properties":{
-            "caSecret":{
-              "type":"string",
-              "title":"CA kubernetes secret",
-              "widget":{
-                "id":"string"
+        "tlsModeFromSecret": {
+          "type": "object",
+          "properties": {
+            "caSecret": {
+              "type": "string",
+              "title": "CA kubernetes secret",
+              "widget": {
+                "id": "string"
               }
             },
-            "tlsSecret":{
-              "type":"string",
-              "title":"TLS keypair kubernetes secret",
-              "widget":{
-                "id":"string"
+            "tlsSecret": {
+              "type": "string",
+              "title": "TLS keypair kubernetes secret",
+              "widget": {
+                "id": "string"
               }
             }
           },
-          "visibleIf":{
-            "tlsMode":[
+          "visibleIf": {
+            "tlsMode": [
               "TlsFromSecret"
             ]
           }
         },
-        "tlsModeFromFile":{
-          "type":"object",
-          "name":"",
-          "properties":{
-            "caCert":{
-              "type":"string",
-              "title":"Choose CA certificate",
-              "widget":{
-                "id":"file"
+        "tlsModeFromFile": {
+          "type": "object",
+          "name": "",
+          "properties": {
+            "caCert": {
+              "type": "string",
+              "title": "Choose CA certificate",
+              "widget": {
+                "id": "file"
               }
             },
-            "tlsPrivateKey":{
-              "type":"string",
-              "title":"Choose TLS private key",
-              "widget":{
-                "id":"file"
+            "tlsPrivateKey": {
+              "type": "string",
+              "title": "Choose TLS private key",
+              "widget": {
+                "id": "file"
               }
             },
-            "tlsCertificate":{
-              "type":"string",
-              "title":"Choose TLS certificate",
-              "widget":{
-                "id":"file"
+            "tlsCertificate": {
+              "type": "string",
+              "title": "Choose TLS certificate",
+              "widget": {
+                "id": "file"
               }
             }
           },
-          "visibleIf":{
-            "tlsMode":[
+          "visibleIf": {
+            "tlsMode": [
               "TlsFromFile"
             ]
           }
@@ -146,120 +146,120 @@
         "tlsModeFromFile"
       ]
     },
-    "backup":{
-      "type":"object",
-      "description":"Backup options",
-      "properties":{
-        "performBackup":{
-          "type":"boolean",
-          "widget":{
-            "id":"checkbox"
+    "backup": {
+      "type": "object",
+      "description": "Backup options",
+      "properties": {
+        "performBackup": {
+          "type": "boolean",
+          "widget": {
+            "id": "checkbox"
           },
-          "description":"Perform Backrest AWS S3 Backups",
-          "default":true
+          "description": "Perform Backrest AWS S3 Backups",
+          "default": true
         },
-        "commonS3data":{
-          "type":"object",
-          "description":"S3 Backup information",
-          "properties":{
-            "s3bucketName":{
-              "type":"string",
-              "title":"S3 Bucket name",
-              "widget":{
-                "id":"string"
+        "commonS3data": {
+          "type": "object",
+          "description": "S3 Backup information",
+          "properties": {
+            "s3bucketName": {
+              "type": "string",
+              "title": "S3 Bucket name",
+              "widget": {
+                "id": "string"
               }
             },
-            "s3endpoint":{
-              "type":"string",
-              "title":"S3 Endpoint",
-              "widget":{
-                "id":"string"
+            "s3endpoint": {
+              "type": "string",
+              "title": "S3 Endpoint",
+              "widget": {
+                "id": "string"
               }
             },
-            "s3region":{
-              "type":"string",
-              "title":"S3 Region",
-              "widget":{
-                "id":"string"
+            "s3region": {
+              "type": "string",
+              "title": "S3 Region",
+              "widget": {
+                "id": "string"
               }
             }
           },
-          "visibleIf":{
-            "performBackup":[
+          "visibleIf": {
+            "performBackup": [
               true
             ]
           }
         },
-        "backupMode":{
-          "type":"string",
-          "default":"BackupFromNewS3Credentials",
-          "widget":{
-            "id":"radio"
+        "backupMode": {
+          "type": "string",
+          "default": "BackupFromNewS3Credentials",
+          "widget": {
+            "id": "radio"
           },
-          "oneOf":[
+          "oneOf": [
             {
-              "enum":[
+              "enum": [
                 "BackupFromNewS3Credentials"
               ],
-              "description":"New S3 credentials"
+              "description": "New S3 credentials"
             },
             {
-              "enum":[
+              "enum": [
                 "BackupFromS3Secret"
               ],
-              "description":"S3 Credentials from kubernetes secret"
+              "description": "S3 Credentials from kubernetes secret"
             }
           ],
-          "visibleIf":{
-            "performBackup":[
+          "visibleIf": {
+            "performBackup": [
               true
             ]
           }
         },
-        "backupModeFromSecret":{
-          "type":"object",
-          "properties":{
-            "s3key":{
-              "type":"string",
-              "title":"S3 Key kubernetes secret",
-              "widget":{
-                "id":"string"
+        "backupModeFromSecret": {
+          "type": "object",
+          "properties": {
+            "s3key": {
+              "type": "string",
+              "title": "S3 Key kubernetes secret",
+              "widget": {
+                "id": "string"
               }
             },
-            "s3secret":{
-              "type":"string",
-              "title":"S3 Secret kubernetes secret",
-              "widget":{
-                "id":"string"
+            "s3secret": {
+              "type": "string",
+              "title": "S3 Secret kubernetes secret",
+              "widget": {
+                "id": "string"
               }
             }
           },
-          "visibleIf":{
-            "backupMode":[
+          "visibleIf": {
+            "backupMode": [
               "BackupFromS3Secret"
             ]
           }
         },
-        "backupModeFromNewCredentials":{
-          "type":"object",
-          "properties":{
-            "s3key":{
-              "type":"string",
-              "title":"S3 Key",
-              "widget":{
-                "id":"string"
+        "backupModeFromNewCredentials": {
+          "type": "object",
+          "properties": {
+            "s3key": {
+              "type": "string",
+              "title": "S3 Key",
+              "widget": {
+                "id": "string"
               }
             },
-            "s3secret":{
-              "type":"string",
-              "title":"S3 Secret",
-              "widget":{
-                "id":"string"
+            "s3secret": {
+              "type": "string",
+              "title": "S3 Secret",
+              "widget": {
+                "id": "string"
               }
             }
           },
-          "visibleIf":{
-            "backupMode":[
+          "visibleIf": {
+            "backupMode": [
               "BackupFromNewS3Credentials"
             ]
           }

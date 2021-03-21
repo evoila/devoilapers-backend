@@ -63,7 +63,6 @@ func Test_DummyProvider_Service_Actions(t *testing.T) {
 	formAction := actions[0]
 	toggleAction := actions[1]
 
-
 	// Toggle actions
 	assert.Equal(t, true, toggleAction.GetIsToggleAction())
 	assert.Equal(t, "Dummy Toggle", toggleAction.GetName())

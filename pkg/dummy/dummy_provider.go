@@ -23,7 +23,7 @@ func (es DummyProvider) GetYamlTemplate(auth common.IKubernetesAuthInformation, 
 func (es DummyProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (interface{}, error) {
 	return map[string]interface{}{
 		"properties": map[string]interface{}{},
-	}, nil;
+	}, nil
 }
 
 func CreateDummyProvider() DummyProvider {
@@ -53,7 +53,7 @@ func (es DummyProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*
 			yaml:        data.yaml,
 			serviceType: es.GetServiceType(),
 			auth:        auth,
-			state: data.toggleState,
+			state:       data.toggleState,
 		}
 		services = append(services, &service)
 	}
@@ -71,7 +71,7 @@ func (es DummyProvider) GetService(auth common.IKubernetesAuthInformation, id st
 		yaml:        data.yaml,
 		serviceType: es.GetServiceType(),
 		auth:        auth,
-		state: data.toggleState,
+		state:       data.toggleState,
 	}
 
 	return &service, nil

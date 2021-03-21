@@ -100,22 +100,22 @@ func getService(pg *pgCommon.PostgresServiceInformations, api *kubernetes.K8sApi
 }
 
 // Reverts the expose action by removing the port
-func Hide(pg *pgCommon.PostgresServiceInformations) (error) {
+func Hide(pg *pgCommon.PostgresServiceInformations) error {
 	api, err := kubernetes.GenerateK8sApiFromToken(pg.Host, pg.CaPath, pg.Auth.GetKubernetesAccessToken())
 	if err != nil {
-		return  err
+		return err
 	}
 
 	// Ensure a service with matching port exists
 	_, err = getService(pg, api)
 	if err != nil {
-		return  err
+		return err
 	}
 
 	// Get the cluster internal service port
 	internalPort, err := strconv.Atoi(pg.ClusterInstance.Spec.Port)
 	if err != nil {
-		return  err
+		return err
 	}
 
 	// Finally try close the port

@@ -19,7 +19,7 @@ func CreateScaleAction(service *pgCommon.PostgresServiceInformations) action.IAc
 	return action.FormAction{
 		Name:          "Scale",
 		UniqueCommand: "cmd_pg_scale",
-		Placeholder:  CreatePlaceholder(service),
+		Placeholder:   CreatePlaceholder(service),
 		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
 			return scaleCluster(service, placeholder.(*dtos2.ClusterScaleDto))
 		},
@@ -35,7 +35,7 @@ func CreatePlaceholder(pg *pgCommon.PostgresServiceInformations) *dtos2.ClusterS
 		numberOfReplicas = len(replicas.Items)
 	}
 
-	return  &dtos2.ClusterScaleDto{
+	return &dtos2.ClusterScaleDto{
 		NumberOfReplicas: numberOfReplicas,
 	}
 }

@@ -8,7 +8,7 @@ import (
 
 func NewError(ctx *gin.Context, status int, err error) {
 
-	errorMessage :=  err.Error()
+	errorMessage := err.Error()
 	er := dtos.HTTPErrorDto{
 		Message: errorMessage,
 	}

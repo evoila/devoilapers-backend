@@ -7,14 +7,12 @@ type IActionGroup interface {
 	GetActions() []IAction
 }
 
-
 type ActionGroup struct {
 	// Name of the action group
 	Name string
 	// Actions of this group
 	Actions []IAction
 }
-
 
 func (ag ActionGroup) GetName() string {
 	return ag.Name
@@ -23,7 +21,6 @@ func (ag ActionGroup) GetName() string {
 func (ag ActionGroup) GetActions() []IAction {
 	return ag.Actions
 }
-
 
 type IAction interface {
 	// Get action name
@@ -41,4 +38,3 @@ type IAction interface {
 	// Determine if this action is a toggle action
 	GetIsToggleAction() bool
 }
-

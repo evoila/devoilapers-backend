@@ -14,18 +14,17 @@ import (
 var nginxMutex sync.Mutex
 
 type NginxInformation struct {
-	Namespace string
+	Namespace        string
 	TcpConfigMapName string
-	DeploymentName string
-	ContainerName string
+	DeploymentName   string
+	ContainerName    string
 }
-
 
 func NginxGetExposedTcpPort(api *K8sApi,
 	nginxInformation NginxInformation,
 	serviceNamespace string,
 	serviceName string,
-	servicePort int) (int, error){
+	servicePort int) (int, error) {
 
 	servicePortStr := strconv.Itoa(servicePort)
 	nginxIdentifier := serviceNamespace + "/" + serviceName + ":" + servicePortStr

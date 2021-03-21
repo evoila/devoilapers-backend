@@ -159,7 +159,6 @@ func Test_ServiceController_HandlePostServiceInstanceAction(t *testing.T) {
 	requestDto := common_test.TestPlaceholder{SomeValue: "MyTestValue"}
 	responseWrapperDto := dtos.ServiceInstanceActionResponseDto{}
 
-
 	statusCode := MakeRequest(
 		t,
 		router,

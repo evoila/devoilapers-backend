@@ -161,4 +161,3 @@ func (es ElasticsearchProvider) CrdInstanceToServiceInstance(api *kubernetes.K8s
 
 	return &elasticSearchService
 }
-

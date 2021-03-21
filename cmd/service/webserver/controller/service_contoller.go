@@ -133,7 +133,6 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 				actionResultJson = string(actionResultBytes)
 			}
 
-
 			ctx.JSON(http.StatusOK, dtos.ServiceInstanceActionResponseDto{ResultJson: actionResultJson})
 			return
 		}

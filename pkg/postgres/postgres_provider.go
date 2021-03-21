@@ -12,6 +12,7 @@ import (
 	v1 "github.com/Crunchydata/postgres-operator/pkg/apis/crunchydata.com/v1"
 	"gopkg.in/yaml.v2"
 	"path"
+	"strconv"
 )
 
 // Implements IServiceProvider interface
@@ -40,7 +41,6 @@ func CreatePostgresProvider(
 		)}
 }
 
-
 func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformation, jsonFormResult []byte) (interface{}, error) {
 	form := dtos.FormResponseDto{}
 	err := json.Unmarshal(jsonFormResult, &form)
@@ -55,23 +55,27 @@ func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformatio
 		return nil, err
 	}
 
-	// Transfer name to the final creation yaml
-	yamlTemplate.Metadata.Annotations.CurrentPrimary = form.Common.ClusterName
+	// Transfer namespace
+	yamlTemplate.Spec.Namespace = auth.GetKubernetesNamespace()
+	yamlTemplate.Metadata.Namespace = auth.GetKubernetesNamespace()
 
+	// Transfer form data to yaml template
+	yamlTemplate.Metadata.Annotations.CurrentPrimary = form.Common.ClusterName
 	yamlTemplate.Metadata.Labels.CrunchyPghaScope = form.Common.ClusterName
 	yamlTemplate.Metadata.Labels.DeploymentName = form.Common.ClusterName
 	yamlTemplate.Metadata.Labels.Name = form.Common.ClusterName
 	yamlTemplate.Metadata.Labels.PgCluster = form.Common.ClusterName
-
 	yamlTemplate.Metadata.Name = form.Common.ClusterName
-	yamlTemplate.Metadata.Namespace = auth.GetKubernetesNamespace()
-
 	yamlTemplate.Spec.PrimaryStorage.Name = form.Common.ClusterName
 	yamlTemplate.Spec.Clustername = form.Common.ClusterName
 	yamlTemplate.Spec.Database = form.Common.ClusterName
 	yamlTemplate.Spec.Name = form.Common.ClusterName
 
-	yamlTemplate.Spec.Namespace = auth.GetKubernetesNamespace()
+	yamlTemplate.Spec.User = form.Common.Username
+	yamlTemplate.Spec.Port = strconv.Itoa(form.Common.InClusterPort)
+	yamlTemplate.Spec.PrimaryStorage.Size = strconv.Itoa(form.Common.ClusterStorageSize) + "G"
+	yamlTemplate.Spec.BackrestStorage.Size = yamlTemplate.Spec.PrimaryStorage.Size
+	yamlTemplate.Spec.ReplicaStorage.Size = yamlTemplate.Spec.PrimaryStorage.Size
 
 	return yamlTemplate, nil
 }
@@ -87,7 +91,6 @@ func (pg PostgresProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (
 
 	// Set a default name
 	formsQuery.Properties.Common.Properties.ClusterName.Default = utils.GetRandomKubernetesResourceName()
-
 
 	return formsQuery, nil
 }
@@ -170,17 +173,17 @@ func (pg PostgresProvider) CrdInstanceToServiceInstance(
 
 	var postgresService service.IService = PostgresService{
 		PostgresServiceInformations: common2.PostgresServiceInformations{
-			ClusterInstance: crdInstance,
-			Auth:            auth,
-			Host:            pg.Host,
-			CaPath:          pg.CaPath,
-			CrdClient:       crdClient,
+			ClusterInstance:  crdInstance,
+			Auth:             auth,
+			Host:             pg.Host,
+			CaPath:           pg.CaPath,
+			CrdClient:        crdClient,
 			NginxInformation: pg.nginxInformation,
 		},
 		BasicService: provider.BasicService{
-			Name:              crdInstance.Name,
-			ProviderType:      pg.GetServiceType(),
-			Yaml:              string(yamlData),
+			Name:         crdInstance.Name,
+			ProviderType: pg.GetServiceType(),
+			Yaml:         string(yamlData),
 		},
 	}
 

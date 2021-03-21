@@ -16,12 +16,12 @@ func CreateToggleAction(
 	unsetExecuteCallback func() (interface{}, error)) ToggleAction {
 
 	return ToggleAction{
-		Name: name,
-		UniqueCommand: uniqueCommand,
+		Name:                 name,
+		UniqueCommand:        uniqueCommand,
 		QueryExecuteCallback: queryExecuteCallback,
-		SetExecuteCallback: setExecuteCallback,
+		SetExecuteCallback:   setExecuteCallback,
 		UnsetExecuteCallback: unsetExecuteCallback,
-		placeholder: &toggleActionPlaceholder{},
+		placeholder:          &toggleActionPlaceholder{},
 	}
 }
 
@@ -60,21 +60,21 @@ func (a ToggleAction) GetJsonForm() interface{} {
 	// Create ngx json form
 	return map[string]interface{}{
 		"properties": map[string]interface{}{
-			"toggle": map[string]interface{} {
-				"type": "string",
-				"title": "toggle",
+			"toggle": map[string]interface{}{
+				"type":   "string",
+				"title":  "toggle",
 				"widget": "select",
 				"oneOf": []map[string]interface{}{
 					{
-						"enum": []string{"get"},
+						"enum":        []string{"get"},
 						"description": "get",
 					},
 					{
-						"enum": []string{"set"},
+						"enum":        []string{"set"},
 						"description": "set",
 					},
 					{
-						"enum": []string{"unset"},
+						"enum":        []string{"unset"},
 						"description": "unset",
 					},
 				},
@@ -87,12 +87,12 @@ func (a ToggleAction) executionCallback(placeholder interface{}) (interface{}, e
 	toggleDto := placeholder.(*toggleActionPlaceholder)
 
 	switch toggleDto.Toggle {
-		case "get":
-			return a.QueryExecuteCallback()
-		case "set":
-			return a.SetExecuteCallback()
-		case "unset":
-			return a.UnsetExecuteCallback()
+	case "get":
+		return a.QueryExecuteCallback()
+	case "set":
+		return a.SetExecuteCallback()
+	case "unset":
+		return a.UnsetExecuteCallback()
 	}
 
 	return nil, errors.New("invalid toggle state")

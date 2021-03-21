@@ -6,7 +6,6 @@ import (
 	"OperatorAutomation/pkg/dummy/dtos"
 )
 
-
 type DummyService struct {
 	id          string
 	status      int
@@ -29,7 +28,6 @@ func (es DummyService) GetName() string {
 }
 
 func (es DummyService) GetActionGroups() []action.IActionGroup {
-
 
 	return []action.IActionGroup{
 		action.ActionGroup{

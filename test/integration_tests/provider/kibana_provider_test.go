@@ -147,7 +147,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	filledForm.Common.ClusterName = "kibana-test"
 	filledForm.Common.ElasticSearchInstance = esFormResponseDto.Common.ClusterName
 
-	service1Ptr := common_test.CommonProviderStart(t, kbProviderPtr, user, filledForm,1)
+	service1Ptr := common_test.CommonProviderStart(t, kbProviderPtr, user, filledForm, 1)
 	service1 := *service1Ptr
 
 	// Check whether service is an Kibana service
@@ -167,7 +167,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Check status of service after setting the certificate
-	service3Ptr, err  := common_test.WaitForServiceComeUp(kbProvider, user, service1.GetName())
+	service3Ptr, err := common_test.WaitForServiceComeUp(kbProvider, user, service1.GetName())
 	assert.Nil(t, err)
 	service3 := *service3Ptr
 

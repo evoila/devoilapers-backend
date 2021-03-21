@@ -13,17 +13,17 @@ type DummyKubernetes struct {
 }
 
 type DummyKubernetesData struct {
-	status int
-	yaml   string
+	status      int
+	yaml        string
 	toggleState *bool
 }
 
 func (dk DummyKubernetes) Create(yaml string) error {
 	toggleState := false
 	dk.data[strconv.Itoa(rand.Int())] = DummyKubernetesData{
-		status: service.ServiceStatusOk,
-		yaml:   yaml,
-		toggleState: &toggleState ,
+		status:      service.ServiceStatusOk,
+		yaml:        yaml,
+		toggleState: &toggleState,
 	}
 	return nil
 }

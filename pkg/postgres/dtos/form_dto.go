@@ -6,7 +6,7 @@ type FormResponseDto struct {
 		ClusterName        string `json:"clusterName"`
 		Username           string `json:"username"`
 		InClusterPort      int    `json:"inClusterPort"`
-		ClusterCtorageSize int    `json:"clusterCtorageSize"`
+		ClusterStorageSize int    `json:"clusterStorageSize"`
 	} `json:"common"`
 	TLS struct {
 		UseTLS            bool   `json:"useTls"`
@@ -66,14 +66,14 @@ type FormQueryDto struct {
 					} `json:"widget"`
 					Default int `json:"default"`
 				} `json:"inClusterPort"`
-				ClusterCtorageSize struct {
+				ClusterStorageSize struct {
 					Type   string `json:"type"`
 					Title  string `json:"title"`
 					Widget struct {
 						ID string `json:"id"`
 					} `json:"widget"`
 					Default int `json:"default"`
-				} `json:"clusterCtorageSize"`
+				} `json:"clusterStorageSize"`
 			} `json:"properties"`
 			Order []string `json:"order"`
 		} `json:"common"`

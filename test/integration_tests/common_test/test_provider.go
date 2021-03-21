@@ -76,7 +76,7 @@ func CommonProviderStart(t *testing.T, providerPtr *provider.IServiceProvider, u
 	return service1Ptr
 }
 
-func CommonProviderStop(t *testing.T, providerPtr *provider.IServiceProvider, user common.IKubernetesAuthInformation)  {
+func CommonProviderStop(t *testing.T, providerPtr *provider.IServiceProvider, user common.IKubernetesAuthInformation) {
 	invalidUser := unit_test.TestUser{KubernetesNamespace: "namespace", KubernetesAccessToken: "InvalidToken"}
 	provider := *providerPtr
 

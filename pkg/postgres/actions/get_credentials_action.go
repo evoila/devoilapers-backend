@@ -46,8 +46,8 @@ func GetDatabaseCredentials(pg *pgCommon.PostgresServiceInformations) (*dtos2.Cl
 	}
 
 	return &dtos2.ClusterCredentialsDto{
-		Username: string(secret.Data["username"]),
-		Password: string(secret.Data["password"]),
-		InternalPort:     internalPort,
+		Username:     string(secret.Data["username"]),
+		Password:     string(secret.Data["password"]),
+		InternalPort: internalPort,
 	}, nil
 }

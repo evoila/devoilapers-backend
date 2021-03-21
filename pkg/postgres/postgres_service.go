@@ -40,7 +40,6 @@ func (pg PostgresService) GetActionGroups() []action.IActionGroup {
 	}
 }
 
-
 func (pg PostgresService) GetStatus() int {
 	status := pg.ClusterInstance.Status.State
 	if status == v1.PgclusterStateProcessed ||
@@ -56,4 +55,3 @@ func (pg PostgresService) GetStatus() int {
 
 	return service.ServiceStatusError
 }
-

@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func WaitForServiceComeUp(provider provider.IServiceProvider, user common.IKubernetesAuthInformation, serviceId string) (*service.IService, error)  {
+func WaitForServiceComeUp(provider provider.IServiceProvider, user common.IKubernetesAuthInformation, serviceId string) (*service.IService, error) {
 	for i := 0; i < 100; i++ {
 		time.Sleep(5 * time.Second)
 

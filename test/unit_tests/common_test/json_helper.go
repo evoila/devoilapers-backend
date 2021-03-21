@@ -19,12 +19,12 @@ func remarshal(input string) string {
 	var dynamicObj interface{}
 	err := json.Unmarshal([]byte(input), &dynamicObj)
 
-	if err != nil  {
+	if err != nil {
 		panic(err)
 	}
 
 	jsonBytes, err := json.Marshal(dynamicObj)
-	if err != nil  {
+	if err != nil {
 		panic(err)
 	}
 

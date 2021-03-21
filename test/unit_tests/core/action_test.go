@@ -10,13 +10,13 @@ import (
 
 type ActionPlaceholder struct {
 	ValueString string
-	ValueInt int
-	ValueBool bool
-	ValueFile string `formWidget:"file"`
+	ValueInt    int
+	ValueBool   bool
+	ValueFile   string `formWidget:"file"`
 
 	ValueStringTags string `json:"value_string_tags" formType:"string" formOrder:"1" formTitle:"My ValueStringTags"`
-	ValueIntTags int `json:"value_int_tags" formType:"number" formOrder:"2" formTitle:"My ValueIntTags"`
-	ValueBoolTags bool `json:"value_bool_tags" formType:"boolean" formOrder:"3" formTitle:"My ValueBoolTags"`
+	ValueIntTags    int    `json:"value_int_tags" formType:"number" formOrder:"2" formTitle:"My ValueIntTags"`
+	ValueBoolTags   bool   `json:"value_bool_tags" formType:"boolean" formOrder:"3" formTitle:"My ValueBoolTags"`
 }
 
 func Test_FormActionGetter(t *testing.T) {
@@ -128,7 +128,7 @@ func Test_FormActionGetter(t *testing.T) {
 
 }
 
-func Test_FormAction_Invalid_NonPointerPlaceholder(t *testing.T)  {
+func Test_FormAction_Invalid_NonPointerPlaceholder(t *testing.T) {
 	// Gets called on destruction. Ensures there was a panic.
 	defer func() {
 		if r := recover(); r == nil {
@@ -149,9 +149,7 @@ func Test_FormAction_Invalid_NonPointerPlaceholder(t *testing.T)  {
 	actionUnsupportedType.GetJsonForm()
 }
 
-
-
-func Test_FormAction_Invalid_PlaceholderField(t *testing.T)  {
+func Test_FormAction_Invalid_PlaceholderField(t *testing.T) {
 	unsupportedTypeStruct := struct {
 		InvalidField []string // Not supported field
 	}{}
@@ -176,8 +174,7 @@ func Test_FormAction_Invalid_PlaceholderField(t *testing.T)  {
 	actionUnsupportedType.GetJsonForm()
 }
 
-
-func Test_FormAction_Invalid_FormOrderField(t *testing.T)  {
+func Test_FormAction_Invalid_FormOrderField(t *testing.T) {
 	unsupportedFormOrderStruct := struct {
 		InvalidField string `formOrder:"NotANumber"` // Not supported field
 	}{}
@@ -202,7 +199,6 @@ func Test_FormAction_Invalid_FormOrderField(t *testing.T)  {
 	actionUnsupportedType.GetJsonForm()
 }
 
-
 func Test_ToggleActionGetter(t *testing.T) {
 	state := false
 	var action1 action.IAction = action.CreateToggleAction(
@@ -223,7 +219,6 @@ func Test_ToggleActionGetter(t *testing.T) {
 			return map[string]interface{}{"now": state}, nil
 		},
 	)
-
 
 	assert.Equal(t, "ToggleAction", action1.GetName())
 	assert.Equal(t, "cmd_toggle_action", action1.GetUniqueCommand())
@@ -301,7 +296,6 @@ func Test_ToggleActionGetter(t *testing.T) {
 	response, err = action1.GetActionExecuteCallback()(placeholder)
 	assert.NotNil(t, err)
 }
-
 
 func Test_ActionExecution(t *testing.T) {
 

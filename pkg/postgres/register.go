@@ -8,7 +8,6 @@ import (
 	pgV1 "github.com/Crunchydata/postgres-operator/pkg/apis/crunchydata.com/v1"
 )
 
-
 const GroupName = "crunchydata.com"
 const GroupVersion = "v1"
 const ResourceName = "pgclusters"
@@ -19,7 +18,6 @@ var (
 	// AddToScheme ...
 	AddToScheme = SchemeBuilder.AddToScheme
 )
-
 
 // SchemeGroupVersion is the group version used to register these objects.
 var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: GroupVersion}
