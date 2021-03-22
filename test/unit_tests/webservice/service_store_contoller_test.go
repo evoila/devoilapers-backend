@@ -2,15 +2,18 @@ package webservice
 
 import (
 	"OperatorAutomation/cmd/service/webserver/dtos"
-	"OperatorAutomation/pkg/core/service"
+	"OperatorAutomation/pkg/core/common"
+	provider2 "OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/test/unit_tests/common_test"
+	"encoding/json"
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 )
 
 func Test_ServiceStoreController_HandleGetServiceStoreOverview(t *testing.T) {
-	var provider service.IServiceProvider = common_test.TestProvider{
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},
@@ -41,7 +44,7 @@ func Test_ServiceStoreController_HandleGetServiceStoreOverview(t *testing.T) {
 	serviceStoreItem := dto.ServiceStoreItems[0]
 	assert.Equal(t, "TestType", serviceStoreItem.Type)
 	assert.Equal(t, "TestDescription", serviceStoreItem.Description)
-	assert.Equal(t, "TestImage", serviceStoreItem.ImageBase64)
+	assert.Equal(t, "TestImage", serviceStoreItem.ImageSource)
 
 	// Unauthorized
 	statusCode = MakeRequest(
@@ -57,50 +60,122 @@ func Test_ServiceStoreController_HandleGetServiceStoreOverview(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, statusCode)
 }
 
-func Test_ServiceStoreController_HandleGetServiceStoreItemYaml(t *testing.T) {
-	var provider service.IServiceProvider = common_test.TestProvider{
+func Test_ServiceStoreController_HandleGetServiceStoreForm(t *testing.T) {
+	formTemplateError := false
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},
-		GetTemplateCb: func() *service.IServiceTemplate {
-			var template service.IServiceTemplate = service.ServiceTemplate{
-				Yaml: "TestYaml",
+		GetFormTemplateCb: func(auth common.IKubernetesAuthInformation) (interface{}, error) {
+			if formTemplateError {
+				return nil, errors.New("My error")
 			}
 
-			return &template
+			return common_test.TestSerializableStruct{Value: "MyFormValue"}, nil
 		},
 	}
 
 	router := CreateRouter(t, &provider)
 
 	// Authorized
-	var dto dtos.ServiceStoreItemYamlDto
+
+	var dtoWrapper = dtos.ServiceStoreItemFormDto{}
 	statusCode := MakeRequest(
 		t,
 		router,
 		true,
 		http.MethodGet,
-		"/api/v1/servicestore/yaml/" + provider.GetServiceType(),
+		"/api/v1/servicestore/form/"+provider.GetServiceType(),
 		nil,
-		&dto,
+		&dtoWrapper,
 	)
 
-	assert.Equal(t, http.StatusOK, statusCode)
-	assert.Equal(t, "TestYaml", dto.Yaml)
+	var dto common_test.TestSerializableStruct
+	err := json.Unmarshal([]byte(dtoWrapper.FormJson), &dto)
+	assert.Nil(t, err)
 
-	// Not authorized
+	assert.Equal(t, http.StatusOK, statusCode)
+	assert.Equal(t, "MyFormValue", dto.Value)
+
+	// Unauthorized
 	statusCode = MakeRequest(
 		t,
 		router,
 		false,
 		http.MethodGet,
-		"/api/v1/servicestore/yaml/" + provider.GetServiceType(),
+		"/api/v1/servicestore/form/"+provider.GetServiceType(),
 		nil,
 		nil,
 	)
 
 	assert.Equal(t, http.StatusUnauthorized, statusCode)
 
+	// From template generation error
+	formTemplateError = true
+	errorDto := dtos.HTTPErrorDto{}
+	statusCode = MakeRequest(
+		t,
+		router,
+		true,
+		http.MethodGet,
+		"/api/v1/servicestore/form/"+provider.GetServiceType(),
+		nil,
+		&errorDto,
+	)
+
+	assert.Equal(t, http.StatusInternalServerError, statusCode)
+	assert.NotEqual(t, "", errorDto.Message)
+}
+
+func Test_ServiceStoreController_HandleGetServiceStoreItemYaml(t *testing.T) {
+	getYamlTemplateError := false
+	var provider provider2.IServiceProvider = common_test.TestProvider{
+		GetServiceTypeCb: func() string {
+			return "TestType"
+		},
+		GetYamlTemplateCb: func(auth common.IKubernetesAuthInformation, jsonFormResult []byte) (interface{}, error) {
+			filledForm := common_test.TestSerializableStruct{}
+			err := json.Unmarshal(jsonFormResult, &filledForm)
+			assert.Nil(t, err)
+
+			if getYamlTemplateError {
+				return nil, errors.New("Some error")
+			}
+
+			return common_test.TestSerializableStruct{Value: filledForm.Value}, nil
+		},
+	}
+
+	router := CreateRouter(t, &provider)
+
+	// Authorized
+	filledForm := common_test.TestSerializableStruct{Value: "MyFilledFormValue"}
+	var dto dtos.ServiceStoreItemYamlDto
+	statusCode := MakeRequest(
+		t,
+		router,
+		true,
+		http.MethodPost,
+		"/api/v1/servicestore/yaml/"+provider.GetServiceType(),
+		filledForm,
+		&dto,
+	)
+
+	assert.Equal(t, http.StatusOK, statusCode)
+	assert.Equal(t, "value: MyFilledFormValue\n", dto.Yaml)
+
+	// Not authorized
+	statusCode = MakeRequest(
+		t,
+		router,
+		false,
+		http.MethodPost,
+		"/api/v1/servicestore/yaml/"+provider.GetServiceType(),
+		filledForm,
+		nil,
+	)
+
+	assert.Equal(t, http.StatusUnauthorized, statusCode)
 
 	// Invalid provider
 	errorDto := dtos.HTTPErrorDto{}
@@ -108,13 +183,43 @@ func Test_ServiceStoreController_HandleGetServiceStoreItemYaml(t *testing.T) {
 		t,
 		router,
 		true,
-		http.MethodGet,
+		http.MethodPost,
+		"/api/v1/servicestore/yaml/NotExistingProvider",
+		filledForm,
+		&errorDto,
+	)
+
+	assert.Equal(t, http.StatusBadRequest, statusCode)
+	assert.NotEqual(t, "", errorDto.Message)
+
+	// Invalid payload
+	errorDto = dtos.HTTPErrorDto{}
+	statusCode = MakeRequest(
+		t,
+		router,
+		true,
+		http.MethodPost,
 		"/api/v1/servicestore/yaml/NotExistingProvider",
 		nil,
 		&errorDto,
 	)
 
 	assert.Equal(t, http.StatusBadRequest, statusCode)
-	assert.Equal(t, http.StatusBadRequest, errorDto.Code)
+	assert.NotEqual(t, "", errorDto.Message)
+
+	// Error during yaml generation
+	getYamlTemplateError = true
+	errorDto = dtos.HTTPErrorDto{}
+	statusCode = MakeRequest(
+		t,
+		router,
+		true,
+		http.MethodPost,
+		"/api/v1/servicestore/yaml/"+provider.GetServiceType(),
+		filledForm,
+		&errorDto,
+	)
+
+	assert.Equal(t, http.StatusInternalServerError, statusCode)
 	assert.NotEqual(t, "", errorDto.Message)
 }

@@ -4,7 +4,7 @@ import (
 	"OperatorAutomation/cmd/service/config"
 	ws "OperatorAutomation/cmd/service/webserver"
 	"OperatorAutomation/pkg/core"
-	"OperatorAutomation/pkg/core/service"
+	"OperatorAutomation/pkg/core/provider"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -25,8 +25,8 @@ func Test_Webservice(t *testing.T) {
 
 }
 
-func CreateRouter(t *testing.T, provider *service.IServiceProvider) *gin.Engine {
-	core1 := core.CreateCore([]*service.IServiceProvider{provider})
+func CreateRouter(t *testing.T, newProvider *provider.IServiceProvider) *gin.Engine {
+	core1 := core.CreateCore([]*provider.IServiceProvider{newProvider})
 	router := ws.BuildRouter(Create_AppConfig(t), core1)
 	return router
 }

@@ -2,7 +2,7 @@ package webservice
 
 import (
 	"OperatorAutomation/cmd/service/webserver/dtos"
-	"OperatorAutomation/pkg/core/service"
+	provider2 "OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/test/unit_tests/common_test"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -10,7 +10,7 @@ import (
 )
 
 func Test_AccountController_HandlePostLogin(t *testing.T) {
-	var provider service.IServiceProvider = common_test.TestProvider{
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},
@@ -19,7 +19,7 @@ func Test_AccountController_HandlePostLogin(t *testing.T) {
 	router := CreateRouter(t, &provider)
 
 	// Valid credentials
-	requestDto := dtos.AccountCredentialsDto {
+	requestDto := dtos.AccountCredentialsDto{
 		Password: TEST_PASSWORD,
 		Username: TEST_USERNAME,
 	}
@@ -40,7 +40,7 @@ func Test_AccountController_HandlePostLogin(t *testing.T) {
 	assert.Equal(t, TEST_ROLE, responseDto.Role)
 
 	// Invalid credentials
-	requestDto = dtos.AccountCredentialsDto {
+	requestDto = dtos.AccountCredentialsDto{
 		Password: TEST_PASSWORD + "X",
 		Username: TEST_USERNAME,
 	}
@@ -57,7 +57,6 @@ func Test_AccountController_HandlePostLogin(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnauthorized, statusCode)
 
-
 	// Invalid body
 	errDto := dtos.HTTPErrorDto{}
 	statusCode = MakeRequest(
@@ -71,6 +70,5 @@ func Test_AccountController_HandlePostLogin(t *testing.T) {
 	)
 
 	assert.Equal(t, http.StatusBadRequest, statusCode)
-	assert.Equal(t, http.StatusBadRequest, errDto.Code)
 	assert.NotEqual(t, "", errDto.Message)
 }

@@ -3,15 +3,15 @@ package actions
 import (
 	"OperatorAutomation/pkg/core/action"
 	"OperatorAutomation/pkg/kubernetes"
-	"OperatorAutomation/pkg/postgres/actions/dtos"
 	pgCommon "OperatorAutomation/pkg/postgres/common"
+	dtos2 "OperatorAutomation/pkg/postgres/dtos"
 	"context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
 )
 
 func CreateGetCredentialsAction(service *pgCommon.PostgresServiceInformations) action.IAction {
-	return action.Action{
+	return action.FormAction{
 		Name:          "Get credentials",
 		UniqueCommand: "cmd_pg_get_credentials",
 		Placeholder:   nil,
@@ -21,7 +21,7 @@ func CreateGetCredentialsAction(service *pgCommon.PostgresServiceInformations) a
 	}
 }
 
-func GetDatabaseCredentials(pg *pgCommon.PostgresServiceInformations) (*dtos.ClusterCredentialsDto, error) {
+func GetDatabaseCredentials(pg *pgCommon.PostgresServiceInformations) (*dtos2.ClusterCredentialsDto, error) {
 	api, err := kubernetes.GenerateK8sApiFromToken(pg.Host, pg.CaPath, pg.Auth.GetKubernetesAccessToken())
 	if err != nil {
 		return nil, err
@@ -45,9 +45,9 @@ func GetDatabaseCredentials(pg *pgCommon.PostgresServiceInformations) (*dtos.Clu
 		return nil, err
 	}
 
-	return &dtos.ClusterCredentialsDto{
-		Username: string(secret.Data["username"]),
-		Password: string(secret.Data["password"]),
-		InternalPort:     internalPort,
+	return &dtos2.ClusterCredentialsDto{
+		Username:     string(secret.Data["username"]),
+		Password:     string(secret.Data["password"]),
+		InternalPort: internalPort,
 	}, nil
 }

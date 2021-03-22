@@ -2,6 +2,7 @@ package dummy
 
 import (
 	"OperatorAutomation/pkg/core/common"
+	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 	"math/rand"
 )
@@ -9,6 +10,20 @@ import (
 // Do not initialize use provided CreateDummyProvider function
 type DummyProvider struct {
 	DummyKubernetes DummyKubernetes
+}
+
+func (es DummyProvider) OnCoreInitialized(provider []*provider.IServiceProvider) {
+
+}
+
+func (es DummyProvider) GetYamlTemplate(auth common.IKubernetesAuthInformation, jsonFormResult []byte) (interface{}, error) {
+	return "apiVersion: operator.knative.dev/v1alpha1\nkind: KnativeEventing\nmetadata:\n  name: eventing\nspec: {}\n", nil
+}
+
+func (es DummyProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (interface{}, error) {
+	return map[string]interface{}{
+		"properties": map[string]interface{}{},
+	}, nil
 }
 
 func CreateDummyProvider() DummyProvider {
@@ -28,25 +43,17 @@ func (es DummyProvider) GetServiceType() string {
 	return "DummyService"
 }
 
-func (es DummyProvider) GetTemplate(auth common.IKubernetesAuthInformation) *service.IServiceTemplate {
-	var st service.IServiceTemplate = service.ServiceTemplate{
-		Yaml:              "apiVersion: operator.knative.dev/v1alpha1\nkind: KnativeEventing\nmetadata:\n  name: eventing\nspec: {}\n",
-		ImportantSections: []string{"name"},
-	}
-
-	return &st
-}
-
 func (es DummyProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
 	var services []*service.IService
 	for id, data := range es.DummyKubernetes.GetServices() {
+
 		var service service.IService = DummyService{
-			id:                id,
-			status:            data.status,
-			yaml:              data.yaml,
-			importantSections: (*es.GetTemplate(auth)).GetImportantSections(),
-			serviceType:       es.GetServiceType(),
-			auth:              auth,
+			id:          id,
+			status:      data.status,
+			yaml:        data.yaml,
+			serviceType: es.GetServiceType(),
+			auth:        auth,
+			state:       data.toggleState,
 		}
 		services = append(services, &service)
 	}
@@ -58,13 +65,13 @@ func (es DummyProvider) GetService(auth common.IKubernetesAuthInformation, id st
 	if err != nil {
 		return nil, err
 	}
-
 	var service service.IService = DummyService{
 		id:          id,
 		status:      data.status,
 		yaml:        data.yaml,
 		serviceType: es.GetServiceType(),
 		auth:        auth,
+		state:       data.toggleState,
 	}
 
 	return &service, nil

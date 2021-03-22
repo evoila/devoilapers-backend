@@ -3,8 +3,8 @@ package actions
 import (
 	"OperatorAutomation/pkg/core/action"
 	"OperatorAutomation/pkg/kubernetes"
-	"OperatorAutomation/pkg/postgres/actions/dtos"
 	pgCommon "OperatorAutomation/pkg/postgres/common"
+	dtos2 "OperatorAutomation/pkg/postgres/dtos"
 	"errors"
 	pgV1 "github.com/Crunchydata/postgres-operator/pkg/apis/crunchydata.com/v1"
 	"github.com/google/uuid"
@@ -16,18 +16,18 @@ import (
 const PgreplicaRessource = "pgreplicas"
 
 func CreateScaleAction(service *pgCommon.PostgresServiceInformations) action.IAction {
-	return action.Action{
+	return action.FormAction{
 		Name:          "Scale",
 		UniqueCommand: "cmd_pg_scale",
-		Placeholder:  CreatePlaceholder(service),
+		Placeholder:   CreatePlaceholder(service),
 		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
-			return scaleCluster(service, placeholder.(*dtos.ClusterScaleDto))
+			return scaleCluster(service, placeholder.(*dtos2.ClusterScaleDto))
 		},
 	}
 }
 
 // Generate placeholder which represents the required input fields
-func CreatePlaceholder(pg *pgCommon.PostgresServiceInformations) *dtos.ClusterScaleDto {
+func CreatePlaceholder(pg *pgCommon.PostgresServiceInformations) *dtos2.ClusterScaleDto {
 	replicas, err := getReplicas(pg)
 	numberOfReplicas := 0
 
@@ -35,7 +35,7 @@ func CreatePlaceholder(pg *pgCommon.PostgresServiceInformations) *dtos.ClusterSc
 		numberOfReplicas = len(replicas.Items)
 	}
 
-	return  &dtos.ClusterScaleDto{
+	return &dtos2.ClusterScaleDto{
 		NumberOfReplicas: numberOfReplicas,
 	}
 }
@@ -131,7 +131,7 @@ func scaleDown(
 	return nil
 }
 
-func scaleCluster(pg *pgCommon.PostgresServiceInformations, dto *dtos.ClusterScaleDto) (interface{}, error) {
+func scaleCluster(pg *pgCommon.PostgresServiceInformations, dto *dtos2.ClusterScaleDto) (interface{}, error) {
 	if dto.NumberOfReplicas < 0 {
 		return nil, errors.New("invalid total number of replicas")
 	}

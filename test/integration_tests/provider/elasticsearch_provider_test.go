@@ -2,26 +2,25 @@ package provider
 
 import (
 	"OperatorAutomation/cmd/service/config"
+	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/elasticsearch"
 	"OperatorAutomation/pkg/elasticsearch/dtos"
 	"OperatorAutomation/test/integration_tests/common_test"
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
 	"encoding/base64"
-	"strings"
-	"testing"
-	"time"
-
+	"encoding/json"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-func CreateElasticSearchTestProvider(t *testing.T) (*elasticsearch.ElasticsearchProvider, config.RawConfig) {
+func CreateElasticSearchTestProvider(t *testing.T) (*provider.IServiceProvider, config.RawConfig) {
 	config := common_test.GetConfig(t)
 
-	esProvider := elasticsearch.CreateElasticSearchProvider(
+	var esProvider provider.IServiceProvider = elasticsearch.CreateElasticSearchProvider(
 		config.Kubernetes.Server,
 		config.Kubernetes.CertificateAuthority,
-		config.YamlTemplatePath)
+		config.ResourcesTemplatesPath)
 
 	return &esProvider, config
 }
@@ -42,101 +41,63 @@ func Test_Create_Panic_Template_Not_Found(t *testing.T) {
 }
 
 func Test_Elasticsearch_Provider_GetAttributes(t *testing.T) {
-	esProvider, _ := CreateElasticSearchTestProvider(t)
+	esProviderPtr, _ := CreateElasticSearchTestProvider(t)
+	esProvider := *esProviderPtr
 
 	assert.NotEqual(t, "", esProvider.GetServiceImage())
 	assert.NotEqual(t, "", esProvider.GetServiceDescription())
 	assert.Equal(t, "Elasticsearch", esProvider.GetServiceType())
 
 	testUser := unit_test.TestUser{
-		KubernetesNamespace: "A_LONG_NAMESPACE",
+		KubernetesNamespace: "MyNamespace",
 	}
 
-	template := *esProvider.GetTemplate(testUser)
-	assert.True(t, strings.Contains(template.GetYAML(), "namespace: "+testUser.KubernetesNamespace))
-	assert.Equal(t, 1, len(template.GetImportantSections()))
-	assert.Equal(t, "metadata.name", template.GetImportantSections()[0])
+	// Get json form data
+	formDataObj1, err := esProvider.GetJsonForm(testUser)
+	assert.Nil(t, err)
+	assert.NotNil(t, formDataObj1)
+	formDataObj2, err := esProvider.GetJsonForm(testUser)
+	assert.Nil(t, err)
+	assert.NotNil(t, formDataObj2)
 
-	template2 := *esProvider.GetTemplate(testUser)
-	assert.True(t, strings.Contains(template2.GetYAML(), "namespace: "+testUser.KubernetesNamespace))
-	assert.Equal(t, 1, len(template2.GetImportantSections()))
-	assert.Equal(t, "metadata.name", template2.GetImportantSections()[0])
-	assert.NotEqual(t, template2.GetYAML(), template.GetYAML())
+	// Ensure they are not the same (because of the random name)
+	formData1 := formDataObj1.(dtos.ServiceCreationFormDto)
+	formData2 := formDataObj2.(dtos.ServiceCreationFormDto)
+
+	assert.NotEqual(t,
+		formData1.Properties.Common.Properties.ClusterName.Default,
+		formData2.Properties.Common.Properties.ClusterName.Default)
+
+	// Generate yaml from form values
+	filledForm := dtos.ServiceCreationFormResponseDto{}
+	filledForm.Common.ClusterName = "MyCluster"
+	filledFormData, err := json.Marshal(filledForm)
+	assert.Nil(t, err)
+	yamlTemplate, err := esProvider.GetYamlTemplate(testUser, filledFormData)
+	assert.Nil(t, err)
+	assert.NotNil(t, yamlTemplate)
+
+	elasticSearchYaml := yamlTemplate.(dtos.ProviderYamlTemplateDto)
+	assert.Equal(t, "MyCluster", elasticSearchYaml.Metadata.Name)
+	assert.Equal(t, "MyNamespace", elasticSearchYaml.Metadata.Namespace)
 }
 
 func Test_Elasticsearch_Provider_End2End(t *testing.T) {
-	esProvider, config := CreateElasticSearchTestProvider(t)
+	esProviderPtr, config := CreateElasticSearchTestProvider(t)
+	esProvider := *esProviderPtr
 
 	user := config.Users[0]
-	invalidUser := unit_test.TestUser{KubernetesNamespace: "namespace", KubernetesAccessToken: "InvalidToken"}
-	yaml := (*esProvider.GetTemplate(user)).GetYAML()
+	filledForm := dtos.ServiceCreationFormResponseDto{}
+	filledForm.Common.ClusterName = "es-test-cluster"
 
-	// Check if there is no other service
-	services, err := esProvider.GetServices(user)
-	assert.Nil(t, err)
-	assert.Equal(t, 0, len(services))
-
-	// Try create a service with invalid yaml
-	err = esProvider.CreateService(user, "something")
-	assert.NotNil(t, err)
-
-	// Try create a service with invalid user data
-	err = esProvider.CreateService(invalidUser, yaml)
-	assert.NotNil(t, err)
-
-	// Create a service
-	err = esProvider.CreateService(user, yaml)
-	assert.Nil(t, err)
-
-	// Try check if created with invalid user data
-	services, err = esProvider.GetServices(invalidUser)
-	assert.NotNil(t, err)
-
-	// Check if created
-	services, err = esProvider.GetServices(user)
-	assert.Nil(t, err)
-	assert.Equal(t, 1, len(services))
-	service0 := *services[0]
-	assert.NotEqual(t, "", service0.GetName())
-	assert.Equal(t, esProvider.GetServiceType(), service0.GetType())
-	assert.Equal(t, 1, len(service0.GetActions()))
-	assert.True(t,
-		service.ServiceStatusPending == service0.GetStatus() ||
-			service.ServiceStatusOk == service0.GetStatus(),
-	)
-
-	// Try get service with invalid user data
-	_, err = esProvider.GetService(invalidUser, service0.GetName())
-	assert.NotNil(t, err)
-
-	// Wait for service to become ok
-	var service1 service.IService
-	for i := 0; i < 12; i++ {
-		time.Sleep(5 * time.Second)
-
-		// Try get service with invalid user data
-		service1Ptr, err := esProvider.GetService(user, service0.GetName())
-		assert.Nil(t, err)
-		service1 = *service1Ptr
-
-		if service1.GetStatus() == service.ServiceStatusOk {
-			break
-		}
-	}
-
-	// Ensure service is ok
-	assert.Equal(t, service.ServiceStatusOk, service1.GetStatus())
-
-	// Ensure they have the same attributes
-	assert.Equal(t, service0.GetName(), service1.GetName())
-	assert.Equal(t, service0.GetType(), service1.GetType())
-	assert.Equal(t, service0.GetTemplate().GetImportantSections(), service1.GetTemplate().GetImportantSections())
+	service1Ptr := common_test.CommonProviderStart(t, esProviderPtr, user, filledForm, 1)
+	service1 := *service1Ptr
 
 	// Check whether service is an Elasticsearch service
-	service2, ok := service1.(elasticsearch.ElasticSearchService)
+	service1es, ok := service1.(elasticsearch.ElasticSearchService)
 	assert.True(t, ok)
 
-	secret, _ := service2.K8sApi.GetSecret(user.KubernetesNamespace, service2.GetName()+"-es-http-certs-internal")
+	secret, _ := service1es.K8sApi.GetSecret(user.KubernetesNamespace, service1es.GetName()+"-es-http-certs-internal")
 
 	// Test set certificate to service
 	certDto := &dtos.CertificateDto{
@@ -145,40 +106,20 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 		TlsKey: base64.StdEncoding.EncodeToString(secret.Data["tls.key"]),
 	}
 
-	_, err = service2.SetCertificateToService(certDto)
+	_, err := service1es.SetCertificateToService(certDto)
 	assert.Nil(t, err)
 
 	// Check status of service after setting the certificate
-	var service3 service.IService
-	for i := 0; i < 10; i++ {
-		tmpService, err := esProvider.GetService(user, service0.GetName())
-		assert.Nil(t, err)
-		assert.NotNil(t, tmpService)
-		if (*tmpService).GetStatus() == service.ServiceStatusOk {
-			service3 = *tmpService
-			break
-		} else {
-			time.Sleep(5 * time.Second)
-		}
-	}
+	service3ptr, err := common_test.WaitForServiceComeUp(esProvider, user, service1.GetName())
+	assert.Nil(t, err)
+	service3 := *service3ptr
 	assert.NotNil(t, service3)
 	assert.True(t, service.ServiceStatusOk == service3.GetStatus())
 
-	// Try delete service with invalid id
-	err = esProvider.DeleteService(user, "some-not-existing-id")
-	assert.NotNil(t, err)
+	// Delete everything
+	common_test.CommonProviderStop(t, esProviderPtr, user)
 
-	// Try delete service with invalid user
-	err = esProvider.DeleteService(invalidUser, (*services[0]).GetName())
-	assert.NotNil(t, err)
-
-	// Delete service
-	err = esProvider.DeleteService(user, (*services[0]).GetName())
-	assert.Nil(t, err)
-
-	// Wait till delete service is done
-	time.Sleep(5 * time.Second)
 	// Check whether the secret with associated certificate is also deleted
-	secret, err = service2.K8sApi.GetSecret(user.KubernetesNamespace, service2.GetName()+"-tls-cert")
+	secret, err = service1es.K8sApi.GetSecret(user.KubernetesNamespace, service1es.GetName()+"-tls-cert")
 	assert.NotNil(t, err)
 }

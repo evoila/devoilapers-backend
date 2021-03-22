@@ -10,13 +10,13 @@ const ServiceStatusPending = 3
 // Defines an abstraction for an service-instance
 type IService interface {
 	// Get actions provided by this service
-	GetActions() []action.IActionGroup
+	GetActionGroups() []action.IActionGroup
 	// Get the template on which the service depends
-	GetTemplate() IServiceTemplate
-	// Get IService Status
+	GetYamlTemplate() string
+	// Get service Status. See defined consts.
 	GetStatus() int
-
+	// Get type of service i.e. postgres/elasticsearch
 	GetType() string
-
+	// Name of the deployed service
 	GetName() string
 }

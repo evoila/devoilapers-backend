@@ -2,7 +2,7 @@ package core
 
 import (
 	"OperatorAutomation/pkg/core"
-	"OperatorAutomation/pkg/core/service"
+	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/test/unit_tests/common_test"
 	"strconv"
 	"testing"
@@ -11,10 +11,10 @@ import (
 )
 
 func Test_Core_GetProvider(t *testing.T) {
-	var providers []*service.IServiceProvider
+	var providers []*provider.IServiceProvider
 	for i := 0; i < 3; i++ {
 		closure := i
-		var provider service.IServiceProvider = common_test.TestProvider{
+		var provider provider.IServiceProvider = common_test.TestProvider{
 			GetServiceTypeCb: func() string {
 				return "Type" + strconv.Itoa(closure)
 			},
@@ -34,19 +34,19 @@ func Test_Core_GetProvider(t *testing.T) {
 
 func Test_Core_DuplicateProvider_Panic(t *testing.T) {
 
-	var provider1 service.IServiceProvider = common_test.TestProvider{
+	var provider1 provider.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "1"
 		},
 	}
 
-	var provider2 service.IServiceProvider = common_test.TestProvider{
+	var provider2 provider.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "1"
 		},
 	}
 
-	var providers = []*service.IServiceProvider{
+	var providers = []*provider.IServiceProvider{
 		&provider1,
 		&provider2,
 	}

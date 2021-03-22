@@ -27,10 +27,7 @@ func GenerateK8sApiFromToken(host string, caPath string, token string) (*K8sApi,
 	config := &rest.Config{
 		Host:        host,
 		BearerToken: token,
-		// Todo: Try to remove key/cert?
 		TLSClientConfig: rest.TLSClientConfig{
-			//CertFile: CertPath,
-			//KeyFile:  KeyPath,
 			CAFile: caPath,
 		},
 	}

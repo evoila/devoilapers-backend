@@ -28,33 +28,13 @@ type IAction interface {
 	// Get the unique command
 	GetUniqueCommand() string
 	// Get placeholder
-	GetPlaceholder() interface{}
-	// Getaction execute callback function for executing an action.
+	GetJsonFormResultPlaceholder() interface{}
+	// Get action execute callback function for executing an action.
 	// Placeholder value equals the placeholder of action.
 	// Return value could be any struct
 	GetActionExecuteCallback() func(placeholder interface{}) (interface{}, error)
-}
-
-// Action
-type Action struct {
-	Name                  string
-	UniqueCommand         string
-	Placeholder           interface{}
-	ActionExecuteCallback func(placeholder interface{}) (interface{}, error)
-}
-
-func (a Action) GetName() string {
-	return a.Name
-}
-
-func (a Action) GetUniqueCommand() string {
-	return a.UniqueCommand
-}
-
-func (a Action) GetPlaceholder() interface{} {
-	return a.Placeholder
-}
-
-func (a Action) GetActionExecuteCallback() func(placeholder interface{}) (interface{}, error) {
-	return a.ActionExecuteCallback
+	// Get the json form object
+	GetJsonForm() interface{}
+	// Determine if this action is a toggle action
+	GetIsToggleAction() bool
 }

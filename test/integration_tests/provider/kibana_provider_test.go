@@ -2,27 +2,31 @@ package provider
 
 import (
 	"OperatorAutomation/cmd/service/config"
+	"OperatorAutomation/pkg/core/common"
+	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/elasticsearch"
+	esDtos "OperatorAutomation/pkg/elasticsearch/dtos"
 	"OperatorAutomation/pkg/kibana"
 	"OperatorAutomation/pkg/kibana/dtos"
 	"OperatorAutomation/test/integration_tests/common_test"
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
 	"encoding/base64"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	yamlSerializer "gopkg.in/yaml.v2"
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
 )
 
-func CreateKibanaTestProvider(t *testing.T) (*kibana.KibanaProvider, config.RawConfig) {
+func CreateKibanaTestProvider(t *testing.T) (*provider.IServiceProvider, config.RawConfig) {
 	config := common_test.GetConfig(t)
 
-	kbProvider := kibana.CreateKibanaProvider(
+	var kbProvider provider.IServiceProvider = kibana.CreateKibanaProvider(
 		config.Kubernetes.Server,
 		config.Kubernetes.CertificateAuthority,
-		config.YamlTemplatePath)
+		config.ResourcesTemplatesPath)
 
 	return &kbProvider, config
 }
@@ -43,112 +47,108 @@ func Test_Kibana_Provider_Create_Panic_Template_Not_Found(t *testing.T) {
 }
 
 func Test_Kibana_Provider_GetAttributes(t *testing.T) {
-	kbProvider, _ := CreateKibanaTestProvider(t)
+	kbProviderPtr, _ := CreateKibanaTestProvider(t)
+	kbProvider := *kbProviderPtr
+
+	var dummyEsProvider provider.IServiceProvider = unit_test.TestProvider{
+		GetServiceTypeCb: func() string {
+			return "Elasticsearch"
+		},
+		GetServicesCb: func(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
+			return []*service.IService{}, nil
+		},
+	}
+
+	kbProvider.OnCoreInitialized([]*provider.IServiceProvider{
+		&dummyEsProvider,
+	})
 
 	assert.NotEqual(t, "", kbProvider.GetServiceImage())
 	assert.NotEqual(t, "", kbProvider.GetServiceDescription())
 	assert.Equal(t, "Kibana", kbProvider.GetServiceType())
 
 	testUser := unit_test.TestUser{
-		KubernetesNamespace: "A_LONG_NAMESPACE",
+		KubernetesNamespace: "MyNamespace",
 	}
 
-	template := *kbProvider.GetTemplate(testUser)
-	assert.True(t, strings.Contains(template.GetYAML(), "namespace: "+testUser.KubernetesNamespace))
-	assert.Equal(t, 1, len(template.GetImportantSections()))
-	assert.Equal(t, "metadata.name", template.GetImportantSections()[0])
+	// Get json form data
+	formDataObj1, err := kbProvider.GetJsonForm(testUser)
+	assert.Nil(t, err)
+	assert.NotNil(t, formDataObj1)
+	formDataObj2, err := kbProvider.GetJsonForm(testUser)
+	assert.Nil(t, err)
+	assert.NotNil(t, formDataObj2)
 
-	template2 := *kbProvider.GetTemplate(testUser)
-	assert.True(t, strings.Contains(template2.GetYAML(), "namespace: "+testUser.KubernetesNamespace))
-	assert.Equal(t, 1, len(template2.GetImportantSections()))
-	assert.Equal(t, "metadata.name", template2.GetImportantSections()[0])
-	assert.NotEqual(t, template2.GetYAML(), template.GetYAML())
+	// Ensure they are not the same (because of the random name)
+	formData1 := formDataObj1.(dtos.ServiceCreationFormDto)
+	formData2 := formDataObj2.(dtos.ServiceCreationFormDto)
+
+	assert.NotEqual(t,
+		formData1.Properties.Common.Properties.ClusterName.Default,
+		formData2.Properties.Common.Properties.ClusterName.Default)
+
+	// Generate yaml from form values and ensure it sets the values from form
+	filledForm := dtos.ServiceCreationFormResponseDto{}
+	filledForm.Common.ClusterName = "MyCluster"
+	filledForm.Common.ElasticSearchInstance = "MyElasticSearchInstance"
+
+	filledFormData, err := json.Marshal(filledForm)
+	assert.Nil(t, err)
+	yamlTemplate, err := kbProvider.GetYamlTemplate(testUser, filledFormData)
+	assert.Nil(t, err)
+	assert.NotNil(t, yamlTemplate)
+
+	kibanaYaml := yamlTemplate.(dtos.ProviderYamlTemplateDto)
+	assert.Equal(t, "MyCluster", kibanaYaml.Metadata.Name)
+	assert.Equal(t, "MyNamespace", kibanaYaml.Metadata.Namespace)
+	assert.Equal(t, "MyElasticSearchInstance", kibanaYaml.Spec.ElasticsearchRef.Name)
 }
 
 func Test_Kibana_Provider_End2End(t *testing.T) {
-	kbProvider, config := CreateKibanaTestProvider(t)
-
+	kbProviderPtr, config := CreateKibanaTestProvider(t)
+	kbProvider := *kbProviderPtr
 	user := config.Users[0]
-	invalidUser := unit_test.TestUser{KubernetesNamespace: "namespace", KubernetesAccessToken: "InvalidToken"}
 
 	// Kibana depends on elastic search therefore we need to create it
-	esProvider := elasticsearch.CreateElasticSearchProvider(
+	var esProvider provider.IServiceProvider = elasticsearch.CreateElasticSearchProvider(
 		config.Kubernetes.Server,
 		config.Kubernetes.CertificateAuthority,
-		config.YamlTemplatePath,
+		config.ResourcesTemplatesPath,
 	)
 
+	// Since kibana provider utilizes the es provider we have to give a hint of other existing providers
+	kbProvider.OnCoreInitialized([]*provider.IServiceProvider{&esProvider})
+
 	// Create a new es instance
-	esYaml := (*esProvider.GetTemplate(user)).GetYAML()
-	err := esProvider.CreateService(user, esYaml)
+	esFormResponseDto := esDtos.ServiceCreationFormResponseDto{}
+	esFormResponseDto.Common.ClusterName = "kibana-es-test"
+	esFormResponseDtoBytes, err := json.Marshal(esFormResponseDto)
 	assert.Nil(t, err)
+	esYamlObj, err := esProvider.GetYamlTemplate(user, esFormResponseDtoBytes)
+	assert.Nil(t, err)
+	esYaml, err := yamlSerializer.Marshal(esYamlObj)
+	assert.Nil(t, err)
+	err = esProvider.CreateService(user, string(esYaml))
+	assert.Nil(t, err)
+	time.Sleep(5 * time.Second)
 	esServices, err := esProvider.GetServices(user)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(esServices))
-	esService0 := *esServices[0]
-	time.Sleep(10 * time.Second)
+
+	// Check if kibana form offers elasticsearch
+	form, err := kbProvider.GetJsonForm(user)
+	assert.Nil(t, err)
+	formJsonBytes, err := json.Marshal(form)
+	assert.True(t, strings.Contains(string(formJsonBytes), "kibana-es-test"))
 
 	// Continue with actual kb provider
-	yaml := (*kbProvider.GetTemplate(user)).GetYAML()
-	// Fill in the name of the es instance. Since the yaml needs a reference to come up ok
-	yaml = strings.Replace(yaml, "YOUR_ELASTICSEARCH_INSTANCE_NAME", esService0.GetName(), 1)
+	// Generate a form response that would arrive from the frontent
+	filledForm := dtos.ServiceCreationFormResponseDto{}
+	filledForm.Common.ClusterName = "kibana-test"
+	filledForm.Common.ElasticSearchInstance = esFormResponseDto.Common.ClusterName
 
-	// Check if there is no other service
-	services, err := kbProvider.GetServices(user)
-	assert.Nil(t, err)
-	assert.Equal(t, 0, len(services))
-
-	// Try create a service with invalid yaml
-	err = kbProvider.CreateService(user, "something")
-	assert.NotNil(t, err)
-
-	// Try create a service with invalid user data
-	err = kbProvider.CreateService(invalidUser, yaml)
-	assert.NotNil(t, err)
-
-	// Create a service
-	err = kbProvider.CreateService(user, yaml)
-	assert.Nil(t, err)
-
-	// Try check if created with invalid user data
-	services, err = kbProvider.GetServices(invalidUser)
-	assert.NotNil(t, err)
-
-	// Check if created
-	services, err = kbProvider.GetServices(user)
-	assert.Nil(t, err)
-	assert.Equal(t, 1, len(services))
-	service0 := *services[0]
-	assert.NotEqual(t, "", service0.GetName())
-	assert.Equal(t, kbProvider.GetServiceType(), service0.GetType())
-	assert.Equal(t, 1, len(service0.GetActions()))
-
-	// Try get service with invalid user data
-	_, err = kbProvider.GetService(invalidUser, service0.GetName())
-	assert.NotNil(t, err)
-
-	// Wait for service to become ok. Kibana needs some extra time.
-	var service1 service.IService
-	for i := 0; i < 60; i++ {
-		time.Sleep(5 * time.Second)
-
-		// Try get service with invalid user data
-		service1Ptr, err := kbProvider.GetService(user, service0.GetName())
-		assert.Nil(t, err)
-		service1 = *service1Ptr
-
-		if service1.GetStatus() == service.ServiceStatusOk {
-			break
-		}
-	}
-
-	// Ensure service is ok
-	assert.Equal(t, service.ServiceStatusOk, service1.GetStatus())
-
-	// Ensure they have the same attributes
-	assert.Equal(t, service0.GetName(), service1.GetName())
-	assert.Equal(t, service0.GetType(), service1.GetType())
-	assert.Equal(t, service0.GetTemplate().GetImportantSections(), service1.GetTemplate().GetImportantSections())
+	service1Ptr := common_test.CommonProviderStart(t, kbProviderPtr, user, filledForm, 1)
+	service1 := *service1Ptr
 
 	// Check whether service is an Kibana service
 	service2, ok := service1.(kibana.KibanaService)
@@ -167,40 +167,15 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Check status of service after setting the certificate
-	var service3 *service.IService
-	for i := 0; i < 5; i++ {
-		tmpService, err := kbProvider.GetService(user, service2.GetName())
-		assert.Nil(t, err)
-		assert.NotNil(t, tmpService)
-		if (*tmpService).GetStatus() == service.ServiceStatusOk {
-			service3 = tmpService
-			break
-		} else {
-			time.Sleep(5 * time.Second)
-		}
-	}
-
-	// Check whether service is not nil
-	assert.NotNil(t, service3)
+	service3Ptr, err := common_test.WaitForServiceComeUp(kbProvider, user, service1.GetName())
+	assert.Nil(t, err)
+	service3 := *service3Ptr
 
 	// Check whether status of service is ok after setting the certificate
-	assert.True(t, service.ServiceStatusOk == (*service3).GetStatus())
+	assert.True(t, service.ServiceStatusOk == service3.GetStatus())
 
-	// Try delete service with invalid id
-	err = kbProvider.DeleteService(user, "some-not-existing-id")
-	assert.NotNil(t, err)
-
-	// Try delete service with invalid user
-	err = kbProvider.DeleteService(invalidUser, (*services[0]).GetName())
-	assert.NotNil(t, err)
-
-	// Delete service
-	err = kbProvider.DeleteService(user, (*services[0]).GetName())
-	assert.Nil(t, err)
-
-	// Delete es instance
-	err = esProvider.DeleteService(user, esService0.GetName())
-	assert.Nil(t, err)
+	common_test.CommonProviderStop(t, kbProviderPtr, user)
+	common_test.CommonProviderStop(t, &esProvider, user)
 
 	// Wait till delete service is done
 	time.Sleep(5 * time.Second)

@@ -15,7 +15,7 @@ type PostgresService struct {
 }
 
 // Returns the action groups. Part of service.IService interface
-func (pg PostgresService) GetActions() []action.IActionGroup {
+func (pg PostgresService) GetActionGroups() []action.IActionGroup {
 	return []action.IActionGroup{
 		action.ActionGroup{
 			Name: "Informations",
@@ -40,7 +40,6 @@ func (pg PostgresService) GetActions() []action.IActionGroup {
 	}
 }
 
-
 func (pg PostgresService) GetStatus() int {
 	status := pg.ClusterInstance.Status.State
 	if status == v1.PgclusterStateProcessed ||
@@ -56,4 +55,3 @@ func (pg PostgresService) GetStatus() int {
 
 	return service.ServiceStatusError
 }
-

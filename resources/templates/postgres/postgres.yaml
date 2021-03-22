@@ -2,16 +2,16 @@ apiVersion: crunchydata.com/v1
 kind: Pgcluster
 metadata:
   annotations:
-    current-primary: {opa.random.name[0]}
+    current-primary: "rndname"
   labels:
-    crunchy-pgha-scope: {opa.random.name[0]}
-    deployment-name: {opa.random.name[0]}
-    name: {opa.random.name[0]}
-    pg-cluster: {opa.random.name[0]}
+    crunchy-pgha-scope: "rndname"
+    deployment-name: "rndname"
+    name: "rndname"
+    pg-cluster: "rndname"
     pgo-version: 4.6.1
     pgouser: admin
-  name: {opa.random.name[0]}
-  namespace: {opa.user.namespace}
+  name: "rndname"
+  namespace: "namespace"
 spec:
   BackrestStorage:
     accessmode: ReadWriteMany
@@ -24,7 +24,7 @@ spec:
   PrimaryStorage:
     accessmode: ReadWriteMany
     matchLabels: ""
-    name: {opa.random.name[0]}
+    name: "rndname"
     size: 1G
     storageclass: ""
     storagetype: dynamic
@@ -37,16 +37,16 @@ spec:
     storageclass: ""
     storagetype: dynamic
     supplementalgroups: ""
-  annotations: {}
+  annotations: { }
   ccpimage: crunchy-postgres-ha
   ccpimageprefix: registry.developers.crunchydata.com/crunchydata
   ccpimagetag: centos8-13.2-4.6.1
-  clustername: {opa.random.name[0]}
-  database: {opa.random.name[0]}
+  clustername: "rndname"
+  database: "rndname"
   exporterport: "9187"
-  limits: {}
-  name: {opa.random.name[0]}
-  namespace: {opa.user.namespace}
+  limits: { }
+  name: "rndname"
+  namespace: "namespace"
   pgDataSource:
     restoreFrom: ""
     restoreOpts: ""
@@ -57,7 +57,7 @@ spec:
     pgBackRest: preferred
     pgBouncer: preferred
   port: "5432"
-  tolerations: []
+  tolerations: [ ]
   user: hippo
   userlabels:
     pgo-version: 4.6.1

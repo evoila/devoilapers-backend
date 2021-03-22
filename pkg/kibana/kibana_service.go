@@ -57,12 +57,12 @@ func (kb KibanaService) SetCertificateToService(certDto *dtos.CertificateDto) (i
 	}
 }
 
-func (kb KibanaService) GetActions() []action.IActionGroup {
+func (kb KibanaService) GetActionGroups() []action.IActionGroup {
 	return []action.IActionGroup{
 		action.ActionGroup{
 			Name: "Secure",
 			Actions: []action.IAction{
-				action.Action{
+				action.FormAction{
 					Name:          "Set Certificate",
 					UniqueCommand: "cmd_set_cert_action",
 					Placeholder:   &dtos.CertificateDto{},

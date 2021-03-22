@@ -7,11 +7,11 @@ import (
 )
 
 type PostgresServiceInformations struct {
-	Host   string
-	CaPath string
-	Auth   common.IKubernetesAuthInformation
-	ClusterInstance *v1.Pgcluster
-	CrdClient *kubernetes.CommonCrdApi
-	ClusterReplica []*v1.Pgreplica
+	Host             string
+	CaPath           string
+	Auth             common.IKubernetesAuthInformation
+	ClusterInstance  *v1.Pgcluster
+	CrdClient        *kubernetes.CommonCrdApi
+	ClusterReplica   []*v1.Pgreplica
 	NginxInformation kubernetes.NginxInformation
 }

@@ -4,7 +4,7 @@ import (
 	"OperatorAutomation/cmd/service/config"
 	"OperatorAutomation/cmd/service/webserver"
 	"OperatorAutomation/pkg/core"
-	"OperatorAutomation/pkg/core/service"
+	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/dummy"
 	"OperatorAutomation/pkg/elasticsearch"
 	"OperatorAutomation/pkg/kibana"
@@ -102,35 +102,35 @@ func initialize(c *cli.Context, demoMode bool) error {
 func InitializeCore(appconfig config.RawConfig) *core.Core {
 
 	// TODO: Add concrete just like here service providers here
-	var esp service.IServiceProvider = elasticsearch.CreateElasticSearchProvider(
+	var esp provider.IServiceProvider = elasticsearch.CreateElasticSearchProvider(
 		appconfig.Kubernetes.Server,
 		appconfig.Kubernetes.CertificateAuthority,
-		appconfig.YamlTemplatePath,
+		appconfig.ResourcesTemplatesPath,
 	)
 
-	var kb service.IServiceProvider = kibana.CreateKibanaProvider(
+	var kb provider.IServiceProvider = kibana.CreateKibanaProvider(
 		appconfig.Kubernetes.Server,
 		appconfig.Kubernetes.CertificateAuthority,
-		appconfig.YamlTemplatePath,
+		appconfig.ResourcesTemplatesPath,
 	)
 
-	var pg service.IServiceProvider = postgres.CreatePostgresProvider(
+	var pg provider.IServiceProvider = postgres.CreatePostgresProvider(
 		appconfig.Kubernetes.Server,
 		appconfig.Kubernetes.CertificateAuthority,
-		appconfig.YamlTemplatePath,
+		appconfig.ResourcesTemplatesPath,
 		kubernetes.NginxInformation(appconfig.Kubernetes.Nginx),
 	)
 
-	return core.CreateCore([]*service.IServiceProvider{
+	return core.CreateCore([]*provider.IServiceProvider{
 		&esp,
 		&kb,
 		&pg,
 	})
 }
 func InitializeDemoCore(appconfig config.RawConfig) *core.Core {
-	var dp service.IServiceProvider = dummy.CreateDummyProvider()
+	var dp provider.IServiceProvider = dummy.CreateDummyProvider()
 
-	return core.CreateCore([]*service.IServiceProvider{
+	return core.CreateCore([]*provider.IServiceProvider{
 		&dp,
 	})
 

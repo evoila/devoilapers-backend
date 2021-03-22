@@ -4,20 +4,21 @@ import (
 	"OperatorAutomation/cmd/service/webserver/dtos"
 	"OperatorAutomation/pkg/core/action"
 	"OperatorAutomation/pkg/core/common"
+	provider2 "OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/test/unit_tests/common_test"
+	"encoding/json"
 	"errors"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_ServiceController_HandlePostCreateServiceInstance(t *testing.T) {
 
 	createServiceGotCalled := 0
 	providerError := false
-	var provider service.IServiceProvider = common_test.TestProvider{
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},
@@ -84,7 +85,6 @@ func Test_ServiceController_HandlePostCreateServiceInstance(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, statusCode)
 	assert.Equal(t, 1, createServiceGotCalled)
-	assert.Equal(t, http.StatusBadRequest, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 
 	// On provider error
@@ -102,7 +102,6 @@ func Test_ServiceController_HandlePostCreateServiceInstance(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, statusCode)
 	assert.Equal(t, 2, createServiceGotCalled)
-	assert.Equal(t, http.StatusInternalServerError, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 }
 
@@ -113,7 +112,7 @@ func Test_ServiceController_HandlePostServiceInstanceAction(t *testing.T) {
 	serviceError := false
 
 	// Create provider
-	var provider service.IServiceProvider = common_test.TestProvider{
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},
@@ -127,7 +126,7 @@ func Test_ServiceController_HandlePostServiceInstanceAction(t *testing.T) {
 						action.ActionGroup{
 							Name: "TestGroup",
 							Actions: []action.IAction{
-								action.Action{
+								action.FormAction{
 									Name:          "TestAction",
 									Placeholder:   &common_test.TestPlaceholder{},
 									UniqueCommand: "TestActionCmd",
@@ -158,7 +157,7 @@ func Test_ServiceController_HandlePostServiceInstanceAction(t *testing.T) {
 
 	// Valid credentials
 	requestDto := common_test.TestPlaceholder{SomeValue: "MyTestValue"}
-	responseDto := common_test.TestPlaceholder{}
+	responseWrapperDto := dtos.ServiceInstanceActionResponseDto{}
 
 	statusCode := MakeRequest(
 		t,
@@ -167,8 +166,12 @@ func Test_ServiceController_HandlePostServiceInstanceAction(t *testing.T) {
 		http.MethodPost,
 		"/api/v1/services/action/TestType/TestService/TestActionCmd",
 		&requestDto,
-		&responseDto,
+		&responseWrapperDto,
 	)
+
+	responseDto := common_test.TestPlaceholder{}
+	err := json.Unmarshal([]byte(responseWrapperDto.ResultJson), &responseDto)
+	assert.Nil(t, err)
 
 	assert.Equal(t, http.StatusOK, statusCode)
 	assert.Equal(t, requestDto.SomeValue, responseDto.SomeValue)
@@ -202,7 +205,6 @@ func Test_ServiceController_HandlePostServiceInstanceAction(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, statusCode)
 	assert.Equal(t, 1, actionGotCalled)
-	assert.Equal(t, http.StatusBadRequest, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 
 	// On action error
@@ -220,7 +222,6 @@ func Test_ServiceController_HandlePostServiceInstanceAction(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, statusCode)
 	assert.Equal(t, 2, actionGotCalled)
-	assert.Equal(t, http.StatusInternalServerError, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 
 	// On service error
@@ -238,7 +239,6 @@ func Test_ServiceController_HandlePostServiceInstanceAction(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, statusCode)
 	assert.Equal(t, 2, actionGotCalled)
-	assert.Equal(t, http.StatusBadRequest, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 }
 
@@ -246,7 +246,7 @@ func Test_ServiceController_HandleDeleteServiceInstance(t *testing.T) {
 
 	deleteGotCalled := 0
 	deleteError := false
-	var provider service.IServiceProvider = common_test.TestProvider{
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},
@@ -307,12 +307,11 @@ func Test_ServiceController_HandleDeleteServiceInstance(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, statusCode)
 	assert.Equal(t, 2, deleteGotCalled)
-	assert.Equal(t, http.StatusInternalServerError, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 }
 
 func Test_ServiceController_HandleGetServiceInstanceDetails(t *testing.T) {
-	var provider service.IServiceProvider = common_test.TestProvider{
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},
@@ -334,13 +333,10 @@ func Test_ServiceController_HandleGetServiceInstanceDetails(t *testing.T) {
 						action.ActionGroup{
 							Name: "SomeActionGroup",
 							Actions: []action.IAction{
-								action.Action{
+								action.FormAction{
 									Name:          "MyAction",
 									Placeholder:   &common_test.TestPlaceholder{},
 									UniqueCommand: "MyActionCmd",
-									ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
-										return "", nil
-									},
 								},
 							},
 						},
@@ -379,7 +375,7 @@ func Test_ServiceController_HandleGetServiceInstanceDetails(t *testing.T) {
 	responseAction := responseActionGroup.Actions[0]
 	assert.Equal(t, "MyAction", responseAction.Name)
 	assert.Equal(t, "MyActionCmd", responseAction.Command)
-	assert.Equal(t, "{\"SomeValue\":\"\"}", responseAction.Placeholder)
+	assert.Equal(t, `{"order":["SomeValue"],"properties":{"SomeValue":{"default":"","title":"SomeValue","type":"string"}}}`, responseAction.FormJson)
 
 	// Invalid credentials
 	statusCode = MakeRequest(
@@ -407,14 +403,13 @@ func Test_ServiceController_HandleGetServiceInstanceDetails(t *testing.T) {
 	)
 
 	assert.Equal(t, http.StatusInternalServerError, statusCode)
-	assert.Equal(t, http.StatusInternalServerError, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 }
 
 func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *testing.T) {
 
 	providerError := false
-	var provider service.IServiceProvider = common_test.TestProvider{
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},
@@ -434,13 +429,10 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 						action.ActionGroup{
 							Name: "SomeActionGroup0",
 							Actions: []action.IAction{
-								action.Action{
+								action.FormAction{
 									Name:          "MyAction0",
 									Placeholder:   &common_test.TestPlaceholder{},
 									UniqueCommand: "MyActionCmd0",
-									ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
-										return "", nil
-									},
 								},
 							},
 						},
@@ -463,13 +455,10 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 						action.ActionGroup{
 							Name: "SomeActionGroup1",
 							Actions: []action.IAction{
-								action.Action{
+								action.FormAction{
 									Name:          "MyAction1",
 									Placeholder:   &common_test.TestPlaceholder{},
 									UniqueCommand: "MyActionCmd1",
-									ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
-										return "", nil
-									},
 								},
 							},
 						},
@@ -526,11 +515,11 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 
 	assert.Equal(t, "MyAction0", responseAction0.Name)
 	assert.Equal(t, "MyActionCmd0", responseAction0.Command)
-	assert.Equal(t, "{\"SomeValue\":\"\"}", responseAction0.Placeholder)
+	assert.Equal(t, "{\"order\":[\"SomeValue\"],\"properties\":{\"SomeValue\":{\"default\":\"\",\"title\":\"SomeValue\",\"type\":\"string\"}}}", responseAction0.FormJson)
 
 	assert.Equal(t, "MyAction1", responseAction1.Name)
 	assert.Equal(t, "MyActionCmd1", responseAction1.Command)
-	assert.Equal(t, "{\"SomeValue\":\"\"}", responseAction1.Placeholder)
+	assert.Equal(t, "{\"order\":[\"SomeValue\"],\"properties\":{\"SomeValue\":{\"default\":\"\",\"title\":\"SomeValue\",\"type\":\"string\"}}}", responseAction1.FormJson)
 
 	// Invalid credentials
 	statusCode = MakeRequest(
@@ -559,13 +548,12 @@ func Test_ServiceController_HandleGetServiceInstanceDetailsForAllInstances(t *te
 	)
 
 	assert.Equal(t, http.StatusInternalServerError, statusCode)
-	assert.Equal(t, http.StatusInternalServerError, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 }
 
 func Test_ServiceController_HandleGetServiceInstanceYaml(t *testing.T) {
 	providerError := false
-	var provider service.IServiceProvider = common_test.TestProvider{
+	var provider provider2.IServiceProvider = common_test.TestProvider{
 		GetServiceTypeCb: func() string {
 			return "TestType"
 		},
@@ -573,10 +561,8 @@ func Test_ServiceController_HandleGetServiceInstanceYaml(t *testing.T) {
 			assert.Equal(t, "TestService", id)
 
 			var service0 service.IService = common_test.TestService{
-				GetTemplateCb: func() service.IServiceTemplate {
-					return service.ServiceTemplate{
-						Yaml: "TestYaml",
-					}
+				GetTemplateCb: func() string {
+					return "TestYaml"
 				},
 			}
 
@@ -632,6 +618,5 @@ func Test_ServiceController_HandleGetServiceInstanceYaml(t *testing.T) {
 	)
 
 	assert.Equal(t, http.StatusInternalServerError, statusCode)
-	assert.Equal(t, http.StatusInternalServerError, errorDto.Code)
 	assert.NotEqual(t, "", errorDto.Message)
 }

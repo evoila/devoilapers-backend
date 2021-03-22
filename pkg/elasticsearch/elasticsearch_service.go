@@ -57,12 +57,12 @@ func (es ElasticSearchService) SetCertificateToService(certDto *dtos.Certificate
 	}
 }
 
-func (es ElasticSearchService) GetActions() []action.IActionGroup {
+func (es ElasticSearchService) GetActionGroups() []action.IActionGroup {
 	return []action.IActionGroup{
 		action.ActionGroup{
 			Name: "Secure",
 			Actions: []action.IAction{
-				action.Action{
+				action.FormAction{
 					Name:          "Set Certificate",
 					UniqueCommand: "cmd_set_cert_action",
 					Placeholder:   &dtos.CertificateDto{},

@@ -2,7 +2,7 @@ package core
 
 import (
 	"OperatorAutomation/pkg/core/common"
-	"OperatorAutomation/pkg/core/service"
+	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/users"
 )
 
@@ -10,14 +10,14 @@ import (
 // Holds all references for interacting with the system from a higher level
 type Core struct {
 	//UserContextManagement *users.UserContextManagement
-	service.ServiceProviderRegistry
+	provider.ServiceProviderRegistry
 }
 
 // Creates an instance of the core struct holding the references for
 // the user-context-management and services
-func CreateCore(providers []*service.IServiceProvider) *Core {
-	core := Core{service.ServiceProviderRegistry{Providers: map[string]*service.IServiceProvider{}}}
-	for _,provider := range providers {
+func CreateCore(providers []*provider.IServiceProvider) *Core {
+	core := Core{provider.ServiceProviderRegistry{Providers: map[string]*provider.IServiceProvider{}}}
+	for _, provider := range providers {
 		providerType := (*provider).GetServiceType()
 
 		if _, ok := core.Providers[providerType]; ok {
@@ -26,6 +26,11 @@ func CreateCore(providers []*service.IServiceProvider) *Core {
 
 		core.Providers[providerType] = provider
 	}
+
+	for _, provider := range providers {
+		(*provider).OnCoreInitialized(providers)
+	}
+
 	return &core
 }
 
@@ -33,4 +38,3 @@ func CreateCore(providers []*service.IServiceProvider) *Core {
 func (core Core) CrateUserContext(userInformation common.IKubernetesAuthInformation) *users.UserContext {
 	return &users.UserContext{ServiceProviderRegistry: &core.ServiceProviderRegistry, Auth: userInformation}
 }
-

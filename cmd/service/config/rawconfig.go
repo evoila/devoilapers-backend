@@ -6,7 +6,7 @@ type RawConfig struct {
 	WebserverSllCertificate WebserverSllCertificate `json:"webserver_sll_certificate"`
 	Kubernetes              Kubernetes              `json:"kubernetes"`
 	Users                   []User                  `json:"users"`
-	YamlTemplatePath		string					`json:"yaml_template_path"`
+	ResourcesTemplatesPath  string                  `json:"resources_templates_path"`
 }
 
 type WebserverSllCertificate struct {
@@ -17,14 +17,14 @@ type WebserverSllCertificate struct {
 type Kubernetes struct {
 	Server               string `json:"server"`
 	CertificateAuthority string `json:"certificate-authority"`
-	Nginx                Nginx `json:"nginx"`
+	Nginx                Nginx  `json:"nginx"`
 }
 
 type Nginx struct {
-	Namespace string `json:"namespace"`
+	Namespace        string `json:"namespace"`
 	TcpConfigMapName string `json:"tcp_config_map_name"`
-	DeploymentName string `json:"deployment_name"`
-	ContainerName string `json:"container_name"`
+	DeploymentName   string `json:"deployment_name"`
+	ContainerName    string `json:"container_name"`
 }
 
 type User struct {
