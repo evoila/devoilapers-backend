@@ -106,7 +106,7 @@ func scaleUp(pg *pgCommon.PostgresServiceInformations, numberOfNewReplicas int) 
 			return errors.New("Replica could not serialized to yaml.")
 		}
 
-		err = api.Apply(yamlData)
+		_, err = api.Apply(yamlData)
 		if err != nil {
 			return err
 		}

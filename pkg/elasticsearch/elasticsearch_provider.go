@@ -123,7 +123,7 @@ func (es ElasticsearchProvider) CreateService(auth common.IKubernetesAuthInforma
 		return err
 	}
 
-	err = api.Apply([]byte(yaml))
+	_, err = api.Apply([]byte(yaml))
 	if err != nil {
 		return err
 	}

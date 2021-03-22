@@ -3,9 +3,9 @@ package controller
 import (
 	"OperatorAutomation/cmd/service/utils"
 	"OperatorAutomation/cmd/service/webserver/dtos"
+	"OperatorAutomation/pkg/utils/logger"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
@@ -15,7 +15,6 @@ type ServiceStoreController struct {
 	BaseController
 }
 
-const ServiceStoreLogPrefix = "File: servicestore_controller.go: "
 
 // Service store overview godoc
 // @Summary Lists all possible deployable services
@@ -33,7 +32,7 @@ const ServiceStoreLogPrefix = "File: servicestore_controller.go: "
 //
 // @Router /servicestore/info [get]
 func (controller ServiceStoreController) HandleGetServiceStoreOverview(ctx *gin.Context) {
-	log.Trace(ServiceStoreLogPrefix + "Received get request to get an overview of ther service store provider.")
+	logger.RTrace("Received get request to get an overview of ther service store provider")
 
 	serviceStoreOverviewData := dtos.ServiceStoreOverviewDto{ServiceStoreItems: []dtos.ServiceStoreItemDto{}}
 
@@ -45,11 +44,11 @@ func (controller ServiceStoreController) HandleGetServiceStoreOverview(ctx *gin.
 			ImageSource: (*provider).GetServiceImage(),
 		}
 
-		log.Trace(ServiceStoreLogPrefix + "Found provider with type " + serviceStoreItem.Type)
+		logger.RTrace("Found provider with type " + serviceStoreItem.Type)
 		serviceStoreOverviewData.ServiceStoreItems = append(serviceStoreOverviewData.ServiceStoreItems, serviceStoreItem)
 	}
 
-	log.Trace(ServiceStoreLogPrefix + "Progressed all providers.")
+	logger.RTrace("Progressed all providers")
 	ctx.JSON(http.StatusOK, serviceStoreOverviewData)
 }
 
@@ -74,10 +73,10 @@ func (controller ServiceStoreController) HandleGetServiceStoreOverview(ctx *gin.
 //
 // @Router /servicestore/yaml/{servicetype} [post]
 func (controller ServiceStoreController) HandlePostServiceStoreItemYaml(ctx *gin.Context) {
-	log.Trace(ServiceStoreLogPrefix + "Received post request to get yaml of an service store provider.")
+	logger.RTrace("Received post request to get yaml of an service store provider")
 	serviceType := ctx.Param("servicetype")
 
-	log.Trace(ServiceStoreLogPrefix + "Get provider of type " + serviceType)
+	logger.RTrace("Get provider of type " + serviceType)
 	provider, err := controller.Core.GetProviderByName(serviceType)
 	if err != nil {
 		utils.NewError(ctx, http.StatusBadRequest, err)
@@ -106,7 +105,7 @@ func (controller ServiceStoreController) HandlePostServiceStoreItemYaml(ctx *gin
 	var yamlBytes []byte
 	switch concreteObject := yamlObject.(type) {
 		case []interface{}:
-			log.Trace(ServiceStoreLogPrefix + "Yaml contains multiple documents. Going to marshal it separatly.")
+			logger.RTrace("Yaml contains multiple documents. Going to marshal it separatly")
 
 			for _, innerInterface := range concreteObject {
 				// Append yaml separator
@@ -125,7 +124,7 @@ func (controller ServiceStoreController) HandlePostServiceStoreItemYaml(ctx *gin
 				yamlBytes = append(yamlBytes, yamlSectionBytes...)
 			}
 		default:
-			log.Trace(ServiceStoreLogPrefix + "Yaml does not contain multiple documents. Going to marshal the whole interface.")
+			logger.RTrace("Yaml does not contain multiple documents. Going to marshal the whole interface")
 			yamlBytes, err = yaml.Marshal(yamlObject)
 
 			if err != nil {
@@ -134,7 +133,7 @@ func (controller ServiceStoreController) HandlePostServiceStoreItemYaml(ctx *gin
 			}
 	}
 
-	log.Trace(ServiceStoreLogPrefix + "Marshaling to yaml done.")
+	logger.RTrace("Marshaling to yaml done")
 
 	// Build response
 	serviceYaml := dtos.ServiceStoreItemYamlDto{
@@ -164,10 +163,10 @@ func (controller ServiceStoreController) HandlePostServiceStoreItemYaml(ctx *gin
 //
 // @Router /servicestore/form/{servicetype} [get]
 func (controller ServiceStoreController) HandleGetServiceStoreItemForm(ctx *gin.Context) {
-	log.Trace(ServiceStoreLogPrefix + "Received get request to get the form of an service store provider.")
+	logger.RTrace("Received get request to get the form of an service store provider")
 	serviceType := ctx.Param("servicetype")
 
-	log.Trace(ServiceStoreLogPrefix + "Get provider of type " + serviceType)
+	logger.RTrace("Get provider of type " + serviceType)
 	provider, err := controller.Core.GetProviderByName(serviceType)
 	if err != nil {
 		utils.NewError(ctx, http.StatusBadRequest, err)
@@ -178,20 +177,20 @@ func (controller ServiceStoreController) HandleGetServiceStoreItemForm(ctx *gin.
 	userInfos := controller.UserManagement.GetUserInformation(user, password)
 
 	// Generate form data
-	log.Trace(ServiceStoreLogPrefix + "Get json form of provider type " + serviceType)
+	logger.RTrace("Get json form of provider type " + serviceType)
 	formData, err := (*provider).GetJsonForm(userInfos)
 	if err != nil {
 		utils.NewError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	log.Trace(ServiceStoreLogPrefix + "Marshal json form of provider type " + serviceType)
+	logger.RTrace("Marshal json form of provider type " + serviceType)
 	formString, err := json.Marshal(formData)
 	if err != nil {
 		utils.NewError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	log.Trace(ServiceStoreLogPrefix + "Marshal json form done")
+	logger.RTrace("Marshal json form done")
 	ctx.JSON(http.StatusOK, dtos.ServiceStoreItemFormDto{FormJson: string(formString)})
 }

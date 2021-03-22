@@ -165,7 +165,7 @@ func (kb KibanaProvider) CreateService(auth common.IKubernetesAuthInformation, y
 		return err
 	}
 
-	err = api.Apply([]byte(yaml))
+	_, err = api.Apply([]byte(yaml))
 	if err != nil {
 		return err
 	}

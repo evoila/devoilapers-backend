@@ -49,8 +49,6 @@ func (pg PostgresService) GetStatus() int {
 		status == v1.PgclusterStateCreated ||
 		status == v1.PgclusterStateBootstrapped {
 		return service.ServiceStatusOk
-	} else if status == v1.PgclusterStateBootstrapping {
-
 	}
 
 	return service.ServiceStatusError

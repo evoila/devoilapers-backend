@@ -1,13 +1,13 @@
 package controller
 
 import (
-	"OperatorAutomation/cmd/service/webserver/dtos"
 	"OperatorAutomation/cmd/service/utils"
+	"OperatorAutomation/cmd/service/webserver/dtos"
 	"OperatorAutomation/pkg/core/service"
+	"OperatorAutomation/pkg/utils/logger"
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 )
@@ -15,8 +15,6 @@ import (
 type ServiceController struct {
 	BaseController
 }
-
-const ServiceLogPrefix = "File: service_controller.go: "
 
 // Create service instance godoc
 // @Summary Create service instance from yaml
@@ -39,9 +37,9 @@ const ServiceLogPrefix = "File: service_controller.go: "
 //
 // @Router /services/create/{servicetype} [post]
 func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Context) {
-	log.Trace(ServiceLogPrefix + "Received post request to create an instance of a service.")
-
-	log.Trace(ServiceLogPrefix + "Going to unmarshal body.")
+	logger.RTrace("Received post request to create an instance of a service")
+	
+	logger.RTrace("Going to unmarshal body")
 	var yamlData dtos.ServiceYamlDto
 	if err := ctx.ShouldBindJSON(&yamlData); err != nil {
 		utils.NewError(ctx, http.StatusBadRequest, err)
@@ -52,10 +50,10 @@ func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Con
 	userInfos := controller.UserManagement.GetUserInformation(user, password)
 
 	serviceType := ctx.Param("servicetype")
-	log.Trace(ServiceLogPrefix + "Going to create a usercontext.")
+	logger.RTrace("Going to create a usercontext")
 	userCtx := controller.Core.CrateUserContext(userInfos)
 
-	log.Trace(ServiceLogPrefix + "Going to create a service of type " + serviceType + " out of the given yaml.")
+	logger.RTrace("Going to create a service of type " + serviceType + " out of the given yaml")
 	err := userCtx.CreateServices(serviceType, yamlData.Yaml)
 
 	if err != nil {
@@ -63,7 +61,7 @@ func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Con
 		return
 	}
 
-	log.Trace(ServiceLogPrefix + "Creation of service done.")
+	logger.RTrace("Creation of service done")
 	ctx.Status(http.StatusCreated)
 }
 
@@ -90,7 +88,7 @@ func (controller ServiceController) HandlePostCreateServiceInstance(ctx *gin.Con
 //
 // @Router /services/action/{servicetype}/{servicename}/{actioncommand}  [post]
 func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Context) {
-	log.Trace(ServiceLogPrefix + "Received post request to execute an action.")
+	logger.RTrace("Received post request to execute an action")
 
 	user, password, _ := ctx.Request.BasicAuth()
 	userInfos := controller.UserManagement.GetUserInformation(user, password)
@@ -99,10 +97,10 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 	serviceName := ctx.Param("servicename")
 	serviceActionCommand := ctx.Param("actioncommand")
 
-	log.Trace(ServiceLogPrefix + "Action command " + serviceActionCommand +
-		" should be executed on service " + serviceType + "/" + serviceName + ".")
+	logger.RTrace("Action command " + serviceActionCommand +
+		" should be executed on service " + serviceType + "/" + serviceName)
 
-	log.Trace(ServiceLogPrefix + "Going to create a user context.")
+	logger.RTrace("Going to create a user context")
 	userCtx := controller.Core.CrateUserContext(userInfos)
 	service, err := userCtx.GetService(serviceType, serviceName)
 
@@ -116,7 +114,7 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 		return
 	}
 
-	log.Trace(ServiceLogPrefix + "Going to parse body.")
+	logger.RTrace("Going to parse body")
 	jsonData, err := ioutil.ReadAll(ctx.Request.Body)
 
 	for _, group := range (*service).GetActionGroups() {
@@ -125,19 +123,19 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 				continue
 			}
 
-			log.Trace(ServiceLogPrefix + "Action " + serviceActionCommand + " could be found.")
-			log.Trace(ServiceLogPrefix + "Getting placeholder of action.")
+			logger.RTrace("Action " + serviceActionCommand + " could be found")
+			logger.RTrace("Getting placeholder of action")
 
 			placeholder := action.GetJsonFormResultPlaceholder()
 			if placeholder != nil {
-				log.Trace(ServiceLogPrefix + "Filling placeholder of action with given data.")
+				logger.RTrace("Filling placeholder of action with given data")
 				if err := json.Unmarshal(jsonData, placeholder); err != nil {
 					utils.NewError(ctx, http.StatusBadRequest, err)
 					return
 				}
 			}
 
-			log.Trace(ServiceLogPrefix + "Executing the action.")
+			logger.RTrace("Executing the action")
 			actionResult, err := action.GetActionExecuteCallback()(placeholder)
 			if err != nil {
 				utils.NewError(ctx, http.StatusInternalServerError, err)
@@ -145,7 +143,7 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 			}
 
 
-			log.Trace(ServiceLogPrefix + "Parsing the result of action.")
+			logger.RTrace("Parsing the result of action")
 			actionResultJson := ""
 			if actionResult != nil {
 				actionResultBytes, err := json.Marshal(actionResult)
@@ -162,7 +160,7 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 		}
 	}
 
-	log.Warn(ServiceLogPrefix + "Action " + serviceActionCommand + " could not be found.")
+	logger.RWarn("Action " + serviceActionCommand + " could not be found")
 	utils.NewError(ctx, http.StatusBadRequest, errors.New("action " + serviceActionCommand + " could not be found"))
 }
 
@@ -186,7 +184,7 @@ func (controller ServiceController) HandlePostServiceInstanceAction(ctx *gin.Con
 //
 // @Router /services/{servicetype}/{servicename} [delete]
 func (controller ServiceController) HandleDeleteServiceInstance(ctx *gin.Context) {
-	log.Trace(ServiceLogPrefix + "Received request to delete a service instance.")
+	logger.RTrace("Received request to delete a service instance")
 
 	user, password, _ := ctx.Request.BasicAuth()
 	userInfos := controller.UserManagement.GetUserInformation(user, password)
@@ -194,10 +192,10 @@ func (controller ServiceController) HandleDeleteServiceInstance(ctx *gin.Context
 	serviceType := ctx.Param("servicetype")
 	serviceName := ctx.Param("servicename")
 
-	log.Trace(ServiceLogPrefix + "Going to create a user context.")
+	logger.RTrace("Going to create a user context")
 	userCtx := controller.Core.CrateUserContext(userInfos)
 
-	log.Trace(ServiceLogPrefix + "Going to delete service of type " + serviceType + " with name " + serviceName + ".")
+	logger.RTrace("Going to delete service of type " + serviceType + " with name " + serviceName)
 	err := userCtx.DeleteService(serviceType, serviceName)
 
 	if err != nil {
@@ -205,7 +203,7 @@ func (controller ServiceController) HandleDeleteServiceInstance(ctx *gin.Context
 		return
 	}
 
-	log.Trace(ServiceLogPrefix + "Service deleted.")
+	logger.RTrace("Service deleted")
 	ctx.Status(http.StatusOK)
 }
 
@@ -229,7 +227,7 @@ func (controller ServiceController) HandleDeleteServiceInstance(ctx *gin.Context
 //
 // @Router /services/info/{servicetype}/{servicename} [get]
 func (controller ServiceController) HandleGetServiceInstanceDetails(ctx *gin.Context) {
-	log.Trace(ServiceLogPrefix + "Received request to get service instance details.")
+	logger.RTrace("Received request to get service instance details")
 
 	//Return single instance
 	instanceDetailsOverview := dtos.ServiceInstanceDetailsOverviewDto{
@@ -242,9 +240,9 @@ func (controller ServiceController) HandleGetServiceInstanceDetails(ctx *gin.Con
 	serviceType := ctx.Param("servicetype")
 	serviceName := ctx.Param("servicename")
 
-	log.Trace(ServiceLogPrefix + "Going to create a user context.")
+	logger.RTrace("Going to create a user context")
 	userCtx := controller.Core.CrateUserContext(userInfos)
-	log.Trace(ServiceLogPrefix + "Get service of type " + serviceType + " with name " + serviceName + ".")
+	logger.RTrace("Get service of type " + serviceType + " with name " + serviceName)
 	servicePtr, err := userCtx.GetService(serviceType, serviceName)
 
 	if err != nil {
@@ -260,24 +258,25 @@ func (controller ServiceController) HandleGetServiceInstanceDetails(ctx *gin.Con
 	serviceDto.ActionGroups = serviceActionGroupToDto(servicePtr)
 	instanceDetailsOverview.Instances = append(instanceDetailsOverview.Instances, serviceDto)
 
-	log.Trace(ServiceLogPrefix + "Service could be found")
+	logger.RTrace("Service could be found")
 	ctx.JSON(http.StatusOK, instanceDetailsOverview)
 }
 
 func serviceActionGroupToDto(servicePtr *service.IService) []dtos.ServiceInstanceActionGroupDto {
-	log.Trace(ServiceLogPrefix + "Converting service action groups to dtos.")
+	logger.RTrace("Converting service action groups to dtos")
 	actionGroups := []dtos.ServiceInstanceActionGroupDto{}
 	service := *servicePtr
 
 	for _, group := range service.GetActionGroups() {
-		log.Trace(ServiceLogPrefix + "Found group with name " + group.GetName() + ".")
+		logger.RTrace("Found group with name " + group.GetName())
 
 		groupDto := dtos.ServiceInstanceActionGroupDto{Actions: []dtos.ServiceInstanceActionDto{}}
 		groupDto.GroupName = group.GetName()
 
 		for _, action := range group.GetActions() {
-			log.Trace(ServiceLogPrefix + "Found action with name " + action.GetName() +
-				" in group with name " + group.GetName() + ".")
+			logger.RTrace("Found action with name " + action.GetName() +
+				" in group with name " + group.GetName() + " for " + service.GetType() +
+				" service with name " + service.GetName())
 
 			jsonPlaceholder, _ := json.Marshal(action.GetJsonForm())
 
@@ -298,7 +297,7 @@ func serviceActionGroupToDto(servicePtr *service.IService) []dtos.ServiceInstanc
 }
 
 func serviceStatusToString(status int) string {
-	log.Trace(ServiceLogPrefix + "Parsing numeric error to string.")
+	logger.RTrace("Parsing numeric status code to string status")
 
 	switch status {
 	case service.ServiceStatusError:
@@ -331,7 +330,7 @@ func serviceStatusToString(status int) string {
 //
 // @Router /services/info [get]
 func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstances(ctx *gin.Context) {
-	log.Trace(ServiceLogPrefix + "Received get request to get details for all service instances.")
+	logger.RTrace("Received get request to get details for all service instances")
 
 	//Return single instance
 	instanceDetailsOverview := dtos.ServiceInstanceDetailsOverviewDto{
@@ -341,7 +340,7 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 	user, password, _ := ctx.Request.BasicAuth()
 	userInfos := controller.UserManagement.GetUserInformation(user, password)
 
-	log.Trace(ServiceLogPrefix + "Going to create a user context.")
+	logger.RTrace("Going to create a user context")
 	userCtx := controller.Core.CrateUserContext(userInfos)
 	services, err := userCtx.GetServices()
 	if err != nil {
@@ -351,8 +350,8 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 
 	for _, servicePtr := range services {
 		service := *servicePtr
-		log.Trace(ServiceLogPrefix + "Found service with name " + service.GetName() +
-			" of type " + service.GetType() + ".")
+		logger.RTrace("Found service with name " + service.GetName() +
+			" of type " + service.GetType())
 
 		serviceDto := dtos.ServiceInstanceDetailsDto{}
 		serviceDto.Status = serviceStatusToString(service.GetStatus())
@@ -386,7 +385,7 @@ func (controller ServiceController) HandleGetServiceInstanceDetailsForAllInstanc
 //
 // @Router /services/yaml/{servicetype}/{servicename} [get]
 func (controller ServiceController) HandleGetServiceInstanceYaml(ctx *gin.Context) {
-	log.Trace(ServiceLogPrefix + "Received get request to get yaml of a service")
+	logger.RTrace("Received get request to get yaml of a service")
 
 	servicename := ctx.Param("servicename")
 	servicetype := ctx.Param("servicetype")
@@ -394,17 +393,17 @@ func (controller ServiceController) HandleGetServiceInstanceYaml(ctx *gin.Contex
 	user, password, _ := ctx.Request.BasicAuth()
 	userInfos := controller.UserManagement.GetUserInformation(user, password)
 
-	log.Trace(ServiceLogPrefix + "Going to create a user context.")
+	logger.RTrace("Going to create a user context")
 	userCtx := controller.Core.CrateUserContext(userInfos)
 
-	log.Trace(ServiceLogPrefix + "Get service with name " + servicename + " of type " + servicetype)
+	logger.RTrace("Get service with name " + servicename + " of type " + servicetype)
 	service, err := userCtx.GetService(servicetype, servicename)
 	if err != nil {
 		utils.NewError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	log.Trace(ServiceLogPrefix + "Service found. Getting yaml from it.")
+	logger.RTrace("Service found. Getting yaml from it")
 	yamlData := dtos.ServiceYamlDto{
 		Yaml: (*service).GetYamlTemplate(),
 	}
