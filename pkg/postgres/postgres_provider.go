@@ -4,17 +4,21 @@ import (
 	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/kubernetes"
+	"OperatorAutomation/pkg/kubernetes/yaml_types"
 	common2 "OperatorAutomation/pkg/postgres/common"
 	"OperatorAutomation/pkg/postgres/dtos"
 	"OperatorAutomation/pkg/utils"
 	"OperatorAutomation/pkg/utils/provider"
 	"encoding/json"
 	v1 "github.com/Crunchydata/postgres-operator/pkg/apis/crunchydata.com/v1"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"path"
 	"strconv"
 	"strings"
 )
+
+const PostgresProviderLogPrefix = "File: postgres_provider.go: "
 
 // Implements IServiceProvider interface
 // Use factory method CreatePostgresProvider to create
@@ -29,6 +33,9 @@ func CreatePostgresProvider(
 	caPath string,
 	templateDirectoryPath string,
 	nginxInformation kubernetes.NginxInformation) PostgresProvider {
+
+	log.Info(PostgresProviderLogPrefix + "Creating new postgres provider.")
+
 	return PostgresProvider{
 		nginxInformation: nginxInformation,
 		BasicProvider: provider.CreateCommonProvider(
@@ -43,9 +50,12 @@ func CreatePostgresProvider(
 }
 
 func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformation, jsonFormResult []byte) (interface{}, error) {
+	log.Trace(PostgresProviderLogPrefix + "Going to convert received form data to yaml.")
+
 	form := dtos.FormResponseDto{}
 	err := json.Unmarshal(jsonFormResult, &form)
 	if err != nil {
+		log.Error(PostgresProviderLogPrefix + "Could not unmarshal received form to generate the yaml.")
 		return nil, err
 	}
 
@@ -53,6 +63,7 @@ func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformatio
 	yamlTemplate := dtos.ProviderYamlTemplateDto{}
 	err = yaml.Unmarshal([]byte(pg.YamlTemplate), &yamlTemplate)
 	if err != nil {
+		log.Error(PostgresProviderLogPrefix + "Could not unmarshal the default postgres yaml template.")
 		return nil, err
 	}
 
@@ -78,6 +89,57 @@ func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformatio
 	yamlTemplate.Spec.BackrestStorage.Size = yamlTemplate.Spec.PrimaryStorage.Size
 	yamlTemplate.Spec.ReplicaStorage.Size = yamlTemplate.Spec.PrimaryStorage.Size
 
+	// Check if tls should be used
+	if form.TLS.UseTLS {
+		log.Trace(PostgresProviderLogPrefix + "Tls is requested during yaml conversion")
+
+		if form.TLS.TLSMode == "TlsFromFile" {
+			log.Trace(PostgresProviderLogPrefix + "Use tls mode from file. Going to construct secrets.")
+
+			// Construct secrets accordingly to
+			// https://access.crunchydata.com/documentation/postgres-operator/4.6.1/tutorial/tls/
+			caSecret := &yaml_types.YamlCaSecret{
+				Metadata: yaml_types.Metadata{
+					Name: form.Common.ClusterName + "-ca",
+					Namespace: auth.GetKubernetesNamespace(),
+				},
+				Kind: "Secret",
+				APIVersion: "v1",
+				Data: yaml_types.CaData{
+					CaCrtBase64: form.TLS.TLSModeFromFile.CaCertBase64,
+				},
+				Type: "Opaque",
+			}
+
+			tlsSecret :=  &yaml_types.YamlTlsSecret{
+				Metadata: yaml_types.Metadata{
+					Name: form.Common.ClusterName + "-tls-keypair",
+					Namespace: auth.GetKubernetesNamespace(),
+				},
+				Kind: "Secret",
+				APIVersion: "v1",
+				Data: yaml_types.TlsData{
+					TLSCrtBase64: form.TLS.TLSModeFromFile.TlsCertificateBase64,
+					TLSKeyBase64: form.TLS.TLSModeFromFile.TlsPrivateKeyBase64,
+				},
+				Type: "Opaque",
+			}
+
+			yamlTemplate.Spec.Tls.CaSecret = caSecret.Metadata.Name
+			yamlTemplate.Spec.Tls.TlsSecret = tlsSecret.Metadata.Name
+
+			log.Trace(PostgresProviderLogPrefix + "Form to yaml conversion done")
+			return []interface{}{caSecret, tlsSecret, yamlTemplate}, nil
+
+		} else if form.TLS.TLSMode == "TlsFromSecret" {
+			// Use existing secret
+			yamlTemplate.Spec.Tls.CaSecret = form.TLS.TLSModeFromSecret.CaSecret
+			yamlTemplate.Spec.Tls.TlsSecret = form.TLS.TLSModeFromSecret.TLSSecret
+		}
+
+	}
+
+	log.Trace(PostgresProviderLogPrefix + "Form to yaml conversion done")
 	return yamlTemplate, nil
 }
 
@@ -144,7 +206,7 @@ func (pg PostgresProvider) CreateService(auth common.IKubernetesAuthInformation,
 		return err
 	}
 
-	_, err = api.Apply([]byte(yaml))
+	err = api.Apply([]byte(yaml))
 	if err != nil {
 		return err
 	}

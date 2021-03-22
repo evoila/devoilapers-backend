@@ -20,9 +20,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
+	log "github.com/sirupsen/logrus"
 )
 
+const K8sUtilLogPrefix = "File: k8sUtil.go: "
+
 func GetClientSet(Config *rest.Config) (*kubernetes.Clientset, dynamic.Interface, error) {
+	log.Trace(K8sUtilLogPrefix + "Get kubernetes clientset from rest config.")
+
 	if clientSet, err := kubernetes.NewForConfig(Config); err != nil {
 		return nil, nil, err
 	} else {
@@ -34,37 +39,48 @@ func GetClientSet(Config *rest.Config) (*kubernetes.Clientset, dynamic.Interface
 	}
 }
 
-func (api *K8sApi) Apply(b []byte) (*unstructured.Unstructured, error) {
-	decoder := yamlutil.NewYAMLOrJSONDecoder(bytes.NewReader(b), 100)
+func (api *K8sApi) Apply(b []byte) error {
+	decoder := yamlutil.NewYAMLOrJSONDecoder(bytes.NewReader(b), 256)
+
+	// Loop to allow multi document yaml
 	for {
+		log.Trace(K8sUtilLogPrefix + "Begin parsing to apply yaml in cluster")
+
 		var rawObj runtime.RawExtension
 		if err := decoder.Decode(&rawObj); err != nil {
-			return nil, err
+			// Multi document yaml has finished
+			if err.Error() == "EOF" {
+				log.Trace(K8sUtilLogPrefix + "End of yaml reached")
+				return nil
+			}
+
+			log.Error(K8sUtilLogPrefix + "Yaml decoder produced an error", err)
+			return err
 		}
 
 		obj, gvk, err := yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme).Decode(rawObj.Raw, nil, nil)
 		if obj == nil {
-			return nil, err
+			return err
 		}
 		unstructuredMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 		if err != nil {
 			logrus.Error(err)
-			return nil, err
+			return  err
 		}
 
 		unstructuredObj := &unstructured.Unstructured{Object: unstructuredMap}
 
 		gr, err := restmapper.GetAPIGroupResources(api.ClientSet.Discovery())
 		if err != nil {
-			logrus.Error(err)
-			return nil, err
+			log.Error(K8sUtilLogPrefix + "Could not resolve api group resources.", err)
+			return err
 		}
 
 		mapper := restmapper.NewDiscoveryRESTMapper(gr)
 		mapping, err := mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 		if err != nil {
-			logrus.Error("k8sUtil 1", err)
-			return nil, err
+			log.Error(K8sUtilLogPrefix + "Could not identify a preferred resource mapping.", err)
+			return err
 		}
 
 		var dri dynamic.ResourceInterface
@@ -79,18 +95,16 @@ func (api *K8sApi) Apply(b []byte) (*unstructured.Unstructured, error) {
 
 		data, _ := json.Marshal(obj)
 		force := true
-		unstructured, err := dri.Patch(context.Background(), unstructuredObj.GetName(),
+		_, err = dri.Patch(context.Background(), unstructuredObj.GetName(),
 			types.ApplyPatchType, data, metav1.PatchOptions{
 				FieldManager: "field-manager",
 				Force:        &force,
 			})
-		if err != nil {
-			logrus.Error("k8sUtil 2", err)
-		} else {
-			logrus.Info((unstructured.Object["spec"].(map[string]interface{}))["version"])
-		}
-		return unstructured, err
 
+		if err != nil {
+			log.Error(K8sUtilLogPrefix + "Could not apply patch.", err)
+			return err
+		}
 	}
 }
 

@@ -15,6 +15,11 @@ type FormResponseDto struct {
 			CaSecret  string `json:"caSecret"`
 			TLSSecret string `json:"tlsSecret"`
 		} `json:"tlsModeFromSecret"`
+		TLSModeFromFile struct {
+			TlsPrivateKeyBase64  string `json:"tlsPrivateKey"`
+			TlsCertificateBase64 string `json:"tlsCertificate"`
+			CaCertBase64 string `json:"caCert"`
+		} `json:"tlsModeFromFile"`
 	} `json:"tls"`
 	Backup struct {
 		PerformBackup bool `json:"performBackup"`

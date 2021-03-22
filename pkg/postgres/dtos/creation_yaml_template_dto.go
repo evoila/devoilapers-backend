@@ -71,8 +71,13 @@ type ProviderYamlTemplateDto struct {
 		} `yaml:"podAntiAffinity"`
 		Port        string        `yaml:"port"`
 		Tolerations []interface{} `yaml:"tolerations"`
-		User        string        `yaml:"user"`
-		Userlabels  struct {
+		Tls         struct {
+			CaSecret  string `yaml:"caSecret,omitempty"`
+			TlsSecret string `yaml:"tlsSecret,omitempty"`
+		} `yaml:"tls,omitempty"`
+		TlsOnly    bool   `yaml:"tlsOnly,omitempty"`
+		User       string `yaml:"user"`
+		Userlabels struct {
 			PgoVersion string `yaml:"pgo-version"`
 		} `yaml:"userlabels"`
 	} `yaml:"spec"`
