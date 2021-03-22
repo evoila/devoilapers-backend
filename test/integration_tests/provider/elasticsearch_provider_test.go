@@ -191,7 +191,7 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 
 	// Just for local testing: set host to defined host in proxy file
 	service4 := service3.(elasticsearch.ElasticSearchService)
-	service4.Host = "ganmo.com"
+	service4.Host = "k8s.sep.evoila.digital"
 
 	// Get expose ation
 	action1 := getAction(service4, "Expose", "cmd_expose_action")
