@@ -4,6 +4,7 @@ import (
 	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
+	"OperatorAutomation/pkg/utils/logger"
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
 	"encoding/json"
 	"github.com/sirupsen/logrus"
@@ -22,8 +23,30 @@ func CommonProviderStart(t *testing.T, providerPtr *provider.IServiceProvider, u
 
 	yamlObj, err := provider.GetYamlTemplate(user, filledFormBytes)
 
-	yamlBytes, err := yaml.Marshal(yamlObj)
-	assert.Nil(t, err)
+	var yamlBytes []byte
+	switch concreteObject := yamlObj.(type) {
+	case []interface{}:
+		logger.RTrace("Yaml contains multiple documents. Going to marshal it separatly")
+
+		for _, innerInterface := range concreteObject {
+			// Append yaml separator
+			if len(yamlBytes) > 0 {
+				yamlBytes = append(yamlBytes, []byte("---\n")...)
+			}
+
+			// Convert interface to yaml
+			yamlSectionBytes, err := yaml.Marshal(innerInterface)
+			assert.Nil(t, err)
+
+			// Append to the yaml
+			yamlBytes = append(yamlBytes, yamlSectionBytes...)
+		}
+	default:
+		logger.RTrace("Yaml does not contain multiple documents. Going to marshal the whole interface")
+		yamlBytes, err = yaml.Marshal(yamlObj)
+		assert.Nil(t, err)
+	}
+
 	yaml := string(yamlBytes)
 	assert.True(t, len(yaml) > 10)
 

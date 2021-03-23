@@ -156,7 +156,7 @@ func (pg PostgresProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (
 	}
 
 	// Set a default name
-	formsQuery.Properties.Common.Properties.ClusterName.Default = utils.GetRandomKubernetesResourceName()
+	formsQuery.Properties.Common.Properties.ClusterName.Default = utils.GetRandomKubernetesResourceName("pg")
 
 	return formsQuery, nil
 }

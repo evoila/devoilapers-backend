@@ -9,10 +9,6 @@ import (
 
 // Error log with line information
 func RError(err error, msg ...interface{}) {
-	if !logrus.IsLevelEnabled(logrus.ErrorLevel) {
-		return
-	}
-
 	if pc, file, line, ok := runtime.Caller(1); ok {
 		file = file[strings.LastIndex(file, "/")+1:]
 		funcName := runtime.FuncForPC(pc).Name()

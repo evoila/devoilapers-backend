@@ -90,7 +90,7 @@ func (kb KibanaProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (in
 	}
 
 	// Set a default name
-	formsQuery.Properties.Common.Properties.ClusterName.Default = utils.GetRandomKubernetesResourceName()
+	formsQuery.Properties.Common.Properties.ClusterName.Default = utils.GetRandomKubernetesResourceName("kb")
 
 	// Append elastic search instances as choosable reference
 	for _, esServicePtr := range esServices {

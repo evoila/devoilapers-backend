@@ -54,17 +54,17 @@ func (api *K8sApi) Apply(b []byte) ([]*unstructured.Unstructured, error) {
 			}
 
 			logger.RError(err,"Yaml decoder produced an error")
-			return result, nil
+			return result, err
 		}
 
 		obj, gvk, err := yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme).Decode(rawObj.Raw, nil, nil)
 		if obj == nil {
-			return result, nil
+			return result, err
 		}
 		unstructuredMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 		if err != nil {
 			logrus.Error(err)
-			return  result, nil
+			return  result, err
 		}
 
 		unstructuredObj := &unstructured.Unstructured{Object: unstructuredMap}
@@ -72,14 +72,14 @@ func (api *K8sApi) Apply(b []byte) ([]*unstructured.Unstructured, error) {
 		gr, err := restmapper.GetAPIGroupResources(api.ClientSet.Discovery())
 		if err != nil {
 			logger.RError(err,"Could not resolve api group resources.")
-			return result, nil
+			return result, err
 		}
 
 		mapper := restmapper.NewDiscoveryRESTMapper(gr)
 		mapping, err := mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 		if err != nil {
 			logger.RError(err,"Could not identify a preferred resource mapping.")
-			return result, nil
+			return result, err
 		}
 
 		var dri dynamic.ResourceInterface
@@ -102,7 +102,7 @@ func (api *K8sApi) Apply(b []byte) ([]*unstructured.Unstructured, error) {
 
 		if err != nil {
 			logger.RError(err, "Could not apply patch.")
-			return result, nil
+			return result, err
 		}
 
 		result = append(result, patchResult)
@@ -144,6 +144,35 @@ func (api *K8sApi) CreateTlsSecret(namespace, ownerName, kind, apiVersion, uid s
 	if _, err := api.ClientSet.CoreV1().Secrets(namespace).Create(context.TODO(), secret, metav1.CreateOptions{}); err != nil {
 		return "", err
 	}
+	return secretName, nil
+}
+
+// create a new tls certificate associated with the provided CRD info
+// tlsCert must contain ca.crt, tls.crt and tls.key
+func (api *K8sApi) CreateTlsSecretWithoutOwner(secretName string, namespace string, tlsCert map[string][]byte) (string, error) {
+	_ = api.ClientSet.CoreV1().Secrets(namespace).Delete(context.TODO(), secretName, metav1.DeleteOptions{})
+
+	secret := &v1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: namespace,
+		},
+		Data: map[string][]byte{
+			"ca.crt":  tlsCert["ca.crt"],
+			"tls.crt": tlsCert["tls.crt"],
+			"tls.key": tlsCert["tls.key"],
+		},
+		Type: "Opaque",
+	}
+
+	if _, err := api.ClientSet.CoreV1().Secrets(namespace).Create(context.TODO(), secret, metav1.CreateOptions{}); err != nil {
+		return "", err
+	}
+
 	return secretName, nil
 }
 
