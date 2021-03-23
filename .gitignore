@@ -35,3 +35,4 @@ cmd/service/service
 configs/appconfig.json
 configs/appconfig_local.json
 configs/appconfig_remote.json
+configs/appconfig_docker.json

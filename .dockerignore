@@ -1,0 +1,5 @@
+.git
+Dockerfile
+scripts/*
+README.md
+configs/*
