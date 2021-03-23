@@ -141,7 +141,7 @@ func Test_Postgres_Provider_End2End_Tls_From_File(t *testing.T) {
 
 	// Tls from file
 	filledForm.TLS.UseTLS = true
-	filledForm.Common.ClusterName = "pg-test-cluster"
+	filledForm.Common.ClusterName = "pg-test1-cluster"
 	filledForm.TLS.TLSMode = "TlsFromFile"
 	filledForm.TLS.TLSModeFromFile.CaCertBase64 = testCaBase64
 	filledForm.TLS.TLSModeFromFile.TlsCertificateBase64 = testTlsCertBase64
@@ -154,11 +154,6 @@ func Test_Postgres_Provider_End2End_Tls_From_Secret(t *testing.T) {
 	pgProviderPtr, config := CreatePostgresTestProvider(t)
 	user := config.Users[0]
 
-	filledForm := dtos.FormResponseDto{}
-	filledForm.Common.InClusterPort = 5432
-	filledForm.Common.Username = "testuser"
-	filledForm.Common.ClusterStorageSize = 1
-
 	api, err := kubernetes.GenerateK8sApiFromToken(config.Kubernetes.Server, config.Kubernetes.CertificateAuthority, user.GetKubernetesAccessToken())
 	assert.Nil(t, err)
 
@@ -166,7 +161,7 @@ func Test_Postgres_Provider_End2End_Tls_From_Secret(t *testing.T) {
 	assert.Nil(t, err)
 
 	_, err = api.CreateTlsSecretWithoutOwner(
-		"pg-test-cluster-ca",
+		"pg-test2-cluster-ca",
 		user.GetKubernetesNamespace(),
 		map[string][]byte{
 			"ca.crt":  caCrt,
@@ -182,7 +177,7 @@ func Test_Postgres_Provider_End2End_Tls_From_Secret(t *testing.T) {
 	assert.Nil(t, err)
 
 	_, err = api.CreateTlsSecretWithoutOwner(
-		"pg-test-cluster-tls-keypair",
+		"pg-test2-cluster-tls-keypair",
 		user.GetKubernetesNamespace(),
 		map[string][]byte{
 			"tls.crt": tlsCrt,
@@ -191,20 +186,26 @@ func Test_Postgres_Provider_End2End_Tls_From_Secret(t *testing.T) {
 	)
 	assert.Nil(t, err)
 
+	time.Sleep(20 * time.Second)
 
 	// Tls fromm secret
-	filledForm.Common.ClusterName = "pg-test-cluster"
+	filledForm := dtos.FormResponseDto{}
+	filledForm.Common.InClusterPort = 5432
+	filledForm.Common.Username = "testuser"
+	filledForm.Common.ClusterStorageSize = 1
+	filledForm.Common.ClusterName = "pg-test2-cluster"
+
 	filledForm.TLS.UseTLS = true
 	filledForm.TLS.TLSMode = "TlsFromSecret"
-	filledForm.TLS.TLSModeFromSecret.TLSSecret = "pg-test-cluster-tls-keypair"
-	filledForm.TLS.TLSModeFromSecret.CaSecret = "pg-test-cluster-ca"
+	filledForm.TLS.TLSModeFromSecret.TLSSecret = "pg-test2-cluster-tls-keypair"
+	filledForm.TLS.TLSModeFromSecret.CaSecret = "pg-test2-cluster-ca"
 
 	Postgres_Provider_End2End(t, pgProviderPtr, user, filledForm)
 
-	err = api.DeleteSecret(user.GetKubernetesNamespace(), "pg-test-cluster-ca")
+	err = api.DeleteSecret(user.GetKubernetesNamespace(), "pg-test2-cluster-ca")
 	assert.Nil(t, err)
 
-	err = api.DeleteSecret(user.GetKubernetesNamespace(), "pg-test-cluster-tls-keypair")
+	err = api.DeleteSecret(user.GetKubernetesNamespace(), "pg-test2-cluster-tls-keypair")
 	assert.Nil(t, err)
 }
 
@@ -213,7 +214,7 @@ func Test_Postgres_Provider_End2End_NoTls(t *testing.T) {
 	user := config.Users[0]
 
 	filledForm := dtos.FormResponseDto{}
-	filledForm.Common.ClusterName = "pg-test-cluster-no-tls"
+	filledForm.Common.ClusterName = "pg-test3-cluster"
 	filledForm.Common.InClusterPort = 5432
 	filledForm.Common.Username = "testuser"
 	filledForm.Common.ClusterStorageSize = 1

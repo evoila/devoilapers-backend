@@ -96,7 +96,7 @@ func getService(pg *pgCommon.PostgresServiceInformations, api *kubernetes.K8sApi
 		}
 	}
 
-	return nil, errors.New("Kubernetes service with matching name and port for postgres cluster could not be found.")
+	return nil, errors.New("kubernetes service with matching name and port for postgres cluster could not be found")
 }
 
 // Reverts the expose action by removing the port

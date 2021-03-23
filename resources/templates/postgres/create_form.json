@@ -18,7 +18,7 @@
           "widget": {
             "id": "string"
           },
-          "default": "Maintainer"
+          "default": "maintainer"
         },
         "inClusterPort": {
           "type": "number",

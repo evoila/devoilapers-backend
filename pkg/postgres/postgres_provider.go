@@ -309,7 +309,9 @@ func (pg PostgresProvider) DeleteService(auth common.IKubernetesAuthInformation,
 
 	// Revoke the exposure if there is an exposure
 	err = actions.Hide(&serviceToDelete.PostgresServiceInformations)
-	if err != nil && err.Error() != "service is not exposed" {
+	if err != nil &&
+		err.Error() != "service is not exposed" &&
+		err.Error() != "kubernetes service with matching name and port for postgres cluster could not be found"	{
 		logger.RError(err, "Service could not be deleted because the service is exposed and could not be revoked")
 		return err
 	}
