@@ -161,11 +161,7 @@ func (api *K8sApi) CreateTlsSecretWithoutOwner(secretName string, namespace stri
 			Name:      secretName,
 			Namespace: namespace,
 		},
-		Data: map[string][]byte{
-			"ca.crt":  tlsCert["ca.crt"],
-			"tls.crt": tlsCert["tls.crt"],
-			"tls.key": tlsCert["tls.key"],
-		},
+		Data: tlsCert,
 		Type: "Opaque",
 	}
 
