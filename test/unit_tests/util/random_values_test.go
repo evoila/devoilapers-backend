@@ -12,7 +12,7 @@ func Test_RandomValues(t *testing.T) {
 	rand.Seed(42)
 	knownValues := map[string]bool{}
 
-	for i := 0; i < 200; i++ {
+	for i := 0; i < 42; i++ {
 		randomName := utils.GetRandomKubernetesResourceName("test")
 		_, exists := knownValues[randomName]
 
