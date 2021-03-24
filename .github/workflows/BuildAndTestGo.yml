@@ -72,7 +72,7 @@ jobs:
           mv ca.crt ../configs/kubernetes_ca.crt
 
           echo Export pgo ca
-          echo $GH_PGO_CA_CERT | base64 -d > pgo_ca.cer
+          echo $GH_PGO_CA_CERT | base64 -di > pgo_ca.cer
           mv pgo_ca.cer ../configs/pgo_ca.cer
 
           export GH_KUBERNETES_HOST=`cat host`
