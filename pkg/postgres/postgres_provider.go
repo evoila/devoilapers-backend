@@ -4,13 +4,20 @@ import (
 	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/kubernetes"
+	"OperatorAutomation/pkg/kubernetes/yaml_types"
+	"OperatorAutomation/pkg/postgres/actions"
 	common2 "OperatorAutomation/pkg/postgres/common"
 	"OperatorAutomation/pkg/postgres/dtos"
 	"OperatorAutomation/pkg/utils"
+	"OperatorAutomation/pkg/utils/logger"
 	"OperatorAutomation/pkg/utils/provider"
+	"context"
 	"encoding/json"
+	"fmt"
 	v1 "github.com/Crunchydata/postgres-operator/pkg/apis/crunchydata.com/v1"
 	"gopkg.in/yaml.v2"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"path"
 	"strconv"
 	"strings"
@@ -29,6 +36,9 @@ func CreatePostgresProvider(
 	caPath string,
 	templateDirectoryPath string,
 	nginxInformation kubernetes.NginxInformation) PostgresProvider {
+
+	logger.RTrace("Creating new postgres provider")
+
 	return PostgresProvider{
 		nginxInformation: nginxInformation,
 		BasicProvider: provider.CreateCommonProvider(
@@ -43,9 +53,12 @@ func CreatePostgresProvider(
 }
 
 func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformation, jsonFormResult []byte) (interface{}, error) {
+	logger.RTrace("Going to convert received form data to yaml")
+
 	form := dtos.FormResponseDto{}
 	err := json.Unmarshal(jsonFormResult, &form)
 	if err != nil {
+		logger.RError(err, "Could not unmarshal received form to generate the yaml")
 		return nil, err
 	}
 
@@ -53,6 +66,7 @@ func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformatio
 	yamlTemplate := dtos.ProviderYamlTemplateDto{}
 	err = yaml.Unmarshal([]byte(pg.YamlTemplate), &yamlTemplate)
 	if err != nil {
+		logger.RError(err, "Could not unmarshal the default postgres yaml template")
 		return nil, err
 	}
 
@@ -78,6 +92,57 @@ func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformatio
 	yamlTemplate.Spec.BackrestStorage.Size = yamlTemplate.Spec.PrimaryStorage.Size
 	yamlTemplate.Spec.ReplicaStorage.Size = yamlTemplate.Spec.PrimaryStorage.Size
 
+	// Check if tls should be used
+	if form.TLS.UseTLS {
+		logger.RTrace("Tls is requested during yaml conversion")
+
+		if form.TLS.TLSMode == "TlsFromFile" {
+			logger.RTrace("Use tls mode from file. Going to construct secrets")
+
+			// Construct secrets accordingly to
+			// https://access.crunchydata.com/documentation/postgres-operator/4.6.1/tutorial/tls/
+			caSecret := &yaml_types.YamlCaSecret{
+				Metadata: yaml_types.Metadata{
+					Name:      form.Common.ClusterName + "-ca",
+					Namespace: auth.GetKubernetesNamespace(),
+				},
+				Kind:       "Secret",
+				APIVersion: "v1",
+				Data: yaml_types.CaData{
+					CaCrtBase64: form.TLS.TLSModeFromFile.CaCertBase64,
+				},
+				Type: "Opaque",
+			}
+
+			tlsSecret := &yaml_types.YamlTlsSecret{
+				Metadata: yaml_types.Metadata{
+					Name:      form.Common.ClusterName + "-tls-keypair",
+					Namespace: auth.GetKubernetesNamespace(),
+				},
+				Kind:       "Secret",
+				APIVersion: "v1",
+				Data: yaml_types.TlsData{
+					TLSCrtBase64: form.TLS.TLSModeFromFile.TlsCertificateBase64,
+					TLSKeyBase64: form.TLS.TLSModeFromFile.TlsPrivateKeyBase64,
+				},
+				Type: "Opaque",
+			}
+
+			yamlTemplate.Spec.Tls.CaSecret = caSecret.Metadata.Name
+			yamlTemplate.Spec.Tls.TlsSecret = tlsSecret.Metadata.Name
+
+			logger.RTrace("Form to yaml conversion done")
+			return []interface{}{caSecret, tlsSecret, yamlTemplate}, nil
+
+		} else if form.TLS.TLSMode == "TlsFromSecret" {
+			logger.RTrace("Use tls mode from secret. Going to construct secrets")
+			// Use existing secret
+			yamlTemplate.Spec.Tls.CaSecret = form.TLS.TLSModeFromSecret.CaSecret
+			yamlTemplate.Spec.Tls.TlsSecret = form.TLS.TLSModeFromSecret.TLSSecret
+		}
+	}
+
+	logger.RTrace("Form to yaml conversion done")
 	return yamlTemplate, nil
 }
 
@@ -91,7 +156,7 @@ func (pg PostgresProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (
 	}
 
 	// Set a default name
-	formsQuery.Properties.Common.Properties.ClusterName.Default = utils.GetRandomKubernetesResourceName()
+	formsQuery.Properties.Common.Properties.ClusterName.Default = utils.GetRandomKubernetesResourceName("pg")
 
 	return formsQuery, nil
 }
@@ -139,26 +204,119 @@ func (pg PostgresProvider) GetService(auth common.IKubernetesAuthInformation, id
 }
 
 func (pg PostgresProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
+	logger.RInfo("Create new postgres service by yaml")
+
 	api, err := kubernetes.GenerateK8sApiFromToken(pg.Host, pg.CaPath, auth.GetKubernetesAccessToken())
 	if err != nil {
+		logger.RError(err, "Could not generate kubernetes api from token")
 		return err
 	}
 
-	_, err = api.Apply([]byte(yaml))
+	// Create the objects
+	createdObjects, err := api.Apply([]byte(yaml))
 	if err != nil {
+		logger.RError(err, "Could not apply the yaml")
 		return err
 	}
 
+
+	// Since we may have created secrets we have to concat the ownership of the new cluster with
+	// the new secrets to ensure that they get deleted if the cluster is deleted.
+	// Unfortunately we can not enforce uids, therefore we have to create the objects
+	// first and add the ownership later on.
+
+	newClusterName := "";
+	newClusterUid := "";
+	var newSecretNames []string
+
+	// Loop the new created objects
+	for _, createdObject := range createdObjects {
+		// Identify the cluster and export the necessary informations
+		if createdObject.Object["kind"].(string) == "Pgcluster" {
+			metadata := createdObject.Object["metadata"].(map[string]interface{})
+			newClusterName = metadata["name"].(string)
+			newClusterUid = metadata["uid"].(string)
+
+			logger.RTrace("Identified new cluster " + newClusterName)
+		}
+
+		// Identify the secrets and export all
+		if createdObject.Object["kind"].(string) == "Secret" {
+			metadata := createdObject.Object["metadata"].(map[string]interface{})
+			newSecretName := metadata["name"].(string)
+			newSecretNames = append(newSecretNames, newSecretName)
+
+			logger.RTrace("Identified new secret " + newSecretName)
+		}
+	}
+
+	// Construct a patch for the secrets based on the name and the uid that we extracted bevorhead
+	logger.RTrace("Preparing ownership patch on new secrets")
+	patch := fmt.Sprintf(`
+			{
+			  "metadata": {
+				"ownerReferences": [
+				  {
+					"apiVersion": "crunchydata.com/v1",
+					"controller": true,
+					"blockOwnerDeletion": true,
+					"kind": "Pgcluster",
+					"name": "%s",
+					"uid": "%s"
+				  }
+				]
+			  }
+			}
+	`, newClusterName, newClusterUid)
+
+	// Loop every secret to patch it with the owner reference from above.
+	for _, secretName := range newSecretNames {
+		logger.RInfo("Apply ownership of cluster " + newClusterName+ " to secret " + secretName)
+
+		// Patch the secret with the owner reference
+		_, err = api.ClientSet.CoreV1().Secrets(auth.GetKubernetesNamespace()).Patch(
+			context.TODO(),
+			secretName,
+			types.StrategicMergePatchType,
+			[]byte(patch),
+			metav1.PatchOptions{})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	logger.RInfo("Postgres service created")
 	return nil
 }
 
 func (pg PostgresProvider) DeleteService(auth common.IKubernetesAuthInformation, id string) error {
+	logger.RInfo("Delete postgres service with id " + id)
+
 	postgresCrd, err := pg.createCrdApi(auth)
 	if err != nil {
+		logger.RError(err, "Service could not be deleted because the crd api could not be created")
 		return err
 	}
 
-	//TODO: Check if there is an associated ingress
+	// Find service which should be deleted
+	serviceToDeletePtr, err := pg.GetService(auth, id)
+	if err != nil {
+		logger.RError(err, "Kubernetes api could not be created")
+		return err
+	}
+	serviceToDelete := (*serviceToDeletePtr).(PostgresService)
+
+	// Revoke the exposure if there is an exposure
+	err = actions.Hide(&serviceToDelete.PostgresServiceInformations)
+	if err != nil &&
+		err.Error() != "service is not exposed" &&
+		err.Error() != "kubernetes service with matching name and port for postgres cluster could not be found"	{
+		logger.RError(err, "Service could not be deleted because the service is exposed and could not be revoked")
+		return err
+	}
+
+	// Finally delete the cluster
 	return postgresCrd.Delete(auth.GetKubernetesNamespace(), id, ResourceName)
 }
 
@@ -171,6 +329,7 @@ func (pg PostgresProvider) CrdInstanceToServiceInstance(
 	yamlData, err := yaml.Marshal(crdInstance)
 	if err != nil {
 		yamlData = []byte("Unknown")
+		logger.RError(err, "Could not marshal the kubernetes service struct")
 	}
 
 	var postgresService service.IService = PostgresService{

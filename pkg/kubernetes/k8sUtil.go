@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"OperatorAutomation/pkg/utils/logger"
 	"bytes"
 	"context"
 
@@ -23,6 +24,8 @@ import (
 )
 
 func GetClientSet(Config *rest.Config) (*kubernetes.Clientset, dynamic.Interface, error) {
+	logger.RTrace("Get kubernetes clientset from rest config.")
+
 	if clientSet, err := kubernetes.NewForConfig(Config); err != nil {
 		return nil, nil, err
 	} else {
@@ -34,37 +37,49 @@ func GetClientSet(Config *rest.Config) (*kubernetes.Clientset, dynamic.Interface
 	}
 }
 
-func (api *K8sApi) Apply(b []byte) (*unstructured.Unstructured, error) {
-	decoder := yamlutil.NewYAMLOrJSONDecoder(bytes.NewReader(b), 100)
+func (api *K8sApi) Apply(b []byte) ([]*unstructured.Unstructured, error) {
+	decoder := yamlutil.NewYAMLOrJSONDecoder(bytes.NewReader(b), 256)
+
+	// Loop to allow multi document yaml
+	result := []*unstructured.Unstructured{}
 	for {
+		logger.RTrace("Begin parsing to apply yaml in cluster")
+
 		var rawObj runtime.RawExtension
 		if err := decoder.Decode(&rawObj); err != nil {
-			return nil, err
+			// Multi document yaml has finished
+			if err.Error() == "EOF" {
+				logger.RTrace("End of yaml reached")
+				return result, nil
+			}
+
+			logger.RError(err,"Yaml decoder produced an error")
+			return result, err
 		}
 
 		obj, gvk, err := yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme).Decode(rawObj.Raw, nil, nil)
 		if obj == nil {
-			return nil, err
+			return result, err
 		}
 		unstructuredMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 		if err != nil {
 			logrus.Error(err)
-			return nil, err
+			return  result, err
 		}
 
 		unstructuredObj := &unstructured.Unstructured{Object: unstructuredMap}
 
 		gr, err := restmapper.GetAPIGroupResources(api.ClientSet.Discovery())
 		if err != nil {
-			logrus.Error(err)
-			return nil, err
+			logger.RError(err,"Could not resolve api group resources.")
+			return result, err
 		}
 
 		mapper := restmapper.NewDiscoveryRESTMapper(gr)
 		mapping, err := mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 		if err != nil {
-			logrus.Error("k8sUtil 1", err)
-			return nil, err
+			logger.RError(err,"Could not identify a preferred resource mapping.")
+			return result, err
 		}
 
 		var dri dynamic.ResourceInterface
@@ -79,18 +94,18 @@ func (api *K8sApi) Apply(b []byte) (*unstructured.Unstructured, error) {
 
 		data, _ := json.Marshal(obj)
 		force := true
-		unstructured, err := dri.Patch(context.Background(), unstructuredObj.GetName(),
+		patchResult, err := dri.Patch(context.Background(), unstructuredObj.GetName(),
 			types.ApplyPatchType, data, metav1.PatchOptions{
 				FieldManager: "field-manager",
 				Force:        &force,
 			})
-		if err != nil {
-			logrus.Error("k8sUtil 2", err)
-		} else {
-			logrus.Info((unstructured.Object["spec"].(map[string]interface{}))["version"])
-		}
-		return unstructured, err
 
+		if err != nil {
+			logger.RError(err, "Could not apply patch.")
+			return result, err
+		}
+
+		result = append(result, patchResult)
 	}
 }
 
@@ -132,7 +147,37 @@ func (api *K8sApi) CreateTlsSecret(namespace, ownerName, kind, apiVersion, uid s
 	return secretName, nil
 }
 
+// create a new tls certificate associated with the provided CRD info
+// tlsCert must contain ca.crt, tls.crt and tls.key
+func (api *K8sApi) CreateTlsSecretWithoutOwner(secretName string, namespace string, tlsCert map[string][]byte) (string, error) {
+	_ = api.ClientSet.CoreV1().Secrets(namespace).Delete(context.TODO(), secretName, metav1.DeleteOptions{})
+
+	secret := &v1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: namespace,
+		},
+		Data: tlsCert,
+		Type: "Opaque",
+	}
+
+	if _, err := api.ClientSet.CoreV1().Secrets(namespace).Create(context.TODO(), secret, metav1.CreateOptions{}); err != nil {
+		return "", err
+	}
+
+	return secretName, nil
+}
+
 // Get a secret based on provided name and namespace
 func (api *K8sApi) GetSecret(namespace, name string) (*v1.Secret, error) {
 	return api.ClientSet.CoreV1().Secrets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+}
+
+// Delete a secret based on provided name and namespace
+func (api *K8sApi) DeleteSecret(namespace, name string) error {
+	return api.ClientSet.CoreV1().Secrets(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
 }

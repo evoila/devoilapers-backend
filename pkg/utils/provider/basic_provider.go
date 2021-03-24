@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 )
 
+// Abstract basic provider to reduce implementation effort
 type BasicProvider struct {
 	FormTemplate string
 	YamlTemplate string

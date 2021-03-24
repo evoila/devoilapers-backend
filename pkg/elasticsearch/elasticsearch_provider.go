@@ -62,7 +62,7 @@ func (es ElasticsearchProvider) GetJsonForm(auth common.IKubernetesAuthInformati
 	}
 
 	// Set a default name
-	formsQuery.Properties.Common.Properties.ClusterName.Default = utils.GetRandomKubernetesResourceName()
+	formsQuery.Properties.Common.Properties.ClusterName.Default = utils.GetRandomKubernetesResourceName("es")
 	return formsQuery, nil
 }
 

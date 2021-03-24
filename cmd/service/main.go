@@ -10,6 +10,7 @@ import (
 	"OperatorAutomation/pkg/kibana"
 	"OperatorAutomation/pkg/kubernetes"
 	"OperatorAutomation/pkg/postgres"
+	"OperatorAutomation/pkg/utils/logger"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"math/rand"
@@ -60,7 +61,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	} else {
-		log.Info("Exit application")
+		logger.RInfo("Exit application")
 	}
 }
 
@@ -69,7 +70,7 @@ func initialize(c *cli.Context, demoMode bool) error {
 	filepath := c.String("configfile")
 	parsedConfig, err := config.LoadConfigurationFromFile(filepath)
 	if err != nil {
-		log.Error("Config file in path could not be found or parsed. Ensure file exists and is valid json")
+		logger.RError(err,"Config file in path could not be found or parsed. Ensure file exists and is valid json")
 		log.Fatal(err)
 		return err
 	}
@@ -80,7 +81,7 @@ func initialize(c *cli.Context, demoMode bool) error {
 	var appCore *core.Core
 
 	if demoMode {
-		log.Info("App launched in demo mode")
+		log.Info("App launched in demo mode.")
 		appCore = InitializeDemoCore(parsedConfig)
 	} else {
 		// Create the core of the app
@@ -88,10 +89,10 @@ func initialize(c *cli.Context, demoMode bool) error {
 	}
 
 	// Start webserver
-	log.Info("Starting the webserver")
+	logger.RInfo("Starting the webserver.")
 	err = webserver.StartWebserver(parsedConfig, appCore)
 	if err != nil {
-		log.Error("Webserver start failed")
+		logger.RError(err,"Webserver start failed.")
 		log.Fatal(err)
 	}
 
@@ -153,7 +154,7 @@ func ApplyGlobalLogConfigurations(rawConfig config.RawConfig) {
 		break
 	default:
 		log.SetLevel(log.DebugLevel)
-		log.Warn("Invalid log level found. Valid values are: trace, debug, warning, error. Fallback to debug level")
+		logger.RWarn("Invalid log level found. Valid values are: trace, debug, warning, error. Fallback to debug level")
 		break
 	}
 }

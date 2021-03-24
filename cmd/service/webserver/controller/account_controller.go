@@ -3,6 +3,7 @@ package controller
 import (
 	"OperatorAutomation/cmd/service/webserver/dtos"
 	"OperatorAutomation/cmd/service/utils"
+	"OperatorAutomation/pkg/utils/logger"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -28,8 +29,9 @@ type AccountController struct {
 //
 // @Router /accounts/login [post]
 func (controller AccountController) HandlePostLogin(ctx *gin.Context) {
-	var accountCredentials dtos.AccountCredentialsDto
+	logger.RTrace("Service found. Getting yaml from it")
 
+	var accountCredentials dtos.AccountCredentialsDto
 	if err := ctx.ShouldBindJSON(&accountCredentials); err != nil {
 		utils.NewError(ctx, http.StatusBadRequest, err)
 		return
