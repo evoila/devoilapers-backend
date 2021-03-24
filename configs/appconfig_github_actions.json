@@ -21,7 +21,7 @@
         "pgo_username": "$GH_PGO_USERNAME",
         "pgo_password": "$GH_PGO_PASSWORD",
         "pgo_version": "4.6.2",
-        "pgo_ca_path": "configs/pgo_ca.crt"
+        "pgo_ca_path": "configs/pgo_ca.cer"
       }
     }
   },

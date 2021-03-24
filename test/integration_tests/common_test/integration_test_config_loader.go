@@ -30,7 +30,7 @@ func tryPathOrJoinWithWorkingDirectory(targetPath string, workingDirectory strin
 		return newPath
 	}
 
-	panic("Path: \"" + targetPath + "\" not found")
+	panic("Path: \"" + targetPath + "\" not found during absolute path conversion")
 }
 
 func loadConfigAndResolveToAbsolutePaths(t *testing.T, pathFromRoot string) opaConfig.RawConfig {
