@@ -85,7 +85,7 @@ func loadConfigAndResolveToAbsolutePaths(t *testing.T, pathFromRoot string) opaC
 	config.Kubernetes.Operators.Postgres.PgoCaPath = tryPathOrJoinWithWorkingDirectory(
 		config.Kubernetes.Operators.Postgres.PgoCaPath,
 		rootDirectoryPath,
-		true,
+		false,
 	)
 
 	return config
