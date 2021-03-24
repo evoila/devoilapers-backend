@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: postgres-operator
+  namespace: pgo
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+    - host: "$PGO_HOST"
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: postgres-operator
+              servicePort: 8553

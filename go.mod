@@ -6,6 +6,7 @@ require (
 	github.com/Crunchydata/postgres-operator v4.5.1+incompatible
 	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+	github.com/crunchydata/postgres-operator v4.5.2+incompatible
 	github.com/elastic/cloud-on-k8s v0.0.0-20210301124940-30bbdff2e9bf
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-contrib/gzip v0.0.3 // indirect
@@ -23,15 +24,16 @@ require (
 	github.com/toorop/gin-logrus v0.0.0-20200831135515-d2ee50d38dae
 	github.com/ugorji/go v1.2.1 // indirect
 	github.com/urfave/cli/v2 v2.3.0
+	github.com/xdg/stringprep v1.0.0 // indirect
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/mod v0.4.0 // indirect
 	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110 // indirect
 	golang.org/x/sys v0.0.0-20210301091718-77cc2087c03b // indirect
 	golang.org/x/tools v0.1.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
-	gopkg.in/go-playground/assert.v1 v1.2.1
+	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	k8s.io/api v0.20.2
 	k8s.io/apimachinery v0.20.2
 	k8s.io/client-go v0.20.2

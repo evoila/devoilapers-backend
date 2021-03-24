@@ -8,7 +8,8 @@ import (
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/kubernetes"
 	"OperatorAutomation/pkg/postgres"
-	dtos "OperatorAutomation/pkg/postgres/dtos"
+	"OperatorAutomation/pkg/postgres/dtos/action_dtos"
+	"OperatorAutomation/pkg/postgres/dtos/provider_dtos"
 	"OperatorAutomation/test/integration_tests/common_test"
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
 	"encoding/base64"
@@ -29,6 +30,11 @@ func CreatePostgresTestProvider(t *testing.T) (*provider.IServiceProvider, confi
 	var pgProvider provider.IServiceProvider = postgres.CreatePostgresProvider(
 		config.Kubernetes.Server,
 		config.Kubernetes.CertificateAuthority,
+		config.Kubernetes.Operators.Postgres.PgoUrl,
+		config.Kubernetes.Operators.Postgres.PgoVersion,
+		config.Kubernetes.Operators.Postgres.PgoCa,
+		config.Kubernetes.Operators.Postgres.PgoUsername,
+		config.Kubernetes.Operators.Postgres.PgoPassword,
 		config.ResourcesTemplatesPath,
 		kubernetes.NginxInformation(config.Kubernetes.Nginx),
 	)
@@ -47,6 +53,11 @@ func Test_Postgres_Provider_Create_Panic_Template_Not_Found(t *testing.T) {
 		"Server",
 		"CaPath",
 		"NotExistingPath",
+		"",
+		"",
+		"",
+		"",
+		"",
 		kubernetes.NginxInformation{})
 
 	_ = pgProvider
@@ -73,15 +84,15 @@ func Test_Postgres_Provider_GetAttributes(t *testing.T) {
 	assert.NotNil(t, formDataObj2)
 
 	// Ensure they are not the same (because of the random name)
-	formData1 := formDataObj1.(dtos.FormQueryDto)
-	formData2 := formDataObj2.(dtos.FormQueryDto)
+	formData1 := formDataObj1.(provider_dtos.FormQueryDto)
+	formData2 := formDataObj2.(provider_dtos.FormQueryDto)
 
 	assert.NotEqual(t,
 		formData1.Properties.Common.Properties.ClusterName.Default,
 		formData2.Properties.Common.Properties.ClusterName.Default)
 
 	// Generate yaml from form values and ensure it sets the values from the form
-	filledForm := dtos.FormResponseDto{}
+	filledForm := provider_dtos.FormResponseDto{}
 	filledForm.Common.ClusterName = "MyCluster"
 
 	filledFormData, err := json.Marshal(filledForm)
@@ -90,7 +101,7 @@ func Test_Postgres_Provider_GetAttributes(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, yamlTemplate)
 
-	yamlObject := yamlTemplate.(dtos.ProviderYamlTemplateDto)
+	yamlObject := yamlTemplate.(provider_dtos.ProviderYamlTemplateDto)
 
 	// Ensure values are set by form as expected
 	expectedClusterName := "MyCluster"
@@ -129,12 +140,11 @@ func get_action(service *service.IService, groupname string, actioncommand strin
 	return nil, errors.New("Action not found")
 }
 
-
 func Test_Postgres_Provider_End2End_Tls_From_File(t *testing.T) {
 	pgProviderPtr, config := CreatePostgresTestProvider(t)
 	user := config.Users[0]
 
-	filledForm := dtos.FormResponseDto{}
+	filledForm := provider_dtos.FormResponseDto{}
 	filledForm.Common.InClusterPort = 5432
 	filledForm.Common.Username = "testuser"
 	filledForm.Common.ClusterStorageSize = 1
@@ -147,7 +157,7 @@ func Test_Postgres_Provider_End2End_Tls_From_File(t *testing.T) {
 	filledForm.TLS.TLSModeFromFile.TlsCertificateBase64 = testTlsCertBase64
 	filledForm.TLS.TLSModeFromFile.TlsPrivateKeyBase64 = testTlsCertKeyBase64
 
-	Postgres_Provider_End2End(t,pgProviderPtr, user, filledForm)
+	Postgres_Provider_End2End(t, pgProviderPtr, user, filledForm)
 }
 
 func Test_Postgres_Provider_End2End_Tls_From_Secret(t *testing.T) {
@@ -164,11 +174,10 @@ func Test_Postgres_Provider_End2End_Tls_From_Secret(t *testing.T) {
 		"pg-test2-cluster-ca",
 		user.GetKubernetesNamespace(),
 		map[string][]byte{
-			"ca.crt":  caCrt,
+			"ca.crt": caCrt,
 		},
 	)
 	assert.Nil(t, err)
-
 
 	tlsCrt, err := base64.StdEncoding.DecodeString(testTlsCertBase64)
 	assert.Nil(t, err)
@@ -189,7 +198,7 @@ func Test_Postgres_Provider_End2End_Tls_From_Secret(t *testing.T) {
 	time.Sleep(20 * time.Second)
 
 	// Tls fromm secret
-	filledForm := dtos.FormResponseDto{}
+	filledForm := provider_dtos.FormResponseDto{}
 	filledForm.Common.InClusterPort = 5432
 	filledForm.Common.Username = "testuser"
 	filledForm.Common.ClusterStorageSize = 1
@@ -213,7 +222,7 @@ func Test_Postgres_Provider_End2End_NoTls(t *testing.T) {
 	pgProviderPtr, config := CreatePostgresTestProvider(t)
 	user := config.Users[0]
 
-	filledForm := dtos.FormResponseDto{}
+	filledForm := provider_dtos.FormResponseDto{}
 	filledForm.Common.ClusterName = "pg-test3-cluster"
 	filledForm.Common.InClusterPort = 5432
 	filledForm.Common.Username = "testuser"
@@ -223,24 +232,60 @@ func Test_Postgres_Provider_End2End_NoTls(t *testing.T) {
 	Postgres_Provider_End2End(t, pgProviderPtr, user, filledForm)
 }
 
-func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServiceProvider, user common.IKubernetesAuthInformation,  filledForm dtos.FormResponseDto) {
+func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServiceProvider, user common.IKubernetesAuthInformation, filledForm provider_dtos.FormResponseDto) {
 	pgProvider := *pgProviderPtr
 
 	service1Ptr := common_test.CommonProviderStart(t, pgProviderPtr, user, filledForm, 3)
 	service1 := *service1Ptr
 
-	// Testing actions
-	// Get database credentials
-	actionPtr, err := get_action(service1Ptr, "Informations", "cmd_pg_get_credentials")
+	// user
+	// show = 1
+	actionPtr, err := get_action(service1Ptr, "User", "cmd_pg_show_users")
 	assert.Nil(t, err)
 	action := *actionPtr
-	assert.Nil(t, action.GetJsonFormResultPlaceholder())
 	result, err := action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
 	assert.Nil(t, err)
-	clusterCredentials := *result.(*dtos.ClusterCredentialsDto)
-	assert.True(t, len(clusterCredentials.Username) > 3)
-	assert.True(t, len(clusterCredentials.Password) > 3)
-	assert.True(t, clusterCredentials.InternalPort > 1)
+	users := result.(map[string]string)
+	assert.Equal(t, 1, len(users))
+
+	// Add 1
+	actionPtr, err = get_action(service1Ptr, "User", "cmd_pg_add_user")
+	assert.Nil(t, err)
+	action = *actionPtr
+	addUserDto := *(action.GetJsonFormResultPlaceholder().(*action_dtos.AddUserDto))
+	addUserDto.Password = "testpswd"
+	addUserDto.Username = "testuser1"
+	_, err = action.GetActionExecuteCallback()(&addUserDto)
+	assert.Nil(t, err)
+	time.Sleep(5 * time.Second)
+
+	// show = 2
+	actionPtr, err = get_action(service1Ptr, "User", "cmd_pg_show_users")
+	assert.Nil(t, err)
+	action = *actionPtr
+	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
+	assert.Nil(t, err)
+	users = result.(map[string]string)
+	assert.Equal(t, 2, len(users))
+
+	// Delete 1
+	actionPtr, err = get_action(service1Ptr, "User", "cmd_pg_remove_user")
+	assert.Nil(t, err)
+	action = *actionPtr
+	deleteUserDto := *(action.GetJsonFormResultPlaceholder().(*action_dtos.DeleteUserDto))
+	deleteUserDto.Username = "testuser1"
+	_, err = action.GetActionExecuteCallback()(&deleteUserDto)
+	assert.Nil(t, err)
+	time.Sleep(5 * time.Second)
+
+	// show = 1
+	actionPtr, err = get_action(service1Ptr, "User", "cmd_pg_show_users")
+	assert.Nil(t, err)
+	action = *actionPtr
+	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
+	assert.Nil(t, err)
+	users = result.(map[string]string)
+	assert.Equal(t, 1, len(users))
 
 	// Exposure
 	actionPtr, err = get_action(service1Ptr, "Security", "cmd_pg_get_expose_info")
@@ -255,7 +300,7 @@ func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServicePro
 	action = *actionPtr
 	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
 	assert.Nil(t, err)
-	clusterExposeResult := result.(*dtos.ClusterExposeResponseDto)
+	clusterExposeResult := result.(*action_dtos.ClusterExposeResponseDto)
 	assert.True(t, clusterExposeResult.Port > 1)
 
 	// Check again if it is exposed
@@ -266,7 +311,7 @@ func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServicePro
 	action = *actionPtr
 	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
 	assert.Nil(t, err)
-	clusterExposeInformation := result.(*dtos.ClusterExposeResponseDto)
+	clusterExposeInformation := result.(*action_dtos.ClusterExposeResponseDto)
 	assert.Equal(t, clusterExposeResult.Port, clusterExposeInformation.Port)
 
 	// Hide it again
@@ -289,7 +334,7 @@ func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServicePro
 	actionPtr, err = get_action(service1Ptr, "Features", "cmd_pg_scale")
 	assert.Nil(t, err)
 	action = *actionPtr
-	clusterScale := *(action.GetJsonFormResultPlaceholder().(*dtos.ClusterScaleDto))
+	clusterScale := *(action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto))
 	assert.Equal(t, 0, clusterScale.NumberOfReplicas)
 	// Try setting the same number of replicas as we have
 	clusterScale.NumberOfReplicas = 0
@@ -313,7 +358,7 @@ func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServicePro
 	actionPtr, err = get_action(serviceTemp, "Features", "cmd_pg_scale")
 	assert.Nil(t, err)
 	action = *actionPtr
-	clusterScale = *(action.GetJsonFormResultPlaceholder().(*dtos.ClusterScaleDto))
+	clusterScale = *(action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto))
 	assert.Equal(t, 2, clusterScale.NumberOfReplicas)
 	// Decrement the number of replicas
 	clusterScale.NumberOfReplicas = 1
@@ -327,8 +372,9 @@ func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServicePro
 	actionPtr, err = get_action(serviceTemp, "Features", "cmd_pg_scale")
 	assert.Nil(t, err)
 	action = *actionPtr
-	clusterScale = *(action.GetJsonFormResultPlaceholder().(*dtos.ClusterScaleDto))
+	clusterScale = *(action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto))
 	assert.Equal(t, 1, clusterScale.NumberOfReplicas)
 
+	// Shut down all services of the provider
 	common_test.CommonProviderStop(t, pgProviderPtr, user)
 }

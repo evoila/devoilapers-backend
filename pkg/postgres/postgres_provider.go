@@ -7,17 +7,19 @@ import (
 	"OperatorAutomation/pkg/kubernetes/yaml_types"
 	"OperatorAutomation/pkg/postgres/actions"
 	common2 "OperatorAutomation/pkg/postgres/common"
-	"OperatorAutomation/pkg/postgres/dtos"
+	"OperatorAutomation/pkg/postgres/dtos/provider_dtos"
+	"OperatorAutomation/pkg/postgres/pgo"
 	"OperatorAutomation/pkg/utils"
 	"OperatorAutomation/pkg/utils/logger"
 	"OperatorAutomation/pkg/utils/provider"
 	"context"
 	"encoding/json"
 	"fmt"
-	v1 "github.com/Crunchydata/postgres-operator/pkg/apis/crunchydata.com/v1"
+	v1 "github.com/crunchydata/postgres-operator/pkg/apis/crunchydata.com/v1"
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"net/url"
 	"path"
 	"strconv"
 	"strings"
@@ -28,22 +30,37 @@ import (
 type PostgresProvider struct {
 	provider.BasicProvider
 	nginxInformation kubernetes.NginxInformation
+	pgoApi *pgo.PgoApi
+	hostname string
 }
+
 
 // Factory method to create an instance of the PostgresProvider
 func CreatePostgresProvider(
-	host string,
-	caPath string,
+	kubernetesServer string,
+	kubernetesCaPath string,
+	pgoServer string,
+	pgoServerVersion string,
+	pgoCaPath string,
+	pgoUsername string,
+	pgoPassword string,
 	templateDirectoryPath string,
 	nginxInformation kubernetes.NginxInformation) PostgresProvider {
 
 	logger.RTrace("Creating new postgres provider")
 
+	url, err := url.Parse(kubernetesServer)
+	if err != nil {
+		logger.RError(err, "Could not parse kubernetes server url: " + kubernetesServer)
+	}
+
 	return PostgresProvider{
 		nginxInformation: nginxInformation,
+		hostname: url.Hostname(),
+		pgoApi: pgo.CreatePgoApi(pgoServer, pgoServerVersion, pgoCaPath, pgoUsername, pgoPassword),
 		BasicProvider: provider.CreateCommonProvider(
-			host,
-			caPath,
+			kubernetesServer,
+			kubernetesCaPath,
 			path.Join(templateDirectoryPath, "postgres", "postgres.yaml"),
 			path.Join(templateDirectoryPath, "postgres", "create_form.json"),
 			"Postgres",
@@ -55,7 +72,7 @@ func CreatePostgresProvider(
 func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformation, jsonFormResult []byte) (interface{}, error) {
 	logger.RTrace("Going to convert received form data to yaml")
 
-	form := dtos.FormResponseDto{}
+	form := provider_dtos.FormResponseDto{}
 	err := json.Unmarshal(jsonFormResult, &form)
 	if err != nil {
 		logger.RError(err, "Could not unmarshal received form to generate the yaml")
@@ -63,7 +80,7 @@ func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformatio
 	}
 
 	// Create form with form default values
-	yamlTemplate := dtos.ProviderYamlTemplateDto{}
+	yamlTemplate := provider_dtos.ProviderYamlTemplateDto{}
 	err = yaml.Unmarshal([]byte(pg.YamlTemplate), &yamlTemplate)
 	if err != nil {
 		logger.RError(err, "Could not unmarshal the default postgres yaml template")
@@ -148,7 +165,7 @@ func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformatio
 
 func (pg PostgresProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (interface{}, error) {
 	// Create form with form default values
-	formsQuery := dtos.FormQueryDto{}
+	formsQuery := provider_dtos.FormQueryDto{}
 	//formsQuery := map[string]interface{}{}
 	err := json.Unmarshal([]byte(pg.FormTemplate), &formsQuery)
 	if err != nil {
@@ -332,14 +349,17 @@ func (pg PostgresProvider) CrdInstanceToServiceInstance(
 		logger.RError(err, "Could not marshal the kubernetes service struct")
 	}
 
+
 	var postgresService service.IService = PostgresService{
 		PostgresServiceInformations: common2.PostgresServiceInformations{
 			ClusterInstance:  crdInstance,
 			Auth:             auth,
-			Host:             pg.Host,
+			Hostname: 		  pg.hostname,
+			HostWithPort:     pg.Host,
 			CaPath:           pg.CaPath,
 			CrdClient:        crdClient,
 			NginxInformation: pg.nginxInformation,
+			PgoApi:           pg.pgoApi,
 		},
 		BasicService: provider.BasicService{
 			Name:         crdInstance.Name,

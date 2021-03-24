@@ -38,7 +38,7 @@ func (controller AccountController) HandlePostLogin(ctx *gin.Context) {
 	}
 
 	// Get user information from the user management
-	user, userCouldBeFound := controller.UserManagement.TryGetUserInformation(
+	_, userCouldBeFound := controller.UserManagement.TryGetUserInformation(
 		accountCredentials.Username,
 		accountCredentials.Password,
 	)
@@ -51,7 +51,7 @@ func (controller AccountController) HandlePostLogin(ctx *gin.Context) {
 
 	// Otherwise, return the role
 	authData := dtos.AuthenticationResponseDataDto{
-		Role:    user.Role,
+		Role:    "user",
 		IsValid: true,
 	}
 

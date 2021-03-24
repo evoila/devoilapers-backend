@@ -15,9 +15,10 @@ type WebserverSllCertificate struct {
 }
 
 type Kubernetes struct {
-	Server               string `json:"server"`
-	CertificateAuthority string `json:"certificate-authority"`
-	Nginx                Nginx  `json:"nginx"`
+	Server               string    `json:"server"`
+	CertificateAuthority string    `json:"certificate-authority"`
+	Nginx                Nginx     `json:"nginx"`
+	Operators            Operators `json:"operators"`
 }
 
 type Nginx struct {
@@ -27,12 +28,23 @@ type Nginx struct {
 	ContainerName    string `json:"container_name"`
 }
 
+type Operators struct {
+	Postgres Postgres `json:"postgres"`
+}
+
+type Postgres struct {
+	PgoUrl       string `json:"pgo_url"`
+	PgoUsername  string `json:"pgo_username"`
+	PgoPassword  string `json:"pgo_password"`
+	PgoVersion   string `json:"pgo_version"`
+	PgoCa        string `json:"pgo_ca"`
+}
+
 type User struct {
 	Name                  string `json:"name"`
 	Password              string `json:"password"`
 	KubernetesAccessToken string `json:"kubernetes_access_token"`
 	KubernetesNamespace   string `json:"kubernetes_namespace"`
-	Role                  string `json:"role"`
 }
 
 // Interface IKubernetesAuthInformation

@@ -14,6 +14,15 @@
       "tcp_config_map_name": "tcp-services",
       "deployment_name": "default-http-backend",
       "container_name": "default-http-backend"
+    },
+    "operators": {
+      "postgres": {
+        "pgo_url": "$GH_PGO_URL",
+        "pgo_username": "$GH_PGO_USERNAME",
+        "pgo_password": "$GH_PGO_PASSWORD",
+        "pgo_version": "4.6.2",
+        "pgo_ca": "configs/pgo_ca.crt"
+      }
     }
   },
   "users": [

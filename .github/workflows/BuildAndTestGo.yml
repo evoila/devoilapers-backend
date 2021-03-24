@@ -58,18 +58,22 @@ jobs:
           cd temp
           export KUB_TEMP_PREFIX=`cat randomuser`
 
-          echo Create user on cluster
+          echo Create kubernetes rbac user on cluster
           kubectl apply -f create_service_account.yaml
 
-          echo Export token
+          echo Export kubernetes token
           kubectl -n $KUB_TEMP_PREFIX-namespace describe secret $(kubectl -n $KUB_TEMP_PREFIX-namespace get secret | (grep $KUB_TEMP_PREFIX-user || echo "$_") | awk '{print $1}') | grep token: | awk '{print $2}' > usertoken
 
-          echo Export host
+          echo Export kubernetes host
           cat ~/.kube/config | grep server | awk -F '"' '{print $2}'> host
 
-          echo Export ca
+          echo Export kubernetes ca
           cat ~/.kube/config | grep certificate-authority-data | awk -F ': ' '{print $2}' | base64 -d > ca.crt
           mv ca.crt ../configs/kubernetes_ca.crt
+
+          echo Export pgo ca
+          echo $GH_PGO_CA_CERT | base64 -d > pgo_ca.cer
+          mv pgo_ca.cer ../configs/pgo_ca.cer
 
           export GH_KUBERNETES_HOST=`cat host`
           export GH_KUBERNETES_TOKEN=`cat usertoken`
@@ -84,6 +88,11 @@ jobs:
           rm appconfig_github_actions_temp.json
 
           cd ..
+        env:
+          GH_PGO_CA_CERT: ${{ secrets.GH_PGO_CA_CERT }}
+          GH_PGO_PASSWORD: ${{ secrets.GH_PGO_PASSWORD }}
+          GH_PGO_USERNAME: ${{ secrets.GH_PGO_USERNAME }}
+          GH_PGO_URL: ${{ secrets.GH_PGO_URL }}
 
       - name: Get dependencies
         run: |
