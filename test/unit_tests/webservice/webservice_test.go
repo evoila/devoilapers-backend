@@ -82,7 +82,6 @@ func Create_Users(t *testing.T) []config.User {
 		{
 			Name:                  TEST_USERNAME,
 			Password:              TEST_PASSWORD,
-			Role:                  TEST_ROLE,
 			KubernetesNamespace:   TEST_NAMESPACE,
 			KubernetesAccessToken: TEST_TOKEN,
 		},

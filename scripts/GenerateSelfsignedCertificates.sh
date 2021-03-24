@@ -14,4 +14,4 @@ openssl x509 -req -in root.csr -text -days 3650 -extfile /etc/ssl/openssl.cnf -e
 openssl req -new -nodes -text -out server.csr -keyout server.key -subj "/CN="$cn
 chmod og-rwx server.key
 
-openssl x509 -req -in server.csr -text -days 365 -CA root.crt -CAkey root.key -CAcreateserial -out server.crt
+openssl x509 -req -extfile <(printf "subjectAltName=DNS:$cn,DNS:www.$cn") -in server.csr -text -days 365 -CA root.crt -CAkey root.key -CAcreateserial -out server.crt
