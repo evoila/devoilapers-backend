@@ -17,7 +17,7 @@ import (
 
 var TEST_USERNAME = "TestUsername"
 var TEST_PASSWORD = "TestPassword"
-var TEST_ROLE = "TestRole"
+var TEST_ROLE = "user"
 var TEST_NAMESPACE = "TestNamespace"
 var TEST_TOKEN = "TestToken"
 
