@@ -33,11 +33,11 @@ type Operators struct {
 }
 
 type Postgres struct {
-	PgoUrl       string `json:"pgo_url"`
-	PgoUsername  string `json:"pgo_username"`
-	PgoPassword  string `json:"pgo_password"`
-	PgoVersion   string `json:"pgo_version"`
-	PgoCa        string `json:"pgo_ca"`
+	PgoUrl      string `json:"pgo_url"`
+	PgoUsername string `json:"pgo_username"`
+	PgoPassword string `json:"pgo_password"`
+	PgoVersion  string `json:"pgo_version"`
+	PgoCaPath   string `json:"pgo_ca_path"`
 }
 
 type User struct {

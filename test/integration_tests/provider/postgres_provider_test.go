@@ -32,7 +32,7 @@ func CreatePostgresTestProvider(t *testing.T) (*provider.IServiceProvider, confi
 		config.Kubernetes.CertificateAuthority,
 		config.Kubernetes.Operators.Postgres.PgoUrl,
 		config.Kubernetes.Operators.Postgres.PgoVersion,
-		config.Kubernetes.Operators.Postgres.PgoCa,
+		config.Kubernetes.Operators.Postgres.PgoCaPath,
 		config.Kubernetes.Operators.Postgres.PgoUsername,
 		config.Kubernetes.Operators.Postgres.PgoPassword,
 		config.ResourcesTemplatesPath,

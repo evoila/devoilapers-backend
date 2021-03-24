@@ -120,7 +120,7 @@ func InitializeCore(appconfig config.RawConfig) *core.Core {
 		appconfig.Kubernetes.CertificateAuthority,
 		appconfig.Kubernetes.Operators.Postgres.PgoUrl,
 		appconfig.Kubernetes.Operators.Postgres.PgoVersion,
-		appconfig.Kubernetes.Operators.Postgres.PgoCa,
+		appconfig.Kubernetes.Operators.Postgres.PgoCaPath,
 		appconfig.Kubernetes.Operators.Postgres.PgoUsername,
 		appconfig.Kubernetes.Operators.Postgres.PgoPassword,
 		appconfig.ResourcesTemplatesPath,
