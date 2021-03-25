@@ -96,6 +96,7 @@ func (api *PgoApi) executeRequest(path string, httpMethod string, request interf
 	return nil
 }
 
+// Create database user
 func (api *PgoApi) CreateUser(request *msgs.CreateUserRequest) (msgs.CreateUserResponse, error) {
 	var response msgs.CreateUserResponse
 	request.ClientVersion = api.version
@@ -104,6 +105,7 @@ func (api *PgoApi) CreateUser(request *msgs.CreateUserRequest) (msgs.CreateUserR
 	return response, err
 }
 
+// Delete database user
 func (api *PgoApi) DeleteUser(request *msgs.DeleteUserRequest) (msgs.DeleteUserResponse, error) {
 	var response msgs.DeleteUserResponse
 	request.ClientVersion = api.version
@@ -111,9 +113,17 @@ func (api *PgoApi) DeleteUser(request *msgs.DeleteUserRequest) (msgs.DeleteUserR
 	return response, err
 }
 
+// Get database users
 func (api *PgoApi) GetUsers(request *msgs.ShowUserRequest) (msgs.ShowUserResponse, error) {
 	var response msgs.ShowUserResponse
 	request.ClientVersion = api.version
 	err := api.executeRequest("/usershow", http.MethodPost, request, &response)
+	return response, err
+}
+
+// Create database backup
+func (api *PgoApi) CreateBackup(request *msgs.CreateBackrestBackupRequest) (msgs.CreateBackrestBackupResponse, error) {
+	var response msgs.CreateBackrestBackupResponse
+	err := api.executeRequest("/backrestbackup", http.MethodPost, request, &response)
 	return response, err
 }

@@ -27,16 +27,9 @@ type FormResponseDto struct {
 			S3BucketName string `json:"s3bucketName"`
 			S3Endpoint   string `json:"s3endpoint"`
 			S3Region     string `json:"s3region"`
+			S3Key    string `json:"s3key"`
+			S3Secret string `json:"s3secret"`
 		} `json:"commonS3data"`
-		BackupMode                   string `json:"backupMode"`
-		BackupModeFromNewCredentials struct {
-			S3Key    string `json:"s3key"`
-			S3Secret string `json:"s3secret"`
-		} `json:"backupModeFromNewCredentials"`
-		BackupModeFromSecret struct {
-			S3Key    string `json:"s3key"`
-			S3Secret string `json:"s3secret"`
-		} `json:"backupModeFromSecret"`
 	} `json:"backup"`
 }
 
@@ -200,69 +193,25 @@ type FormQueryDto struct {
 								ID string `json:"id"`
 							} `json:"widget"`
 						} `json:"s3region"`
+						S3Key struct {
+							Type   string `json:"type"`
+							Title  string `json:"title"`
+							Widget struct {
+								ID string `json:"id"`
+							} `json:"widget"`
+						} `json:"s3key"`
+						S3Secret struct {
+							Type   string `json:"type"`
+							Title  string `json:"title"`
+							Widget struct {
+								ID string `json:"id"`
+							} `json:"widget"`
+						} `json:"s3secret"`
 					} `json:"properties"`
 					VisibleIf struct {
 						PerformBackup []bool `json:"performBackup"`
 					} `json:"visibleIf"`
 				} `json:"commonS3data"`
-				BackupMode struct {
-					Type    string `json:"type"`
-					Default string `json:"default"`
-					Widget  struct {
-						ID string `json:"id"`
-					} `json:"widget"`
-					OneOf []struct {
-						Enum        []string `json:"enum"`
-						Description string   `json:"description"`
-					} `json:"oneOf"`
-					VisibleIf struct {
-						PerformBackup []bool `json:"performBackup"`
-					} `json:"visibleIf"`
-				} `json:"backupMode"`
-				BackupModeFromSecret struct {
-					Type       string `json:"type"`
-					Properties struct {
-						S3Key struct {
-							Type   string `json:"type"`
-							Title  string `json:"title"`
-							Widget struct {
-								ID string `json:"id"`
-							} `json:"widget"`
-						} `json:"s3key"`
-						S3Secret struct {
-							Type   string `json:"type"`
-							Title  string `json:"title"`
-							Widget struct {
-								ID string `json:"id"`
-							} `json:"widget"`
-						} `json:"s3secret"`
-					} `json:"properties"`
-					VisibleIf struct {
-						BackupMode []string `json:"backupMode"`
-					} `json:"visibleIf"`
-				} `json:"backupModeFromSecret"`
-				BackupModeFromNewCredentials struct {
-					Type       string `json:"type"`
-					Properties struct {
-						S3Key struct {
-							Type   string `json:"type"`
-							Title  string `json:"title"`
-							Widget struct {
-								ID string `json:"id"`
-							} `json:"widget"`
-						} `json:"s3key"`
-						S3Secret struct {
-							Type   string `json:"type"`
-							Title  string `json:"title"`
-							Widget struct {
-								ID string `json:"id"`
-							} `json:"widget"`
-						} `json:"s3secret"`
-					} `json:"properties"`
-					VisibleIf struct {
-						BackupMode []string `json:"backupMode"`
-					} `json:"visibleIf"`
-				} `json:"backupModeFromNewCredentials"`
 			} `json:"properties"`
 			Order []string `json:"order"`
 		} `json:"backup"`

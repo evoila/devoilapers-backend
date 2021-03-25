@@ -13,6 +13,7 @@ import (
 	"OperatorAutomation/pkg/utils/logger"
 	"OperatorAutomation/pkg/utils/provider"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	v1 "github.com/crunchydata/postgres-operator/pkg/apis/crunchydata.com/v1"
@@ -87,6 +88,9 @@ func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformatio
 		return nil, err
 	}
 
+	// Construct array of final yaml components
+	resultingYaml := []interface{}{}
+
 	// Transfer namespace
 	yamlTemplate.Spec.Namespace = auth.GetKubernetesNamespace()
 	yamlTemplate.Metadata.Namespace = auth.GetKubernetesNamespace()
@@ -108,6 +112,33 @@ func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformatio
 	yamlTemplate.Spec.PrimaryStorage.Size = strconv.Itoa(form.Common.ClusterStorageSize) + "G"
 	yamlTemplate.Spec.BackrestStorage.Size = yamlTemplate.Spec.PrimaryStorage.Size
 	yamlTemplate.Spec.ReplicaStorage.Size = yamlTemplate.Spec.PrimaryStorage.Size
+
+
+	if form.Backup.PerformBackup {
+		logger.RTrace("Backup is used")
+
+		yamlTemplate.Spec.BackrestStorageTypes = []string{"s3"}
+		yamlTemplate.Spec.BackrestS3Bucket = form.Backup.CommonS3Data.S3BucketName
+		yamlTemplate.Spec.BackrestS3Endpoint = form.Backup.CommonS3Data.S3Endpoint
+		yamlTemplate.Spec.BackrestS3Region = form.Backup.CommonS3Data.S3Region
+		yamlTemplate.Spec.BackrestS3URIStyle = "path"
+
+		s3BackupSecret := &yaml_types.CommonSecret{
+			Metadata: yaml_types.Metadata{
+				Name:      form.Common.ClusterName + "-backrest-repo-config", // Name according to crunchy docs
+				Namespace: auth.GetKubernetesNamespace(),
+			},
+			Kind:       "Secret",
+			APIVersion: "v1",
+			Data: map[string]string{
+				"aws-s3-key": base64.StdEncoding.EncodeToString([]byte(form.Backup.CommonS3Data.S3Key)),
+				"aws-s3-key-secret": base64.StdEncoding.EncodeToString([]byte(form.Backup.CommonS3Data.S3Secret)),
+			},
+			Type: "Opaque",
+		}
+
+		resultingYaml = append(resultingYaml, s3BackupSecret)
+	}
 
 	// Check if tls should be used
 	if form.TLS.UseTLS {
@@ -149,7 +180,8 @@ func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformatio
 			yamlTemplate.Spec.Tls.TlsSecret = tlsSecret.Metadata.Name
 
 			logger.RTrace("Form to yaml conversion done")
-			return []interface{}{caSecret, tlsSecret, yamlTemplate}, nil
+			resultingYaml = append(resultingYaml, caSecret)
+			resultingYaml = append(resultingYaml, tlsSecret)
 
 		} else if form.TLS.TLSMode == "TlsFromSecret" {
 			logger.RTrace("Use tls mode from secret. Going to construct secrets")
@@ -159,8 +191,15 @@ func (pg PostgresProvider) GetYamlTemplate(auth common.IKubernetesAuthInformatio
 		}
 	}
 
+	resultingYaml = append(resultingYaml, yamlTemplate)
 	logger.RTrace("Form to yaml conversion done")
-	return yamlTemplate, nil
+
+	// Do not use multi-document yaml for a single value
+	if len(resultingYaml) == 1 {
+		return resultingYaml[0], nil
+	}
+
+	return resultingYaml, nil
 }
 
 func (pg PostgresProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (interface{}, error) {

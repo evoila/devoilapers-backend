@@ -39,6 +39,12 @@ func (pg PostgresService) GetActionGroups() []action.IActionGroup {
 				actions.DeleteExposeAction(&pg.PostgresServiceInformations),
 			},
 		},
+		action.ActionGroup{
+			Name: "Backup",
+			Actions: []action.IAction{
+				actions.CreateBackupAction(&pg.PostgresServiceInformations),
+			},
+		},
 	}
 }
 
