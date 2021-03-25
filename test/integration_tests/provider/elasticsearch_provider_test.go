@@ -5,7 +5,8 @@ import (
 	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/elasticsearch"
-	"OperatorAutomation/pkg/elasticsearch/dtos"
+	"OperatorAutomation/pkg/elasticsearch/dtos/action_dtos"
+	"OperatorAutomation/pkg/elasticsearch/dtos/provider_dtos"
 	"OperatorAutomation/test/integration_tests/common_test"
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
 	"encoding/base64"
@@ -61,15 +62,15 @@ func Test_Elasticsearch_Provider_GetAttributes(t *testing.T) {
 	assert.NotNil(t, formDataObj2)
 
 	// Ensure they are not the same (because of the random name)
-	formData1 := formDataObj1.(dtos.ServiceCreationFormDto)
-	formData2 := formDataObj2.(dtos.ServiceCreationFormDto)
+	formData1 := formDataObj1.(provider_dtos.ServiceCreationFormDto)
+	formData2 := formDataObj2.(provider_dtos.ServiceCreationFormDto)
 
 	assert.NotEqual(t,
 		formData1.Properties.Common.Properties.ClusterName.Default,
 		formData2.Properties.Common.Properties.ClusterName.Default)
 
 	// Generate yaml from form values
-	filledForm := dtos.ServiceCreationFormResponseDto{}
+	filledForm := provider_dtos.ServiceCreationFormResponseDto{}
 	filledForm.Common.ClusterName = "MyCluster"
 	filledFormData, err := json.Marshal(filledForm)
 	assert.Nil(t, err)
@@ -77,7 +78,7 @@ func Test_Elasticsearch_Provider_GetAttributes(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, yamlTemplate)
 
-	elasticSearchYaml := yamlTemplate.(dtos.ProviderYamlTemplateDto)
+	elasticSearchYaml := yamlTemplate.(provider_dtos.ProviderYamlTemplateDto)
 	assert.Equal(t, "MyCluster", elasticSearchYaml.Metadata.Name)
 	assert.Equal(t, "MyNamespace", elasticSearchYaml.Metadata.Namespace)
 }
@@ -87,7 +88,7 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	esProvider := *esProviderPtr
 
 	user := config.Users[0]
-	filledForm := dtos.ServiceCreationFormResponseDto{}
+	filledForm := provider_dtos.ServiceCreationFormResponseDto{}
 	filledForm.Common.ClusterName = "es-test-cluster"
 
 	service1Ptr := common_test.CommonProviderStart(t, esProviderPtr, user, filledForm, 1)
@@ -100,7 +101,7 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	secret, _ := service1es.K8sApi.GetSecret(user.KubernetesNamespace, service1es.GetName()+"-es-http-certs-internal")
 
 	// Test set certificate to service
-	certDto := &dtos.CertificateDto{
+	certDto := &action_dtos.CertificateDto{
 		CaCrt:  base64.StdEncoding.EncodeToString(secret.Data["ca.crt"]),
 		TlsCrt: base64.StdEncoding.EncodeToString(secret.Data["tls.crt"]),
 		TlsKey: base64.StdEncoding.EncodeToString(secret.Data["tls.key"]),

@@ -4,12 +4,14 @@ import (
 	"OperatorAutomation/pkg/utils/logger"
 	"bytes"
 	"context"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/sirupsen/logrus"
 
 	"encoding/json"
 
 	v1 "k8s.io/api/core/v1"
+	v1Beta "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -180,4 +182,54 @@ func (api *K8sApi) GetSecret(namespace, name string) (*v1.Secret, error) {
 // Delete a secret based on provided name and namespace
 func (api *K8sApi) DeleteSecret(namespace, name string) error {
 	return api.ClientSet.CoreV1().Secrets(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+}
+
+
+func (api *K8sApi) CreateIngressWithHttpsBackend(ingressName string, namespace string, hostname string, tlsSecret string, serviceName string, servicePort int, ) (*v1Beta.Ingress, error) {
+
+	new_ingress  := &v1Beta.Ingress{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Ingress",
+			APIVersion: "networking.k8s.io/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ingressName,
+			Namespace: namespace,
+			Annotations: map[string]string{
+				"kubernetes.io/ingress.class": "nginx",
+				"nginx.ingress.kubernetes.io/backend-protocol": "HTTPS",
+			},
+		},
+		Spec: v1Beta.IngressSpec{
+			TLS: []v1Beta.IngressTLS{
+				{
+					Hosts:      []string{hostname},
+					SecretName: tlsSecret,
+				},
+			},
+			Rules: []v1Beta.IngressRule{
+				{
+					Host: hostname,
+					IngressRuleValue: v1Beta.IngressRuleValue{
+						HTTP: &v1Beta.HTTPIngressRuleValue{
+							Paths: []v1Beta.HTTPIngressPath{
+								{
+									Path: "/",
+									Backend: v1Beta.IngressBackend{
+										ServiceName: serviceName,
+										ServicePort: intstr.IntOrString{
+											Type:   0,
+											IntVal: int32(servicePort),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	return api.V1beta1Client.Ingresses(namespace).Create(context.TODO(), new_ingress, metav1.CreateOptions{})
 }

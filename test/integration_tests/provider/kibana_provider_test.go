@@ -6,7 +6,7 @@ import (
 	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/elasticsearch"
-	esDtos "OperatorAutomation/pkg/elasticsearch/dtos"
+	"OperatorAutomation/pkg/elasticsearch/dtos/provider_dtos"
 	"OperatorAutomation/pkg/kibana"
 	"OperatorAutomation/pkg/kibana/dtos"
 	"OperatorAutomation/test/integration_tests/common_test"
@@ -120,7 +120,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	kbProvider.OnCoreInitialized([]*provider.IServiceProvider{&esProvider})
 
 	// Create a new es instance
-	esFormResponseDto := esDtos.ServiceCreationFormResponseDto{}
+	esFormResponseDto := provider_dtos.ServiceCreationFormResponseDto{}
 	esFormResponseDto.Common.ClusterName = "kibana-es-test"
 	esFormResponseDtoBytes, err := json.Marshal(esFormResponseDto)
 	assert.Nil(t, err)

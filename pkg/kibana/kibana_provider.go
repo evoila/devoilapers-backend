@@ -108,7 +108,7 @@ func (kb KibanaProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (in
 }
 
 func (kb KibanaProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error) {
-	return kubernetes.CreateCommonCrdApi(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
+	return kubernetes.CreateCommonCrdApi(kb.KubernetsServer, kb.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
 }
 
 func (kb KibanaProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
@@ -124,7 +124,7 @@ func (kb KibanaProvider) GetServices(auth common.IKubernetesAuthInformation) ([]
 		return nil, err
 	}
 
-	api, err := kubernetes.GenerateK8sApiFromToken(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken())
+	api, err := kubernetes.GenerateK8sApiFromToken(kb.KubernetsServer, kb.CaPath, auth.GetKubernetesAccessToken())
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (kb KibanaProvider) GetService(auth common.IKubernetesAuthInformation, id s
 		return nil, err
 	}
 
-	api, err := kubernetes.GenerateK8sApiFromToken(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken())
+	api, err := kubernetes.GenerateK8sApiFromToken(kb.KubernetsServer, kb.CaPath, auth.GetKubernetesAccessToken())
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (kb KibanaProvider) GetService(auth common.IKubernetesAuthInformation, id s
 }
 
 func (kb KibanaProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
-	api, err := kubernetes.GenerateK8sApiFromToken(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken())
+	api, err := kubernetes.GenerateK8sApiFromToken(kb.KubernetsServer, kb.CaPath, auth.GetKubernetesAccessToken())
 	if err != nil {
 		return err
 	}

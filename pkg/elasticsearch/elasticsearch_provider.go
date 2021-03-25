@@ -3,7 +3,8 @@ package elasticsearch
 import (
 	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/service"
-	"OperatorAutomation/pkg/elasticsearch/dtos"
+	esCommon "OperatorAutomation/pkg/elasticsearch/common"
+	"OperatorAutomation/pkg/elasticsearch/dtos/provider_dtos"
 	"OperatorAutomation/pkg/kubernetes"
 	"OperatorAutomation/pkg/utils"
 	"OperatorAutomation/pkg/utils/provider"
@@ -16,13 +17,18 @@ import (
 // Implements IServiceProvider interface
 // Use factory method CreateElasticSearchProvider to create
 type ElasticsearchProvider struct {
+	kubernetesHostname string
 	provider.BasicProvider
 }
 
 // Factory method to create an instance of the ElasticsearchProvider
-func CreateElasticSearchProvider(host string, caPath string, templateDirectoryPath string) ElasticsearchProvider {
-	return ElasticsearchProvider{provider.CreateCommonProvider(
-		host,
+func CreateElasticSearchProvider(
+	kubernetesHostname string,
+	kuberntesServer string, caPath string, templateDirectoryPath string) ElasticsearchProvider {
+	return ElasticsearchProvider{
+		kubernetesHostname: kubernetesHostname,
+		BasicProvider: provider.CreateCommonProvider(
+		kuberntesServer,
 		caPath,
 		path.Join(templateDirectoryPath, "elasticsearch", "elasticsearch.yaml"),
 		path.Join(templateDirectoryPath, "elasticsearch", "create_form.json"),
@@ -33,14 +39,14 @@ func CreateElasticSearchProvider(host string, caPath string, templateDirectoryPa
 }
 
 func (es ElasticsearchProvider) GetYamlTemplate(auth common.IKubernetesAuthInformation, jsonFormResult []byte) (interface{}, error) {
-	form := dtos.ServiceCreationFormResponseDto{}
+	form := provider_dtos.ServiceCreationFormResponseDto{}
 	err := json.Unmarshal(jsonFormResult, &form)
 	if err != nil {
 		return "", err
 	}
 
 	// Create form with form default values
-	yamlTemplate := dtos.ProviderYamlTemplateDto{}
+	yamlTemplate := provider_dtos.ProviderYamlTemplateDto{}
 	err = yaml.Unmarshal([]byte(es.YamlTemplate), &yamlTemplate)
 	if err != nil {
 		return "", err
@@ -55,7 +61,7 @@ func (es ElasticsearchProvider) GetYamlTemplate(auth common.IKubernetesAuthInfor
 
 func (es ElasticsearchProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (interface{}, error) {
 	// Create form with form default values
-	formsQuery := dtos.ServiceCreationFormDto{}
+	formsQuery := provider_dtos.ServiceCreationFormDto{}
 	err := json.Unmarshal([]byte(es.FormTemplate), &formsQuery)
 	if err != nil {
 		return "", err
@@ -67,7 +73,7 @@ func (es ElasticsearchProvider) GetJsonForm(auth common.IKubernetesAuthInformati
 }
 
 func (es ElasticsearchProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error) {
-	return kubernetes.CreateCommonCrdApi(es.Host, es.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
+	return kubernetes.CreateCommonCrdApi(es.KubernetsServer, es.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
 }
 
 func (es ElasticsearchProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
@@ -83,7 +89,7 @@ func (es ElasticsearchProvider) GetServices(auth common.IKubernetesAuthInformati
 		return nil, err
 	}
 
-	api, err := kubernetes.GenerateK8sApiFromToken(es.Host, es.CaPath, auth.GetKubernetesAccessToken())
+	api, err := kubernetes.GenerateK8sApiFromToken(es.KubernetsServer, es.CaPath, auth.GetKubernetesAccessToken())
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +115,7 @@ func (es ElasticsearchProvider) GetService(auth common.IKubernetesAuthInformatio
 		return nil, err
 	}
 
-	api, err := kubernetes.GenerateK8sApiFromToken(es.Host, es.CaPath, auth.GetKubernetesAccessToken())
+	api, err := kubernetes.GenerateK8sApiFromToken(es.KubernetsServer, es.CaPath, auth.GetKubernetesAccessToken())
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +124,7 @@ func (es ElasticsearchProvider) GetService(auth common.IKubernetesAuthInformatio
 }
 
 func (es ElasticsearchProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
-	api, err := kubernetes.GenerateK8sApiFromToken(es.Host, es.CaPath, auth.GetKubernetesAccessToken())
+	api, err := kubernetes.GenerateK8sApiFromToken(es.KubernetsServer, es.CaPath, auth.GetKubernetesAccessToken())
 	if err != nil {
 		return err
 	}
@@ -149,9 +155,12 @@ func (es ElasticsearchProvider) CrdInstanceToServiceInstance(api *kubernetes.K8s
 	}
 
 	var elasticSearchService service.IService = ElasticSearchService{
-		K8sApi:       api,
-		commonCrdApi: commonCrdApi,
-		crdInstance:  crdInstance,
+		ElasticsearchServiceInformations: esCommon.ElasticsearchServiceInformations{
+			Hostname: es.kubernetesHostname,
+			K8sApi:       api,
+			CrdClient: commonCrdApi,
+			ClusterInstance:  crdInstance,
+		},
 		status:       crdInstance.Status.Health,
 		BasicService: provider.BasicService{
 			Name:         crdInstance.Name,
