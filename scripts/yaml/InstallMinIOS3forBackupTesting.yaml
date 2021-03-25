@@ -1,4 +1,3 @@
-# Replace USERNAME and PASSWORD
 # Create Namespace
 apiVersion: v1
 kind: Namespace
@@ -59,9 +58,9 @@ spec:
           env:
             # Minio access key and secret key
             - name: MINIO_ACCESS_KEY
-              value: "USERNAME"
+              value: "$MINIO_USERNAME"
             - name: MINIO_SECRET_KEY
-              value: "PASSWORD"
+              value: "$MINIO_PASSWORD"
           ports:
             - containerPort: 9000
               hostPort: 9000
@@ -94,7 +93,7 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
 spec:
   rules:
-    - host: "minio.k8s.sep.evoila.digital"
+    - host: "$MINIO_HOSTNAME"
       http:
         paths:
           - path: /
