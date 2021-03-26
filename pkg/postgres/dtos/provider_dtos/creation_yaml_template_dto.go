@@ -70,6 +70,12 @@ type ProviderYamlTemplateDto struct {
 			PgBouncer  string `yaml:"pgBouncer"`
 		} `yaml:"podAntiAffinity"`
 		Port        string        `yaml:"port"`
+		BackrestStorageTypes []string `yaml:"backrestStorageTypes,omitempty"`
+		BackrestS3Bucket     string   `yaml:"backrestS3Bucket,omitempty"`
+		BackrestS3Endpoint   string   `yaml:"backrestS3Endpoint,omitempty"`
+		BackrestS3Region     string   `yaml:"backrestS3Region,omitempty"`
+		BackrestS3URIStyle   string   `yaml:"backrestS3URIStyle,omitempty"`
+		BackrestS3VerifyTLS  string   `yaml:"backrestS3VerifyTLS,omitempty"`
 		Tolerations []interface{} `yaml:"tolerations"`
 		Tls         struct {
 			CaSecret  string `yaml:"caSecret,omitempty"`

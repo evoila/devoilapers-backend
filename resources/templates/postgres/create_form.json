@@ -54,7 +54,7 @@
             "id": "checkbox"
           },
           "description": "Use in cluster tls",
-          "default": true
+          "default": false
         },
         "tlsMode": {
           "type": "string",
@@ -156,7 +156,7 @@
             "id": "checkbox"
           },
           "description": "Perform Backrest AWS S3 Backups",
-          "default": true
+          "default": false
         },
         "commonS3data": {
           "type": "object",
@@ -182,67 +182,7 @@
               "widget": {
                 "id": "string"
               }
-            }
-          },
-          "visibleIf": {
-            "performBackup": [
-              true
-            ]
-          }
-        },
-        "backupMode": {
-          "type": "string",
-          "default": "BackupFromNewS3Credentials",
-          "widget": {
-            "id": "radio"
-          },
-          "oneOf": [
-            {
-              "enum": [
-                "BackupFromNewS3Credentials"
-              ],
-              "description": "New S3 credentials"
             },
-            {
-              "enum": [
-                "BackupFromS3Secret"
-              ],
-              "description": "S3 Credentials from kubernetes secret"
-            }
-          ],
-          "visibleIf": {
-            "performBackup": [
-              true
-            ]
-          }
-        },
-        "backupModeFromSecret": {
-          "type": "object",
-          "properties": {
-            "s3key": {
-              "type": "string",
-              "title": "S3 Key kubernetes secret",
-              "widget": {
-                "id": "string"
-              }
-            },
-            "s3secret": {
-              "type": "string",
-              "title": "S3 Secret kubernetes secret",
-              "widget": {
-                "id": "string"
-              }
-            }
-          },
-          "visibleIf": {
-            "backupMode": [
-              "BackupFromS3Secret"
-            ]
-          }
-        },
-        "backupModeFromNewCredentials": {
-          "type": "object",
-          "properties": {
             "s3key": {
               "type": "string",
               "title": "S3 Key",
@@ -259,18 +199,15 @@
             }
           },
           "visibleIf": {
-            "backupMode": [
-              "BackupFromNewS3Credentials"
+            "performBackup": [
+              true
             ]
           }
         }
       },
       "order": [
         "performBackup",
-        "commonS3data",
-        "backupMode",
-        "backupModeFromSecret",
-        "backupModeFromNewCredentials"
+        "commonS3data"
       ]
     }
   }

@@ -18,7 +18,7 @@ echo "Namespace is:"
 echo $KUB_TEMP_PREFIX"-namespace"
 
 echo "Token is:"
-kubectl -n $KUB_TEMP_PREFIX-namespace describe secret $(kubectl -n $KUB_TEMP_PREFIX-namespace get secret | (grep $KUB_TEMP_PREFIX-user || echo "$_") | awk >
+kubectl -n $KUB_TEMP_PREFIX-namespace describe secret $(kubectl -n $KUB_TEMP_PREFIX-namespace get secret | (grep $KUB_TEMP_PREFIX-user || echo "$_") | awk '{print $1}') | grep token: | awk '{print $2}'
 
 
 

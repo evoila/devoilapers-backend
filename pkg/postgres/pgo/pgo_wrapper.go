@@ -50,11 +50,14 @@ func CreatePgoApi(apiServerUrl string, apiServerVersion string, caCertificatePat
 // Performs a request to the endpoint of the postgres operator
 func (api *PgoApi) executeRequest(path string, httpMethod string, request interface{}, response interface{}) error {
 	ctx := context.TODO()
-	jsonValue, _ := json.Marshal(request)
-	url := api.credentials.APIServerURL  + path
-	logger.RTrace("%s called...[%s]", path, url)
 
-	req, err := http.NewRequestWithContext(ctx, httpMethod, url, bytes.NewBuffer(jsonValue))
+	jsonValue, _ := json.Marshal(request)
+	buffer := bytes.NewBuffer(jsonValue)
+
+	url := api.credentials.APIServerURL  + path
+	logger.RTrace("Call postgres operator api at " + url)
+
+	req, err := http.NewRequestWithContext(ctx, httpMethod, url, buffer)
 	if err != nil {
 		return err
 	}
@@ -69,7 +72,7 @@ func (api *PgoApi) executeRequest(path string, httpMethod string, request interf
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return errors.New("Postgres operator api returned invalid invalid status code.")
+		return errors.New("Postgres operator api returned invalid invalid status code: " + resp.Status)
 	}
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
@@ -96,6 +99,7 @@ func (api *PgoApi) executeRequest(path string, httpMethod string, request interf
 	return nil
 }
 
+// Create database user
 func (api *PgoApi) CreateUser(request *msgs.CreateUserRequest) (msgs.CreateUserResponse, error) {
 	var response msgs.CreateUserResponse
 	request.ClientVersion = api.version
@@ -104,6 +108,7 @@ func (api *PgoApi) CreateUser(request *msgs.CreateUserRequest) (msgs.CreateUserR
 	return response, err
 }
 
+// Delete database user
 func (api *PgoApi) DeleteUser(request *msgs.DeleteUserRequest) (msgs.DeleteUserResponse, error) {
 	var response msgs.DeleteUserResponse
 	request.ClientVersion = api.version
@@ -111,9 +116,33 @@ func (api *PgoApi) DeleteUser(request *msgs.DeleteUserRequest) (msgs.DeleteUserR
 	return response, err
 }
 
+// Get database users
 func (api *PgoApi) GetUsers(request *msgs.ShowUserRequest) (msgs.ShowUserResponse, error) {
 	var response msgs.ShowUserResponse
 	request.ClientVersion = api.version
 	err := api.executeRequest("/usershow", http.MethodPost, request, &response)
+	return response, err
+}
+
+// Create database backup
+func (api *PgoApi) CreateBackup(request *msgs.CreateBackrestBackupRequest) (msgs.CreateBackrestBackupResponse, error) {
+	var response msgs.CreateBackrestBackupResponse
+	err := api.executeRequest("/backrestbackup", http.MethodPost, request, &response)
+	return response, err
+}
+
+// Restore database backup
+func (api *PgoApi) RestoreBackup(request *msgs.RestoreRequest) (msgs.RestoreResponse, error) {
+	var response msgs.RestoreResponse
+	err := api.executeRequest("/restore", http.MethodPost, request, &response)
+	return response, err
+}
+
+
+// Restore database backup
+func (api *PgoApi) ShowBackups(namespace string, clustername string) (msgs.ShowBackrestResponse, error) {
+	var response msgs.ShowBackrestResponse
+	path :=  "/backrest/" + clustername + "?version=" + api.version + "&selector=name=" + clustername + "&namespace=" + namespace
+	err := api.executeRequest(path, http.MethodGet, nil, &response)
 	return response, err
 }

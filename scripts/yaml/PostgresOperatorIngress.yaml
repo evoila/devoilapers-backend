@@ -6,6 +6,10 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: "nginx"
 spec:
+  tls:
+    - hosts:
+        - $PGO_HOST
+      secretName: pgoservicetls
   rules:
     - host: "$PGO_HOST"
       http:

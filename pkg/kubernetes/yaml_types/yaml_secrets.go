@@ -1,8 +1,16 @@
 package yaml_types
 
+type CommonSecret struct {
+	APIVersion string            `yaml:"apiVersion"`
+	Data       map[string]string `yaml:"data"`
+	Kind       string            `yaml:"kind"`
+	Metadata   Metadata          `yaml:"metadata"`
+	Type       string            `yaml:"type"`
+}
+
 type YamlCaSecret struct {
 	APIVersion string   `yaml:"apiVersion"`
-	Data       CaData  `yaml:"data"`
+	Data       CaData   `yaml:"data"`
 	Kind       string   `yaml:"kind"`
 	Metadata   Metadata `yaml:"metadata"`
 	Type       string   `yaml:"type"`

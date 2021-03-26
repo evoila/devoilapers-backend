@@ -235,7 +235,7 @@ func Test_Postgres_Provider_End2End_NoTls(t *testing.T) {
 func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServiceProvider, user common.IKubernetesAuthInformation, filledForm provider_dtos.FormResponseDto) {
 	pgProvider := *pgProviderPtr
 
-	service1Ptr := common_test.CommonProviderStart(t, pgProviderPtr, user, filledForm, 3)
+	service1Ptr := common_test.CommonProviderStart(t, pgProviderPtr, user, filledForm, 4)
 	service1 := *service1Ptr
 
 	// user
