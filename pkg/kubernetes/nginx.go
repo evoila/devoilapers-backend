@@ -47,7 +47,7 @@ func NginxGetExposedTcpPort(api *K8sApi,
 		}
 	}
 
-	return -1, errors.New("No port found. The service is not exposed.")
+	return -1, errors.New("no port found. The service is not exposed")
 }
 
 func NginxCloseTcpPort(api *K8sApi,

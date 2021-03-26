@@ -29,17 +29,17 @@ func (kb KibanaService) GetStatus() int {
 func (kb KibanaService) GetActionGroups() []action.IActionGroup {
 	return []action.IActionGroup{
 		action.ActionGroup{
-			Name: "Security",
+			Name: "User",
 			Actions: []action.IAction{
-				actions.SetCertificateAction(&kb.KibanaServiceInformations),
+				actions.GetCredentialsAction(&kb.KibanaServiceInformations),
 			},
 		},
 		action.ActionGroup{
-			Name: "Exposure",
+			Name: "Security",
 			Actions: []action.IAction{
+				actions.SetCertificateAction(&kb.KibanaServiceInformations),
 				actions.CreateGetExposeInformationAction(&kb.KibanaServiceInformations),
-				actions.CreateExposeAction(&kb.KibanaServiceInformations),
-				actions.DeleteExposeAction(&kb.KibanaServiceInformations),
+				actions.CreateExposeToggleAction(&kb.KibanaServiceInformations),
 			},
 		},
 	}

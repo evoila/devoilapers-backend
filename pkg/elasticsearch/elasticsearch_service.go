@@ -39,15 +39,8 @@ func (es ElasticSearchService) GetActionGroups() []action.IActionGroup {
 			Name: "Security",
 			Actions: []action.IAction{
 				actions.SetCertificateAction(&es.ElasticsearchServiceInformations),
-			},
-		},
-		action.ActionGroup{
-			Name: "Exposure",
-			Actions: []action.IAction{
 				actions.CreateGetExposeInformationAction(&es.ElasticsearchServiceInformations),
-				actions.CreateExposeAction(&es.ElasticsearchServiceInformations),
-				actions.DeleteExposeAction(&es.ElasticsearchServiceInformations),
-
+				actions.CreateExposeToggleAction(&es.ElasticsearchServiceInformations),
 			},
 		},
 	}

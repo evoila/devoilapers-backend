@@ -6,24 +6,23 @@ import (
 	"OperatorAutomation/pkg/elasticsearch/dtos/action_dtos"
 	"OperatorAutomation/pkg/utils/logger"
 	"context"
+	kubernetesError "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func CreateExposeToggleAction(service *esCommon.ElasticsearchServiceInformations) action.ToggleAction {
-	return action.ToggleAction{
-		Name: "",
-		UniqueCommand: "cmd_es_toggle",
-		QueryExecuteCallback: func() (bool, error) {
-
-			return true, nil
+	return action.CreateToggleAction(
+		"Exposed",
+		"cmd_es_expose_toggle",
+		func() (bool, error) {
+			return IsExposed(service)
 		},
-		SetExecuteCallback: func() (interface{}, error) {
-			return nil, nil
+		func() (interface{}, error) {
+			return nil, Expose(service)
 		},
-		UnsetExecuteCallback: func() (interface{}, error) {
-			return nil, nil
-		},
-	}
+		func() (interface{}, error) {
+			return nil, Hide(service)
+		})
 }
 
 // Creates an action to deliver port informations about the service
@@ -38,28 +37,26 @@ func CreateGetExposeInformationAction(service *esCommon.ElasticsearchServiceInfo
 	}
 }
 
-// Creates an action to expose the service with a random port
-func CreateExposeAction(service *esCommon.ElasticsearchServiceInformations) action.IAction {
-	return action.FormAction{
-		Name:          "Expose",
-		UniqueCommand: "cmd_es_expose",
-		Placeholder:   nil,
-		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
-			return nil, Expose(service)
-		},
-	}
-}
+// Delivers information about the ingress
+func IsExposed(es *esCommon.ElasticsearchServiceInformations) (bool, error) {
+	ingressName := es.ClusterInstance.ObjectMeta.Name + "-es-ingress"
+	_, err := es.K8sApi.V1beta1Client.Ingresses(es.ClusterInstance.Namespace).Get(
+		context.TODO(),
+		ingressName,
+		v1.GetOptions{})
 
-// Creates an action to remove the exposure
-func DeleteExposeAction(service *esCommon.ElasticsearchServiceInformations) action.IAction {
-	return action.FormAction{
-		Name:          "Hide",
-		UniqueCommand: "cmd_es_hide",
-		Placeholder:   nil,
-		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
-			return nil, Hide(service)
-		},
+
+	if kubernetesError.IsNotFound(err) {
+		logger.RTrace(err, "Ingress does not exists for elasticsearch with name "+es.ClusterInstance.ObjectMeta.Name)
+		return false, nil
 	}
+
+	if err != nil {
+		logger.RError(err, "Could not receive ingress for "+es.ClusterInstance.ObjectMeta.Name)
+		return false, err
+	}
+
+	return true, nil
 }
 
 // Delivers information about the ingress
@@ -70,13 +67,18 @@ func GetExposeInformation(es *esCommon.ElasticsearchServiceInformations) (*actio
 		ingressName,
 		v1.GetOptions{})
 
+	if kubernetesError.IsNotFound(err) {
+		logger.RTrace(err, "Ingress does not exists for elasticsearch with name "+es.ClusterInstance.ObjectMeta.Name)
+		return &action_dtos.ExposeInformations{Status: "Not exposed", Host: "Unknown"}, nil
+	}
+
 	if err != nil {
-		logger.RError(err, "Could not receive ingress for " + es.ClusterInstance.ObjectMeta.Name)
+		logger.RError(err, "Could not receive ingress for "+es.ClusterInstance.ObjectMeta.Name)
 		return nil, err
 	}
 
 	host := ingress.Spec.Rules[0].Host
-	return &action_dtos.ExposeInformations{Host: host}, err
+	return &action_dtos.ExposeInformations{Status: "Exposed", Host: host}, err
 }
 
 // Reverts the expose action by removing the ingress
@@ -85,7 +87,7 @@ func Hide(es *esCommon.ElasticsearchServiceInformations) error {
 	err := es.K8sApi.V1beta1Client.Ingresses(es.ClusterInstance.Namespace).Delete(context.TODO(), ingressName, v1.DeleteOptions{})
 
 	if err != nil {
-		logger.RError(err, "Could not hide ingress for " + es.ClusterInstance.ObjectMeta.Name)
+		logger.RError(err, "Could not hide ingress for "+es.ClusterInstance.ObjectMeta.Name)
 	}
 
 	return err
@@ -100,10 +102,10 @@ func Expose(es *esCommon.ElasticsearchServiceInformations) error {
 
 	trueValue := true
 	ownerRef := v1.OwnerReference{
-		UID: es.ClusterInstance.UID,
-		APIVersion:         esCommon.GroupName+"/"+esCommon.GroupVersion,
+		UID:                es.ClusterInstance.UID,
+		APIVersion:         esCommon.GroupName + "/" + esCommon.GroupVersion,
 		Name:               es.ClusterInstance.Name,
-		Kind:             	"Elasticsearch",
+		Kind:               "Elasticsearch",
 		Controller:         &trueValue,
 		BlockOwnerDeletion: &trueValue,
 	}

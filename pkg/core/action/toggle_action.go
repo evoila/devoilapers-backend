@@ -4,7 +4,7 @@ import (
 	"errors"
 )
 
-type toggleActionPlaceholder struct {
+type ToggleActionPlaceholder struct {
 	Toggle string `json:"toggle"`
 }
 
@@ -21,11 +21,11 @@ func CreateToggleAction(
 		QueryExecuteCallback: queryExecuteCallback,
 		SetExecuteCallback:   setExecuteCallback,
 		UnsetExecuteCallback: unsetExecuteCallback,
-		placeholder:          &toggleActionPlaceholder{},
+		placeholder:          &ToggleActionPlaceholder{},
 	}
 }
 
-// Action
+// Toggle action. Use factory method CreateToggleAction to construct.
 type ToggleAction struct {
 	Name                 string
 	UniqueCommand        string
@@ -33,7 +33,7 @@ type ToggleAction struct {
 	SetExecuteCallback   func() (interface{}, error)
 	UnsetExecuteCallback func() (interface{}, error)
 
-	placeholder *toggleActionPlaceholder
+	placeholder *ToggleActionPlaceholder
 }
 
 func (a ToggleAction) GetIsToggleAction() bool {
@@ -57,7 +57,7 @@ func (a ToggleAction) GetActionExecuteCallback() func(placeholder interface{}) (
 }
 
 func (a ToggleAction) GetJsonForm() interface{} {
-	// Create ngx json form
+	// Create ngx json form with 3 options to get,set,unset this toggle action
 	return map[string]interface{}{
 		"properties": map[string]interface{}{
 			"toggle": map[string]interface{}{
@@ -83,8 +83,9 @@ func (a ToggleAction) GetJsonForm() interface{} {
 	}
 }
 
+// Gets filled placeholder that is defined above
 func (a ToggleAction) executionCallback(placeholder interface{}) (interface{}, error) {
-	toggleDto := placeholder.(*toggleActionPlaceholder)
+	toggleDto := placeholder.(*ToggleActionPlaceholder)
 
 	switch toggleDto.Toggle {
 	case "get":

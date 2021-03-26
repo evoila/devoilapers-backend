@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net/url"
 	"testing"
+	"time"
 )
 
 func CreateElasticSearchTestProvider(t *testing.T) (*provider.IServiceProvider, config.RawConfig) {
@@ -97,24 +98,101 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	filledForm := provider_dtos.ServiceCreationFormResponseDto{}
 	filledForm.Common.ClusterName = "es-test-cluster"
 
-	service1Ptr := common_test.CommonProviderStart(t, esProviderPtr, user, filledForm, 1)
+	service1Ptr := common_test.CommonProviderStart(t, esProviderPtr, user, filledForm, 2)
 	service1 := *service1Ptr
 
+	// Actions
+
+	// --- Exposure ---
+	// Check if toggle is correct
+	toggleActionPtr, err := common_test.GetToggleAction(service1Ptr, "Security", "cmd_es_expose_toggle")
+	assert.Nil(t, err)
+	toggleAction := *toggleActionPtr
+	isSet, err := toggleAction.Get()
+	assert.Nil(t, err)
+	assert.False(t, isSet) // Not exposed
+
+	// Check expose details
+	actionPtr, err := common_test.GetAction(service1Ptr, "Security", "cmd_es_get_expose_info")
+	assert.Nil(t, err)
+	action := *actionPtr
+	result, err := action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
+	assert.Nil(t, err)
+	clusterExposeInformation := result.(*action_dtos.ExposeInformations)
+	assert.True(t, len(clusterExposeInformation.Host) > 0)
+
+	// Expose it
+	toggleActionPtr, err = common_test.GetToggleAction(service1Ptr, "Security", "cmd_es_expose_toggle")
+	assert.Nil(t, err)
+	toggleAction = *toggleActionPtr
+	result, err = toggleAction.Set()
+	assert.Nil(t, err)
+	assert.Nil(t, result)
+	time.Sleep(5 * time.Second)
+
+	// Check if toggle is correct
+	toggleActionPtr, err = common_test.GetToggleAction(service1Ptr, "Security", "cmd_es_expose_toggle")
+	assert.Nil(t, err)
+	toggleAction = *toggleActionPtr
+	isSet, err = toggleAction.Get()
+	assert.Nil(t, err)
+	assert.True(t, isSet) // exposed
+
+	// Check expose details
+	actionPtr, err = common_test.GetAction(service1Ptr, "Security", "cmd_es_get_expose_info")
+	assert.Nil(t, err)
+	action = *actionPtr
+	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
+	assert.Nil(t, err)
+	clusterExposeInformation = result.(*action_dtos.ExposeInformations)
+	assert.True(t, len(clusterExposeInformation.Host) > 0)
+
+	// Hide it again
+	toggleActionPtr, err = common_test.GetToggleAction(service1Ptr, "Security", "cmd_es_expose_toggle")
+	assert.Nil(t, err)
+	toggleAction = *toggleActionPtr
+	result, err = toggleAction.Unset()
+	assert.Nil(t, err)
+	time.Sleep(5 * time.Second)
+
+	// Check again if it is hidden
+	// Check if toggle is correct
+	toggleActionPtr, err = common_test.GetToggleAction(service1Ptr, "Security", "cmd_es_expose_toggle")
+	assert.Nil(t, err)
+	toggleAction = *toggleActionPtr
+	isSet, err = toggleAction.Get()
+	assert.Nil(t, err)
+	assert.False(t, isSet) // Not exposed
+
+	// Check expose details
+	actionPtr, err = common_test.GetAction(service1Ptr, "Security", "cmd_es_get_expose_info")
+	assert.Nil(t, err)
+	action = *actionPtr
+	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
+	assert.Nil(t, err)
+	clusterExposeInformation = result.(*action_dtos.ExposeInformations)
+	assert.True(t, len(clusterExposeInformation.Host) > 0)
+	
+	
+	
+	
 	// Check whether service is an Elasticsearch service
 	service1es, ok := service1.(elasticsearch.ElasticSearchService)
 	assert.True(t, ok)
 
 	secret, _ := service1es.K8sApi.GetSecret(user.KubernetesNamespace, service1es.GetName()+"-es-http-certs-internal")
 
-	// Test set certificate to service
-	certDto := &action_dtos.CertificateDto{
-		CaCrt:  base64.StdEncoding.EncodeToString(secret.Data["ca.crt"]),
-		TlsCrt: base64.StdEncoding.EncodeToString(secret.Data["tls.crt"]),
-		TlsKey: base64.StdEncoding.EncodeToString(secret.Data["tls.key"]),
-	}
-
-	_, err := service1es.SetCertificateToService(certDto)
+	// Set cert
+	actionPtr, err = common_test.GetAction(service1Ptr, "Security", "cmd_es_set_cert_action")
 	assert.Nil(t, err)
+	action = *actionPtr
+	certDto := action.GetJsonFormResultPlaceholder().(*action_dtos.CertificateDto)
+	certDto.CaCrt = base64.StdEncoding.EncodeToString(secret.Data["ca.crt"])
+	certDto.TlsCrt = base64.StdEncoding.EncodeToString(secret.Data["tls.crt"])
+	certDto.TlsKey = base64.StdEncoding.EncodeToString(secret.Data["tls.key"])
+	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
+	assert.Nil(t, err)
+	assert.Nil(t, result)
 
 	// Check status of service after setting the certificate
 	service3ptr, err := common_test.WaitForServiceComeUp(esProvider, user, service1.GetName())
