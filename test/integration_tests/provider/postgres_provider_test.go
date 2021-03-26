@@ -16,6 +16,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/stretchr/testify/assert"
+	"net/url"
 	"testing"
 	"time"
 )
@@ -27,7 +28,11 @@ const testTlsCertKeyBase64 = "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2QUlCQU
 func CreatePostgresTestProvider(t *testing.T) (*provider.IServiceProvider, config.RawConfig) {
 	config := common_test.GetConfig(t)
 
+	url, err := url.Parse(config.Kubernetes.Server)
+	assert.Nil(t, err)
+
 	var pgProvider provider.IServiceProvider = postgres.CreatePostgresProvider(
+		url.Hostname(),
 		config.Kubernetes.Server,
 		config.Kubernetes.CertificateAuthority,
 		config.Kubernetes.Operators.Postgres.PgoUrl,
@@ -50,6 +55,7 @@ func Test_Postgres_Provider_Create_Panic_Template_Not_Found(t *testing.T) {
 	}()
 
 	pgProvider := postgres.CreatePostgresProvider(
+		"Hostname",
 		"Server",
 		"CaPath",
 		"NotExistingPath",

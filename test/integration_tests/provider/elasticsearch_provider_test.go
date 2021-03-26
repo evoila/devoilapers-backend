@@ -12,13 +12,18 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
+	"net/url"
 	"testing"
 )
 
 func CreateElasticSearchTestProvider(t *testing.T) (*provider.IServiceProvider, config.RawConfig) {
 	config := common_test.GetConfig(t)
 
+	url, err := url.Parse(config.Kubernetes.Server)
+	assert.Nil(t, err)
+
 	var esProvider provider.IServiceProvider = elasticsearch.CreateElasticSearchProvider(
+		url.Hostname(),
 		config.Kubernetes.Server,
 		config.Kubernetes.CertificateAuthority,
 		config.ResourcesTemplatesPath)
@@ -34,6 +39,7 @@ func Test_Create_Panic_Template_Not_Found(t *testing.T) {
 	}()
 
 	esProvider := elasticsearch.CreateElasticSearchProvider(
+		"Hostname",
 		"Server",
 		"CaPath",
 		"NotExistingPath")

@@ -73,7 +73,7 @@ func (es ElasticsearchProvider) GetJsonForm(auth common.IKubernetesAuthInformati
 }
 
 func (es ElasticsearchProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error) {
-	return kubernetes.CreateCommonCrdApi(es.KubernetsServer, es.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
+	return kubernetes.CreateCommonCrdApi(es.KubernetsServer, es.CaPath, auth.GetKubernetesAccessToken(), esCommon.GroupName, esCommon.GroupVersion)
 }
 
 func (es ElasticsearchProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
@@ -84,7 +84,7 @@ func (es ElasticsearchProvider) GetServices(auth common.IKubernetesAuthInformati
 	}
 
 	elasticSearchInstances := v1.ElasticsearchList{}
-	err = elasticSearchCrd.List(auth.GetKubernetesNamespace(), RessourceName, &elasticSearchInstances)
+	err = elasticSearchCrd.List(auth.GetKubernetesNamespace(), esCommon.RessourceName, &elasticSearchInstances)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (es ElasticsearchProvider) GetService(auth common.IKubernetesAuthInformatio
 	}
 
 	elasticSearchInstance := v1.Elasticsearch{}
-	err = elasticSearchCrd.Get(auth.GetKubernetesNamespace(), id, RessourceName, &elasticSearchInstance)
+	err = elasticSearchCrd.Get(auth.GetKubernetesNamespace(), id, esCommon.RessourceName, &elasticSearchInstance)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (es ElasticsearchProvider) DeleteService(auth common.IKubernetesAuthInforma
 	}
 
 	//TODO: Check if there is an associated ingress
-	return elasticSearchCrd.Delete(auth.GetKubernetesNamespace(), id, RessourceName)
+	return elasticSearchCrd.Delete(auth.GetKubernetesNamespace(), id, esCommon.RessourceName)
 }
 
 // Converts a v1.Elasticsearch instance to an service representation

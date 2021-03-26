@@ -55,7 +55,7 @@ func (api *K8sApi) Apply(b []byte) ([]*unstructured.Unstructured, error) {
 				return result, nil
 			}
 
-			logger.RError(err,"Yaml decoder produced an error")
+			logger.RError(err, "Yaml decoder produced an error")
 			return result, err
 		}
 
@@ -66,21 +66,21 @@ func (api *K8sApi) Apply(b []byte) ([]*unstructured.Unstructured, error) {
 		unstructuredMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 		if err != nil {
 			logrus.Error(err)
-			return  result, err
+			return result, err
 		}
 
 		unstructuredObj := &unstructured.Unstructured{Object: unstructuredMap}
 
 		gr, err := restmapper.GetAPIGroupResources(api.ClientSet.Discovery())
 		if err != nil {
-			logger.RError(err,"Could not resolve api group resources.")
+			logger.RError(err, "Could not resolve api group resources.")
 			return result, err
 		}
 
 		mapper := restmapper.NewDiscoveryRESTMapper(gr)
 		mapping, err := mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 		if err != nil {
-			logger.RError(err,"Could not identify a preferred resource mapping.")
+			logger.RError(err, "Could not identify a preferred resource mapping.")
 			return result, err
 		}
 
@@ -184,10 +184,15 @@ func (api *K8sApi) DeleteSecret(namespace, name string) error {
 	return api.ClientSet.CoreV1().Secrets(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
 }
 
+func (api *K8sApi) CreateIngressWithHttpsBackend(ingressName string, namespace string, hostname string, tlsSecret string, serviceName string, servicePort int, ownerReference metav1.OwnerReference) (*v1Beta.Ingress, error) {
+	var owners []metav1.OwnerReference
+	if ownerReference.UID != "" {
+		owners = []metav1.OwnerReference{
+			ownerReference,
+		}
+	}
 
-func (api *K8sApi) CreateIngressWithHttpsBackend(ingressName string, namespace string, hostname string, tlsSecret string, serviceName string, servicePort int, ) (*v1Beta.Ingress, error) {
-
-	new_ingress  := &v1Beta.Ingress{
+	new_ingress := &v1Beta.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Ingress",
 			APIVersion: "networking.k8s.io/v1beta1",
@@ -196,10 +201,12 @@ func (api *K8sApi) CreateIngressWithHttpsBackend(ingressName string, namespace s
 			Name:      ingressName,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				"kubernetes.io/ingress.class": "nginx",
+				"kubernetes.io/ingress.class":                  "nginx",
 				"nginx.ingress.kubernetes.io/backend-protocol": "HTTPS",
 			},
+			OwnerReferences: owners,
 		},
+
 		Spec: v1Beta.IngressSpec{
 			TLS: []v1Beta.IngressTLS{
 				{

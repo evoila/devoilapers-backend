@@ -1,6 +1,7 @@
 package elasticsearch
 
 import (
+	esCommon "OperatorAutomation/pkg/elasticsearch/common"
 	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/elasticsearch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -8,11 +9,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-const GroupName = "elasticsearch.k8s.elastic.co"
-const GroupVersion = "v1"
-const RessourceName = "elasticsearches"
-
-var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: GroupVersion}
+var SchemeGroupVersion = schema.GroupVersion{Group: esCommon.GroupName, Version: esCommon.GroupVersion}
 
 var (
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)

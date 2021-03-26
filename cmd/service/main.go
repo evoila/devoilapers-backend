@@ -119,6 +119,7 @@ func InitializeCore(appconfig config.RawConfig) *core.Core {
 	)
 
 	var kb provider.IServiceProvider = kibana.CreateKibanaProvider(
+		hostname,
 		appconfig.Kubernetes.Server,
 		appconfig.Kubernetes.CertificateAuthority,
 		appconfig.ResourcesTemplatesPath,

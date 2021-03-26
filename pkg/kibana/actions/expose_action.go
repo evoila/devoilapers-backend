@@ -2,35 +2,18 @@ package actions
 
 import (
 	"OperatorAutomation/pkg/core/action"
-	esCommon "OperatorAutomation/pkg/elasticsearch/common"
-	"OperatorAutomation/pkg/elasticsearch/dtos/action_dtos"
+	kbCommon "OperatorAutomation/pkg/kibana/common"
+	"OperatorAutomation/pkg/kibana/dtos/action_dtos"
 	"OperatorAutomation/pkg/utils/logger"
 	"context"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateExposeToggleAction(service *esCommon.ElasticsearchServiceInformations) action.ToggleAction {
-	return action.ToggleAction{
-		Name: "",
-		UniqueCommand: "cmd_es_toggle",
-		QueryExecuteCallback: func() (bool, error) {
-
-			return true, nil
-		},
-		SetExecuteCallback: func() (interface{}, error) {
-			return nil, nil
-		},
-		UnsetExecuteCallback: func() (interface{}, error) {
-			return nil, nil
-		},
-	}
-}
-
 // Creates an action to deliver port informations about the service
-func CreateGetExposeInformationAction(service *esCommon.ElasticsearchServiceInformations) action.IAction {
+func CreateGetExposeInformationAction(service *kbCommon.KibanaServiceInformations) action.IAction {
 	return action.FormAction{
 		Name:          "Expose infos",
-		UniqueCommand: "cmd_es_get_expose_info",
+		UniqueCommand: "cmd_kb_get_expose_info",
 		Placeholder:   nil,
 		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
 			return GetExposeInformation(service)
@@ -39,10 +22,10 @@ func CreateGetExposeInformationAction(service *esCommon.ElasticsearchServiceInfo
 }
 
 // Creates an action to expose the service with a random port
-func CreateExposeAction(service *esCommon.ElasticsearchServiceInformations) action.IAction {
+func CreateExposeAction(service *kbCommon.KibanaServiceInformations) action.IAction {
 	return action.FormAction{
 		Name:          "Expose",
-		UniqueCommand: "cmd_es_expose",
+		UniqueCommand: "cmd_kb_expose",
 		Placeholder:   nil,
 		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
 			return nil, Expose(service)
@@ -51,10 +34,10 @@ func CreateExposeAction(service *esCommon.ElasticsearchServiceInformations) acti
 }
 
 // Creates an action to remove the exposure
-func DeleteExposeAction(service *esCommon.ElasticsearchServiceInformations) action.IAction {
+func DeleteExposeAction(service *kbCommon.KibanaServiceInformations) action.IAction {
 	return action.FormAction{
 		Name:          "Hide",
-		UniqueCommand: "cmd_es_hide",
+		UniqueCommand: "cmd_kb_hide",
 		Placeholder:   nil,
 		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
 			return nil, Hide(service)
@@ -63,8 +46,8 @@ func DeleteExposeAction(service *esCommon.ElasticsearchServiceInformations) acti
 }
 
 // Delivers information about the ingress
-func GetExposeInformation(es *esCommon.ElasticsearchServiceInformations) (*action_dtos.ExposeInformations, error) {
-	ingressName := es.ClusterInstance.ObjectMeta.Name + "-es-ingress"
+func GetExposeInformation(es *kbCommon.KibanaServiceInformations) (*action_dtos.ExposeInformations, error) {
+	ingressName := es.ClusterInstance.ObjectMeta.Name + "-kb-ingress"
 	ingress, err := es.K8sApi.V1beta1Client.Ingresses(es.ClusterInstance.Namespace).Get(
 		context.TODO(),
 		ingressName,
@@ -80,8 +63,8 @@ func GetExposeInformation(es *esCommon.ElasticsearchServiceInformations) (*actio
 }
 
 // Reverts the expose action by removing the ingress
-func Hide(es *esCommon.ElasticsearchServiceInformations) error {
-	ingressName := es.ClusterInstance.ObjectMeta.Name + "-es-ingress"
+func Hide(es *kbCommon.KibanaServiceInformations) error {
+	ingressName := es.ClusterInstance.ObjectMeta.Name + "-kb-ingress"
 	err := es.K8sApi.V1beta1Client.Ingresses(es.ClusterInstance.Namespace).Delete(context.TODO(), ingressName, v1.DeleteOptions{})
 
 	if err != nil {
@@ -92,18 +75,18 @@ func Hide(es *esCommon.ElasticsearchServiceInformations) error {
 }
 
 // Open a port to connect to the elasticsearch from outside
-func Expose(es *esCommon.ElasticsearchServiceInformations) error {
-	tlsSecretName := es.ClusterInstance.ObjectMeta.Name + "-es-http-certs-public"
-	serviceName := es.ClusterInstance.ObjectMeta.Name + "-es-http"
-	ingressName := es.ClusterInstance.ObjectMeta.Name + "-es-ingress"
+func Expose(es *kbCommon.KibanaServiceInformations) error {
+	tlsSecretName := es.ClusterInstance.ObjectMeta.Name + "-kb-http-certs-public"
+	serviceName := es.ClusterInstance.ObjectMeta.Name + "-kb-http"
+	ingressName := es.ClusterInstance.ObjectMeta.Name + "-kb-ingress"
 	hostname := es.ClusterInstance.Name + "." + es.ClusterInstance.Namespace + "." + es.Hostname
 
 	trueValue := true
 	ownerRef := v1.OwnerReference{
 		UID: es.ClusterInstance.UID,
-		APIVersion:         esCommon.GroupName+"/"+esCommon.GroupVersion,
+		APIVersion:         kbCommon.GroupName+"/"+kbCommon.GroupVersion,
 		Name:               es.ClusterInstance.Name,
-		Kind:             	"Elasticsearch",
+		Kind:             	"Kibana",
 		Controller:         &trueValue,
 		BlockOwnerDeletion: &trueValue,
 	}
@@ -114,7 +97,7 @@ func Expose(es *esCommon.ElasticsearchServiceInformations) error {
 		hostname,
 		tlsSecretName,
 		serviceName,
-		9200,
+		5601,
 		ownerRef)
 
 	return err
