@@ -98,7 +98,7 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	filledForm := provider_dtos.ServiceCreationFormResponseDto{}
 	filledForm.Common.ClusterName = "es-test-cluster"
 
-	service1Ptr := common_test.CommonProviderStart(t, esProviderPtr, user, filledForm, 2)
+	service1Ptr := common_test.CommonProviderStart(t, esProviderPtr, user, filledForm, 3)
 	service1 := *service1Ptr
 
 	// Actions

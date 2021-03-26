@@ -158,7 +158,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	filledForm.Common.ClusterName = "kibana-test"
 	filledForm.Common.ElasticSearchInstance = esFormResponseDto.Common.ClusterName
 
-	service1Ptr := common_test.CommonProviderStart(t, kbProviderPtr, user, filledForm, 2)
+	service1Ptr := common_test.CommonProviderStart(t, kbProviderPtr, user, filledForm, 3)
 	service1 := *service1Ptr
 
 
