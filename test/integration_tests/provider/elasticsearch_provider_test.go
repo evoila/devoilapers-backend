@@ -154,6 +154,9 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 
 	// --- Exposure ---
 	// Check if toggle is correct
+	service1Ptr, err = esProvider.GetService(user, service1.GetName())
+	assert.Nil(t, err)
+	service1 = *service1Ptr
 	toggleActionPtr, err := common_test.GetToggleAction(service1Ptr, "Security", "cmd_es_expose_toggle")
 	assert.Nil(t, err)
 	toggleAction := *toggleActionPtr
