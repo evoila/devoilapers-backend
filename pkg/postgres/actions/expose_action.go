@@ -4,7 +4,7 @@ import (
 	"OperatorAutomation/pkg/core/action"
 	"OperatorAutomation/pkg/kubernetes"
 	pgCommon "OperatorAutomation/pkg/postgres/common"
-	dtos2 "OperatorAutomation/pkg/postgres/dtos"
+	"OperatorAutomation/pkg/postgres/dtos/action_dtos"
 	"context"
 	"errors"
 	coreApiV1 "k8s.io/api/core/v1"
@@ -49,8 +49,8 @@ func DeleteExposeAction(service *pgCommon.PostgresServiceInformations) action.IA
 }
 
 // Delivers information about the exposed port
-func GetExposeInformation(pg *pgCommon.PostgresServiceInformations) (*dtos2.ClusterExposeResponseDto, error) {
-	api, err := kubernetes.GenerateK8sApiFromToken(pg.Host, pg.CaPath, pg.Auth.GetKubernetesAccessToken())
+func GetExposeInformation(pg *pgCommon.PostgresServiceInformations) (*action_dtos.ClusterExposeResponseDto, error) {
+	api, err := kubernetes.GenerateK8sApiFromToken(pg.HostWithPort, pg.CaPath, pg.Auth.GetKubernetesAccessToken())
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,10 @@ func GetExposeInformation(pg *pgCommon.PostgresServiceInformations) (*dtos2.Clus
 		internalPort,
 	)
 
-	return &dtos2.ClusterExposeResponseDto{Port: exposedPort}, err
+	return &action_dtos.ClusterExposeResponseDto{
+		Port: exposedPort,
+		Hostname: pg.Hostname,
+	}, err
 }
 
 // Helper method to get the service of a postgres cluster
@@ -101,7 +104,7 @@ func getService(pg *pgCommon.PostgresServiceInformations, api *kubernetes.K8sApi
 
 // Reverts the expose action by removing the port
 func Hide(pg *pgCommon.PostgresServiceInformations) error {
-	api, err := kubernetes.GenerateK8sApiFromToken(pg.Host, pg.CaPath, pg.Auth.GetKubernetesAccessToken())
+	api, err := kubernetes.GenerateK8sApiFromToken(pg.HostWithPort, pg.CaPath, pg.Auth.GetKubernetesAccessToken())
 	if err != nil {
 		return err
 	}
@@ -129,8 +132,8 @@ func Hide(pg *pgCommon.PostgresServiceInformations) error {
 }
 
 // Open a port to connect to the db from outside
-func Expose(pg *pgCommon.PostgresServiceInformations) (*dtos2.ClusterExposeResponseDto, error) {
-	api, err := kubernetes.GenerateK8sApiFromToken(pg.Host, pg.CaPath, pg.Auth.GetKubernetesAccessToken())
+func Expose(pg *pgCommon.PostgresServiceInformations) (*action_dtos.ClusterExposeResponseDto, error) {
+	api, err := kubernetes.GenerateK8sApiFromToken(pg.HostWithPort, pg.CaPath, pg.Auth.GetKubernetesAccessToken())
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +158,8 @@ func Expose(pg *pgCommon.PostgresServiceInformations) (*dtos2.ClusterExposeRespo
 		internalPort,
 	)
 
-	return &dtos2.ClusterExposeResponseDto{
+	return &action_dtos.ClusterExposeResponseDto{
 		Port: exposedPort,
+		Hostname: pg.Hostname,
 	}, err
 }

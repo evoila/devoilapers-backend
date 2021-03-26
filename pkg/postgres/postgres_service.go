@@ -6,7 +6,7 @@ import (
 	"OperatorAutomation/pkg/postgres/actions"
 	pgCommon "OperatorAutomation/pkg/postgres/common"
 	"OperatorAutomation/pkg/utils/provider"
-	v1 "github.com/Crunchydata/postgres-operator/pkg/apis/crunchydata.com/v1"
+	v1 "github.com/crunchydata/postgres-operator/pkg/apis/crunchydata.com/v1"
 )
 
 type PostgresService struct {
@@ -18,15 +18,17 @@ type PostgresService struct {
 func (pg PostgresService) GetActionGroups() []action.IActionGroup {
 	return []action.IActionGroup{
 		action.ActionGroup{
-			Name: "Informations",
-			Actions: []action.IAction{
-				actions.CreateGetCredentialsAction(&pg.PostgresServiceInformations),
-			},
-		},
-		action.ActionGroup{
 			Name: "Features",
 			Actions: []action.IAction{
 				actions.CreateScaleAction(&pg.PostgresServiceInformations),
+			},
+		},
+		action.ActionGroup{
+			Name: "User",
+			Actions: []action.IAction{
+				actions.ShowUserAction(&pg.PostgresServiceInformations),
+				actions.CreateUserAction(&pg.PostgresServiceInformations),
+				actions.DeleteUserAction(&pg.PostgresServiceInformations),
 			},
 		},
 		action.ActionGroup{

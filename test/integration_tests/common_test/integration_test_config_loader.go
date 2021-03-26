@@ -30,7 +30,7 @@ func tryPathOrJoinWithWorkingDirectory(targetPath string, workingDirectory strin
 		return newPath
 	}
 
-	panic("Path: \"" + targetPath + "\" not found")
+	panic("Path: \"" + targetPath + "\" not found during absolute path conversion")
 }
 
 func loadConfigAndResolveToAbsolutePaths(t *testing.T, pathFromRoot string) opaConfig.RawConfig {
@@ -79,6 +79,13 @@ func loadConfigAndResolveToAbsolutePaths(t *testing.T, pathFromRoot string) opaC
 		config.ResourcesTemplatesPath,
 		rootDirectoryPath,
 		true,
+	)
+
+	fmt.Println("Try resolveconfig.Kubernetes.Operators.Postgres.PgoCaPath")
+	config.Kubernetes.Operators.Postgres.PgoCaPath = tryPathOrJoinWithWorkingDirectory(
+		config.Kubernetes.Operators.Postgres.PgoCaPath,
+		rootDirectoryPath,
+		false,
 	)
 
 	return config

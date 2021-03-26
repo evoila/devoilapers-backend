@@ -17,7 +17,7 @@ import (
 
 var TEST_USERNAME = "TestUsername"
 var TEST_PASSWORD = "TestPassword"
-var TEST_ROLE = "TestRole"
+var TEST_ROLE = "user"
 var TEST_NAMESPACE = "TestNamespace"
 var TEST_TOKEN = "TestToken"
 
@@ -82,7 +82,6 @@ func Create_Users(t *testing.T) []config.User {
 		{
 			Name:                  TEST_USERNAME,
 			Password:              TEST_PASSWORD,
-			Role:                  TEST_ROLE,
 			KubernetesNamespace:   TEST_NAMESPACE,
 			KubernetesAccessToken: TEST_TOKEN,
 		},

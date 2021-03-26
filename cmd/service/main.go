@@ -118,6 +118,11 @@ func InitializeCore(appconfig config.RawConfig) *core.Core {
 	var pg provider.IServiceProvider = postgres.CreatePostgresProvider(
 		appconfig.Kubernetes.Server,
 		appconfig.Kubernetes.CertificateAuthority,
+		appconfig.Kubernetes.Operators.Postgres.PgoUrl,
+		appconfig.Kubernetes.Operators.Postgres.PgoVersion,
+		appconfig.Kubernetes.Operators.Postgres.PgoCaPath,
+		appconfig.Kubernetes.Operators.Postgres.PgoUsername,
+		appconfig.Kubernetes.Operators.Postgres.PgoPassword,
 		appconfig.ResourcesTemplatesPath,
 		kubernetes.NginxInformation(appconfig.Kubernetes.Nginx),
 	)

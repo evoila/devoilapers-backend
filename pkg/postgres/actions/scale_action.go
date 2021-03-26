@@ -4,9 +4,9 @@ import (
 	"OperatorAutomation/pkg/core/action"
 	"OperatorAutomation/pkg/kubernetes"
 	pgCommon "OperatorAutomation/pkg/postgres/common"
-	dtos2 "OperatorAutomation/pkg/postgres/dtos"
+	"OperatorAutomation/pkg/postgres/dtos/action_dtos"
 	"errors"
-	pgV1 "github.com/Crunchydata/postgres-operator/pkg/apis/crunchydata.com/v1"
+	pgV1 "github.com/crunchydata/postgres-operator/pkg/apis/crunchydata.com/v1"
 	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
@@ -21,13 +21,13 @@ func CreateScaleAction(service *pgCommon.PostgresServiceInformations) action.IAc
 		UniqueCommand: "cmd_pg_scale",
 		Placeholder:   CreatePlaceholder(service),
 		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
-			return scaleCluster(service, placeholder.(*dtos2.ClusterScaleDto))
+			return scaleCluster(service, placeholder.(*action_dtos.ClusterScaleDto))
 		},
 	}
 }
 
 // Generate placeholder which represents the required input fields
-func CreatePlaceholder(pg *pgCommon.PostgresServiceInformations) *dtos2.ClusterScaleDto {
+func CreatePlaceholder(pg *pgCommon.PostgresServiceInformations) *action_dtos.ClusterScaleDto {
 	replicas, err := getReplicas(pg)
 	numberOfReplicas := 0
 
@@ -35,7 +35,7 @@ func CreatePlaceholder(pg *pgCommon.PostgresServiceInformations) *dtos2.ClusterS
 		numberOfReplicas = len(replicas.Items)
 	}
 
-	return &dtos2.ClusterScaleDto{
+	return &action_dtos.ClusterScaleDto{
 		NumberOfReplicas: numberOfReplicas,
 	}
 }
@@ -57,7 +57,7 @@ func getReplicas(pg *pgCommon.PostgresServiceInformations) (*pgV1.PgreplicaList,
 }
 
 func scaleUp(pg *pgCommon.PostgresServiceInformations, numberOfNewReplicas int) error {
-	api, err := kubernetes.GenerateK8sApiFromToken(pg.Host, pg.CaPath, pg.Auth.GetKubernetesAccessToken())
+	api, err := kubernetes.GenerateK8sApiFromToken(pg.HostWithPort, pg.CaPath, pg.Auth.GetKubernetesAccessToken())
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func scaleDown(
 	return nil
 }
 
-func scaleCluster(pg *pgCommon.PostgresServiceInformations, dto *dtos2.ClusterScaleDto) (interface{}, error) {
+func scaleCluster(pg *pgCommon.PostgresServiceInformations, dto *action_dtos.ClusterScaleDto) (interface{}, error) {
 	if dto.NumberOfReplicas < 0 {
 		return nil, errors.New("invalid total number of replicas")
 	}
