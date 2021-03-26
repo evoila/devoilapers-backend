@@ -102,6 +102,53 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	service1 := *service1Ptr
 
 	// Actions
+	// --- Scale ---
+	// Scale = 1
+	// Check
+	actionPtr, err := common_test.GetAction(service1Ptr, "Features", "cmd_es_scale")
+	assert.Nil(t, err)
+	action := *actionPtr
+	placeholder := action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
+	assert.Equal(t, 1, placeholder.NumberOfReplicas)
+
+	// Scale up -> 2
+	actionPtr, err = common_test.GetAction(service1Ptr, "Features", "cmd_es_scale")
+	assert.Nil(t, err)
+	action = *actionPtr
+	placeholder = action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
+	placeholder.NumberOfReplicas = 2
+	result, err := action.GetActionExecuteCallback()(placeholder)
+	assert.Nil(t, err)
+	assert.Nil(t, result)
+	time.Sleep(5 * time.Second)
+	// Check
+	tempServicePtr, err := esProvider.GetService(user, service1.GetName())
+	assert.Nil(t, err)
+	actionPtr, err = common_test.GetAction(tempServicePtr, "Features", "cmd_es_scale")
+	assert.Nil(t, err)
+	action = *actionPtr
+	placeholder = action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
+	assert.Equal(t, 2, placeholder.NumberOfReplicas)
+
+	// Scale down -> 1
+	actionPtr, err = common_test.GetAction(service1Ptr, "Features", "cmd_es_scale")
+	assert.Nil(t, err)
+	action = *actionPtr
+	placeholder = action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
+	placeholder.NumberOfReplicas = 1
+	result, err = action.GetActionExecuteCallback()(placeholder)
+	assert.Nil(t, err)
+	assert.Nil(t, result)
+	time.Sleep(5 * time.Second)
+	// Check
+	tempServicePtr, err = esProvider.GetService(user, service1.GetName())
+	assert.Nil(t, err)
+	actionPtr, err = common_test.GetAction(tempServicePtr, "Features", "cmd_es_scale")
+	assert.Nil(t, err)
+	action = *actionPtr
+	placeholder = action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
+	assert.Equal(t, 1, placeholder.NumberOfReplicas)
+
 
 	// --- Exposure ---
 	// Check if toggle is correct
@@ -113,10 +160,10 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	assert.False(t, isSet) // Not exposed
 
 	// Check expose details
-	actionPtr, err := common_test.GetAction(service1Ptr, "Security", "cmd_es_get_expose_info")
+	actionPtr, err = common_test.GetAction(service1Ptr, "Security", "cmd_es_get_expose_info")
 	assert.Nil(t, err)
-	action := *actionPtr
-	result, err := action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
+	action = *actionPtr
+	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
 	assert.Nil(t, err)
 	clusterExposeInformation := result.(*action_dtos.ExposeInformations)
 	assert.True(t, len(clusterExposeInformation.Host) > 0)
