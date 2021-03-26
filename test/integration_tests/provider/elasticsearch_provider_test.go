@@ -131,7 +131,8 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	assert.Equal(t, 2, placeholder.NumberOfReplicas)
 
 	// Scale down -> 1
-	actionPtr, err = common_test.GetAction(service1Ptr, "Features", "cmd_es_scale")
+	tempServicePtr, err = esProvider.GetService(user, service1.GetName())
+	actionPtr, err = common_test.GetAction(tempServicePtr, "Features", "cmd_es_scale")
 	assert.Nil(t, err)
 	action = *actionPtr
 	placeholder = action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
@@ -140,6 +141,7 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, result)
 	time.Sleep(5 * time.Second)
+
 	// Check
 	tempServicePtr, err = esProvider.GetService(user, service1.GetName())
 	assert.Nil(t, err)

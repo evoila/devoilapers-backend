@@ -192,7 +192,8 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	assert.Equal(t, 2, placeholder.NumberOfReplicas)
 
 	// Scale down -> 1
-	actionPtr, err = common_test.GetAction(service1Ptr, "Features", "cmd_kb_scale")
+	tempServicePtr, err = esProvider.GetService(user, service1.GetName())
+	actionPtr, err = common_test.GetAction(tempServicePtr, "Features", "cmd_kb_scale")
 	assert.Nil(t, err)
 	action = *actionPtr
 	placeholder = action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
