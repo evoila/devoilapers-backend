@@ -2,7 +2,7 @@ package actions
 
 import (
 	"OperatorAutomation/pkg/core/action"
-	"OperatorAutomation/pkg/elasticsearch/dtos/action_dtos"
+	"OperatorAutomation/pkg/kibana/dtos/action_dtos"
 	kbCommon "OperatorAutomation/pkg/kibana/common"
 )
 
