@@ -183,7 +183,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	assert.Nil(t, result)
 	time.Sleep(5 * time.Second)
 	// Check
-	tempServicePtr, err := esProvider.GetService(user, service1.GetName())
+	tempServicePtr, err := kbProvider.GetService(user, service1.GetName())
 	assert.Nil(t, err)
 	actionPtr, err = common_test.GetAction(tempServicePtr, "Features", "cmd_kb_scale")
 	assert.Nil(t, err)
@@ -192,7 +192,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	assert.Equal(t, 2, placeholder.NumberOfReplicas)
 
 	// Scale down -> 1
-	tempServicePtr, err = esProvider.GetService(user, service1.GetName())
+	tempServicePtr, err = kbProvider.GetService(user, service1.GetName())
 	actionPtr, err = common_test.GetAction(tempServicePtr, "Features", "cmd_kb_scale")
 	assert.Nil(t, err)
 	action = *actionPtr
@@ -203,7 +203,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	assert.Nil(t, result)
 	time.Sleep(5 * time.Second)
 	// Check
-	tempServicePtr, err = esProvider.GetService(user, service1.GetName())
+	tempServicePtr, err = kbProvider.GetService(user, service1.GetName())
 	assert.Nil(t, err)
 	actionPtr, err = common_test.GetAction(tempServicePtr, "Features", "cmd_kb_scale")
 	assert.Nil(t, err)
@@ -213,7 +213,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 
 	// --- Exposure ---
 	// Check if toggle is correct
-	service1Ptr, err = esProvider.GetService(user, service1.GetName())
+	service1Ptr, err = kbProvider.GetService(user, service1.GetName())
 	assert.Nil(t, err)
 	service1 = *service1Ptr
 	toggleActionPtr, err := common_test.GetToggleAction(service1Ptr, "Security", "cmd_kb_expose_toggle")
