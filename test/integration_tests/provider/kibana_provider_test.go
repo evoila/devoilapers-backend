@@ -166,7 +166,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	// --- Scale ---
 	// Scale = 1
 	// Check
-	actionPtr, err := common_test.GetAction(service1Ptr, "Features", "cmd_es_scale")
+	actionPtr, err := common_test.GetAction(service1Ptr, "Features", "cmd_kb_scale")
 	assert.Nil(t, err)
 	action := *actionPtr
 	placeholder := action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
