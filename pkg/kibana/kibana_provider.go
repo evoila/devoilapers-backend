@@ -112,7 +112,7 @@ func (kb KibanaProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (in
 }
 
 func (kb KibanaProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error) {
-	return kubernetes.CreateCommonCrdApi(kb.KubernetsServer, kb.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
+	return kubernetes.CreateCommonCrdApi(kb.KubernetsServer, kb.CaPath, auth.GetKubernetesAccessToken(), kbCommon.GroupName,  kbCommon.GroupVersion)
 }
 
 func (kb KibanaProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
@@ -123,7 +123,7 @@ func (kb KibanaProvider) GetServices(auth common.IKubernetesAuthInformation) ([]
 	}
 
 	kibanaInstances := v1.KibanaList{}
-	err = KibanaCrd.List(auth.GetKubernetesNamespace(), ResourceName, &kibanaInstances)
+	err = KibanaCrd.List(auth.GetKubernetesNamespace(), kbCommon.ResourceName, &kibanaInstances)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (kb KibanaProvider) GetService(auth common.IKubernetesAuthInformation, id s
 	}
 
 	kibanaInstance := v1.Kibana{}
-	err = KibanaCrd.Get(auth.GetKubernetesNamespace(), id, ResourceName, &kibanaInstance)
+	err = KibanaCrd.Get(auth.GetKubernetesNamespace(), id, kbCommon.ResourceName, &kibanaInstance)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func (kb KibanaProvider) DeleteService(auth common.IKubernetesAuthInformation, i
 	}
 
 	//TODO: Check if there is an associated ingress
-	return KibanaCrd.Delete(auth.GetKubernetesNamespace(), id, ResourceName)
+	return KibanaCrd.Delete(auth.GetKubernetesNamespace(), id, kbCommon.ResourceName)
 }
 
 // Converts a v1.Kibana instance to an service reprkbentation

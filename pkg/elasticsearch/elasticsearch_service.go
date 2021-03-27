@@ -30,6 +30,12 @@ func (es ElasticSearchService) GetStatus() int {
 func (es ElasticSearchService) GetActionGroups() []action.IActionGroup {
 	return []action.IActionGroup{
 		action.ActionGroup{
+			Name: "Features",
+			Actions: []action.IAction{
+				actions.ScaleClusterAction(&es.ElasticsearchServiceInformations),
+			},
+		},
+		action.ActionGroup{
 			Name: "User",
 			Actions: []action.IAction{
 				actions.GetCredentialsAction(&es.ElasticsearchServiceInformations),

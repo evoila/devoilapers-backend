@@ -1,6 +1,7 @@
 package kibana
 
 import (
+	kbCommon "OperatorAutomation/pkg/kibana/common"
 	v1 "github.com/elastic/cloud-on-k8s/pkg/apis/kibana/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -8,11 +9,8 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-const GroupName = "kibana.k8s.elastic.co"
-const GroupVersion = "v1"
-const ResourceName = "kibanas"
 
-var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: GroupVersion}
+var SchemeGroupVersion = schema.GroupVersion{Group: kbCommon.GroupName, Version: kbCommon.GroupVersion}
 
 var (
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)

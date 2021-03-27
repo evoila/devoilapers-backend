@@ -98,13 +98,65 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	filledForm := provider_dtos.ServiceCreationFormResponseDto{}
 	filledForm.Common.ClusterName = "es-test-cluster"
 
-	service1Ptr := common_test.CommonProviderStart(t, esProviderPtr, user, filledForm, 2)
+	service1Ptr := common_test.CommonProviderStart(t, esProviderPtr, user, filledForm, 3)
 	service1 := *service1Ptr
 
 	// Actions
+	// --- Scale ---
+	// Scale = 1
+	// Check
+	actionPtr, err := common_test.GetAction(service1Ptr, "Features", "cmd_es_scale")
+	assert.Nil(t, err)
+	action := *actionPtr
+	placeholder := action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
+	assert.Equal(t, 1, placeholder.NumberOfReplicas)
+
+	// Scale up -> 2
+	actionPtr, err = common_test.GetAction(service1Ptr, "Features", "cmd_es_scale")
+	assert.Nil(t, err)
+	action = *actionPtr
+	placeholder = action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
+	placeholder.NumberOfReplicas = 2
+	result, err := action.GetActionExecuteCallback()(placeholder)
+	assert.Nil(t, err)
+	assert.Nil(t, result)
+	time.Sleep(5 * time.Second)
+	// Check
+	tempServicePtr, err := esProvider.GetService(user, service1.GetName())
+	assert.Nil(t, err)
+	actionPtr, err = common_test.GetAction(tempServicePtr, "Features", "cmd_es_scale")
+	assert.Nil(t, err)
+	action = *actionPtr
+	placeholder = action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
+	assert.Equal(t, 2, placeholder.NumberOfReplicas)
+
+	// Scale down -> 1
+	tempServicePtr, err = esProvider.GetService(user, service1.GetName())
+	actionPtr, err = common_test.GetAction(tempServicePtr, "Features", "cmd_es_scale")
+	assert.Nil(t, err)
+	action = *actionPtr
+	placeholder = action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
+	placeholder.NumberOfReplicas = 1
+	result, err = action.GetActionExecuteCallback()(placeholder)
+	assert.Nil(t, err)
+	assert.Nil(t, result)
+	time.Sleep(5 * time.Second)
+
+	// Check
+	tempServicePtr, err = esProvider.GetService(user, service1.GetName())
+	assert.Nil(t, err)
+	actionPtr, err = common_test.GetAction(tempServicePtr, "Features", "cmd_es_scale")
+	assert.Nil(t, err)
+	action = *actionPtr
+	placeholder = action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
+	assert.Equal(t, 1, placeholder.NumberOfReplicas)
+
 
 	// --- Exposure ---
 	// Check if toggle is correct
+	service1Ptr, err = esProvider.GetService(user, service1.GetName())
+	assert.Nil(t, err)
+	service1 = *service1Ptr
 	toggleActionPtr, err := common_test.GetToggleAction(service1Ptr, "Security", "cmd_es_expose_toggle")
 	assert.Nil(t, err)
 	toggleAction := *toggleActionPtr
@@ -113,10 +165,10 @@ func Test_Elasticsearch_Provider_End2End(t *testing.T) {
 	assert.False(t, isSet) // Not exposed
 
 	// Check expose details
-	actionPtr, err := common_test.GetAction(service1Ptr, "Security", "cmd_es_get_expose_info")
+	actionPtr, err = common_test.GetAction(service1Ptr, "Security", "cmd_es_get_expose_info")
 	assert.Nil(t, err)
-	action := *actionPtr
-	result, err := action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
+	action = *actionPtr
+	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
 	assert.Nil(t, err)
 	clusterExposeInformation := result.(*action_dtos.ExposeInformations)
 	assert.True(t, len(clusterExposeInformation.Host) > 0)

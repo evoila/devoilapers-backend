@@ -29,6 +29,12 @@ func (kb KibanaService) GetStatus() int {
 func (kb KibanaService) GetActionGroups() []action.IActionGroup {
 	return []action.IActionGroup{
 		action.ActionGroup{
+			Name: "Features",
+			Actions: []action.IAction{
+				actions.ScaleClusterAction(&kb.KibanaServiceInformations),
+			},
+		},
+		action.ActionGroup{
 			Name: "User",
 			Actions: []action.IAction{
 				actions.GetCredentialsAction(&kb.KibanaServiceInformations),

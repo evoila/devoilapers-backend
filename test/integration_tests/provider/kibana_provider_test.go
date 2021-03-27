@@ -6,9 +6,9 @@ import (
 	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/elasticsearch"
-	"OperatorAutomation/pkg/elasticsearch/dtos/provider_dtos"
+	esProviderDtos "OperatorAutomation/pkg/elasticsearch/dtos/provider_dtos"
 	"OperatorAutomation/pkg/kibana"
-	provider_dtos2 "OperatorAutomation/pkg/kibana/dtos/provider_dtos"
+	kbProviderDtos "OperatorAutomation/pkg/kibana/dtos/provider_dtos"
 	"OperatorAutomation/pkg/kibana/dtos/action_dtos"
 	"OperatorAutomation/test/integration_tests/common_test"
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
@@ -87,15 +87,15 @@ func Test_Kibana_Provider_GetAttributes(t *testing.T) {
 	assert.NotNil(t, formDataObj2)
 
 	// Ensure they are not the same (because of the random name)
-	formData1 := formDataObj1.(provider_dtos2.ServiceCreationFormDto)
-	formData2 := formDataObj2.(provider_dtos2.ServiceCreationFormDto)
+	formData1 := formDataObj1.(kbProviderDtos.ServiceCreationFormDto)
+	formData2 := formDataObj2.(kbProviderDtos.ServiceCreationFormDto)
 
 	assert.NotEqual(t,
 		formData1.Properties.Common.Properties.ClusterName.Default,
 		formData2.Properties.Common.Properties.ClusterName.Default)
 
 	// Generate yaml from form values and ensure it sets the values from form
-	filledForm := provider_dtos2.ServiceCreationFormResponseDto{}
+	filledForm := kbProviderDtos.ServiceCreationFormResponseDto{}
 	filledForm.Common.ClusterName = "MyCluster"
 	filledForm.Common.ElasticSearchInstance = "MyElasticSearchInstance"
 
@@ -105,7 +105,7 @@ func Test_Kibana_Provider_GetAttributes(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, yamlTemplate)
 
-	kibanaYaml := yamlTemplate.(provider_dtos2.ProviderYamlTemplateDto)
+	kibanaYaml := yamlTemplate.(kbProviderDtos.ProviderYamlTemplateDto)
 	assert.Equal(t, "MyCluster", kibanaYaml.Metadata.Name)
 	assert.Equal(t, "MyNamespace", kibanaYaml.Metadata.Namespace)
 	assert.Equal(t, "MyElasticSearchInstance", kibanaYaml.Spec.ElasticsearchRef.Name)
@@ -131,7 +131,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	kbProvider.OnCoreInitialized([]*provider.IServiceProvider{&esProvider})
 
 	// Create a new es instance
-	esFormResponseDto := provider_dtos.ServiceCreationFormResponseDto{}
+	esFormResponseDto := esProviderDtos.ServiceCreationFormResponseDto{}
 	esFormResponseDto.Common.ClusterName = "kibana-es-test"
 	esFormResponseDtoBytes, err := json.Marshal(esFormResponseDto)
 	assert.Nil(t, err)
@@ -154,18 +154,68 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 
 	// Continue with actual kb provider
 	// Generate a form response that would arrive from the frontent
-	filledForm := provider_dtos2.ServiceCreationFormResponseDto{}
+	filledForm := kbProviderDtos.ServiceCreationFormResponseDto{}
 	filledForm.Common.ClusterName = "kibana-test"
 	filledForm.Common.ElasticSearchInstance = esFormResponseDto.Common.ClusterName
 
-	service1Ptr := common_test.CommonProviderStart(t, kbProviderPtr, user, filledForm, 2)
+	service1Ptr := common_test.CommonProviderStart(t, kbProviderPtr, user, filledForm, 3)
 	service1 := *service1Ptr
 
 
 	// Actions
+	// --- Scale ---
+	// Scale = 1
+	// Check
+	actionPtr, err := common_test.GetAction(service1Ptr, "Features", "cmd_kb_scale")
+	assert.Nil(t, err)
+	action := *actionPtr
+	placeholder := action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
+	assert.Equal(t, 1, placeholder.NumberOfReplicas)
+
+	// Scale up -> 2
+	actionPtr, err = common_test.GetAction(service1Ptr, "Features", "cmd_kb_scale")
+	assert.Nil(t, err)
+	action = *actionPtr
+	placeholder = action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
+	placeholder.NumberOfReplicas = 2
+	result, err := action.GetActionExecuteCallback()(placeholder)
+	assert.Nil(t, err)
+	assert.Nil(t, result)
+	time.Sleep(5 * time.Second)
+	// Check
+	tempServicePtr, err := kbProvider.GetService(user, service1.GetName())
+	assert.Nil(t, err)
+	actionPtr, err = common_test.GetAction(tempServicePtr, "Features", "cmd_kb_scale")
+	assert.Nil(t, err)
+	action = *actionPtr
+	placeholder = action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
+	assert.Equal(t, 2, placeholder.NumberOfReplicas)
+
+	// Scale down -> 1
+	tempServicePtr, err = kbProvider.GetService(user, service1.GetName())
+	actionPtr, err = common_test.GetAction(tempServicePtr, "Features", "cmd_kb_scale")
+	assert.Nil(t, err)
+	action = *actionPtr
+	placeholder = action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
+	placeholder.NumberOfReplicas = 1
+	result, err = action.GetActionExecuteCallback()(placeholder)
+	assert.Nil(t, err)
+	assert.Nil(t, result)
+	time.Sleep(5 * time.Second)
+	// Check
+	tempServicePtr, err = kbProvider.GetService(user, service1.GetName())
+	assert.Nil(t, err)
+	actionPtr, err = common_test.GetAction(tempServicePtr, "Features", "cmd_kb_scale")
+	assert.Nil(t, err)
+	action = *actionPtr
+	placeholder = action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto)
+	assert.Equal(t, 1, placeholder.NumberOfReplicas)
 
 	// --- Exposure ---
 	// Check if toggle is correct
+	service1Ptr, err = kbProvider.GetService(user, service1.GetName())
+	assert.Nil(t, err)
+	service1 = *service1Ptr
 	toggleActionPtr, err := common_test.GetToggleAction(service1Ptr, "Security", "cmd_kb_expose_toggle")
 	assert.Nil(t, err)
 	toggleAction := *toggleActionPtr
@@ -174,10 +224,10 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	assert.False(t, isSet) // Not exposed
 
 	// Check expose details
-	actionPtr, err := common_test.GetAction(service1Ptr, "Security", "cmd_kb_get_expose_info")
+	actionPtr, err = common_test.GetAction(service1Ptr, "Security", "cmd_kb_get_expose_info")
 	assert.Nil(t, err)
-	action := *actionPtr
-	result, err := action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
+	action = *actionPtr
+	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
 	assert.Nil(t, err)
 	clusterExposeInformation := result.(*action_dtos.ExposeInformations)
 	assert.True(t, len(clusterExposeInformation.Host) > 0)
