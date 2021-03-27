@@ -9,13 +9,13 @@ import (
 
 // Abstract basic provider to reduce implementation effort
 type BasicProvider struct {
-	FormTemplate string
-	YamlTemplate string
-	Host         string
-	CaPath       string
-	Description  string
-	Image        string
-	ProviderType string
+	FormTemplate    string
+	YamlTemplate    string
+	KubernetsServer string
+	CaPath          string
+	Description     string
+	Image           string
+	ProviderType    string
 }
 
 func (cp BasicProvider) OnCoreInitialized(provider []*provider.IServiceProvider) {
@@ -47,7 +47,7 @@ func (cp BasicProvider) DeleteService(auth common.IKubernetesAuthInformation, id
 }
 
 func CreateCommonProvider(
-	host string,
+	kubernetesServer string,
 	caPath string,
 	yamlTemplatePath string,
 	formTemplatePath string,
@@ -67,13 +67,13 @@ func CreateCommonProvider(
 	}
 
 	return BasicProvider{
-		YamlTemplate: string(templateData),
-		FormTemplate: string(formTemplateData),
-		Host:         host,
-		CaPath:       caPath,
-		Description:  description,
-		Image:        image,
-		ProviderType: providerType,
+		YamlTemplate:    string(templateData),
+		FormTemplate:    string(formTemplateData),
+		KubernetsServer: kubernetesServer,
+		CaPath:          caPath,
+		Description:     description,
+		Image:           image,
+		ProviderType:    providerType,
 	}
 }
 

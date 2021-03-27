@@ -1,4 +1,4 @@
-package dtos
+package provider_dtos
 
 type ServiceCreationFormResponseDto struct {
 	Common struct {

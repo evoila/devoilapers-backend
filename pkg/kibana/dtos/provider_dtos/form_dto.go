@@ -1,4 +1,4 @@
-package dtos
+package provider_dtos
 
 //NGX schema form result
 type ServiceCreationFormResponseDto struct {

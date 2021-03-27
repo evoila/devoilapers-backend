@@ -1,4 +1,4 @@
-package dtos
+package action_dtos
 
 import "encoding/base64"
 
@@ -7,6 +7,7 @@ type CertificateDto struct {
 	TlsCrt string `formWidget:"file" formTitle:"TLS certificate:"`
 	TlsKey string `formWidget:"file" formTitle:"TLS Key:"`
 }
+
 
 // Convert from CertificateDto containing base64 string to CertificateDto with decoded string
 func (certDto *CertificateDto) EncodeFromBase64ToString() (*CertificateDto, error) {

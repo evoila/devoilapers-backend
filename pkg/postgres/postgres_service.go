@@ -35,8 +35,7 @@ func (pg PostgresService) GetActionGroups() []action.IActionGroup {
 			Name: "Security",
 			Actions: []action.IAction{
 				actions.CreateGetExposeInformationAction(&pg.PostgresServiceInformations),
-				actions.CreateExposeAction(&pg.PostgresServiceInformations),
-				actions.DeleteExposeAction(&pg.PostgresServiceInformations),
+				actions.CreateExposeToggleAction(&pg.PostgresServiceInformations),
 			},
 		},
 		action.ActionGroup{

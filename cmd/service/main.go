@@ -14,6 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"math/rand"
+	"net/url"
 	"os"
 	"time"
 )
@@ -101,21 +102,32 @@ func initialize(c *cli.Context, demoMode bool) error {
 
 // Create the core object that the service is interacting with
 func InitializeCore(appconfig config.RawConfig) *core.Core {
+	url, err := url.Parse(appconfig.Kubernetes.Server)
+	if err != nil {
+		logger.RError(err, "Could not parse kubernetes server url: " + appconfig.Kubernetes.Server)
+		panic(err)
+	}
+
+	hostname := url.Hostname()
 
 	// TODO: Add concrete just like here service providers here
 	var esp provider.IServiceProvider = elasticsearch.CreateElasticSearchProvider(
+		hostname,
 		appconfig.Kubernetes.Server,
 		appconfig.Kubernetes.CertificateAuthority,
 		appconfig.ResourcesTemplatesPath,
 	)
 
 	var kb provider.IServiceProvider = kibana.CreateKibanaProvider(
+		hostname,
 		appconfig.Kubernetes.Server,
 		appconfig.Kubernetes.CertificateAuthority,
 		appconfig.ResourcesTemplatesPath,
 	)
 
+
 	var pg provider.IServiceProvider = postgres.CreatePostgresProvider(
+		hostname,
 		appconfig.Kubernetes.Server,
 		appconfig.Kubernetes.CertificateAuthority,
 		appconfig.Kubernetes.Operators.Postgres.PgoUrl,

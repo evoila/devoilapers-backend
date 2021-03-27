@@ -2,10 +2,8 @@ package provider
 
 import (
 	"OperatorAutomation/cmd/service/config"
-	"OperatorAutomation/pkg/core/action"
 	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/provider"
-	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/kubernetes"
 	"OperatorAutomation/pkg/postgres"
 	"OperatorAutomation/pkg/postgres/dtos/action_dtos"
@@ -14,8 +12,8 @@ import (
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"github.com/stretchr/testify/assert"
+	"net/url"
 	"testing"
 	"time"
 )
@@ -27,7 +25,11 @@ const testTlsCertKeyBase64 = "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2QUlCQU
 func CreatePostgresTestProvider(t *testing.T) (*provider.IServiceProvider, config.RawConfig) {
 	config := common_test.GetConfig(t)
 
+	url, err := url.Parse(config.Kubernetes.Server)
+	assert.Nil(t, err)
+
 	var pgProvider provider.IServiceProvider = postgres.CreatePostgresProvider(
+		url.Hostname(),
 		config.Kubernetes.Server,
 		config.Kubernetes.CertificateAuthority,
 		config.Kubernetes.Operators.Postgres.PgoUrl,
@@ -50,6 +52,7 @@ func Test_Postgres_Provider_Create_Panic_Template_Not_Found(t *testing.T) {
 	}()
 
 	pgProvider := postgres.CreatePostgresProvider(
+		"Hostname",
 		"Server",
 		"CaPath",
 		"NotExistingPath",
@@ -119,25 +122,6 @@ func Test_Postgres_Provider_GetAttributes(t *testing.T) {
 	expectedNamespace := "MyNamespace"
 	assert.Equal(t, expectedNamespace, yamlObject.Metadata.Namespace)
 	assert.Equal(t, expectedNamespace, yamlObject.Spec.Namespace)
-}
-
-func get_action(service *service.IService, groupname string, actioncommand string) (*action.IAction, error) {
-	actionGroups := (*service).GetActionGroups()
-
-	for _, actionGroup := range actionGroups {
-		if actionGroup.GetName() != groupname {
-			continue
-		}
-
-		actions := actionGroup.GetActions()
-		for actionIdx, action := range actions {
-			if action.GetUniqueCommand() == actioncommand {
-				return &actions[actionIdx], nil
-			}
-		}
-	}
-
-	return nil, errors.New("Action not found")
 }
 
 func Test_Postgres_Provider_End2End_Tls_From_File(t *testing.T) {
@@ -233,14 +217,12 @@ func Test_Postgres_Provider_End2End_NoTls(t *testing.T) {
 }
 
 func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServiceProvider, user common.IKubernetesAuthInformation, filledForm provider_dtos.FormResponseDto) {
-	pgProvider := *pgProviderPtr
-
 	service1Ptr := common_test.CommonProviderStart(t, pgProviderPtr, user, filledForm, 4)
-	service1 := *service1Ptr
 
-	// user
+
+	// --- user ---
 	// show = 1
-	actionPtr, err := get_action(service1Ptr, "User", "cmd_pg_show_users")
+	actionPtr, err := common_test.GetAction(service1Ptr, "User", "cmd_pg_show_users")
 	assert.Nil(t, err)
 	action := *actionPtr
 	result, err := action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
@@ -249,7 +231,7 @@ func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServicePro
 	assert.Equal(t, 1, len(users))
 
 	// Add 1
-	actionPtr, err = get_action(service1Ptr, "User", "cmd_pg_add_user")
+	actionPtr, err = common_test.GetAction(service1Ptr, "User", "cmd_pg_add_user")
 	assert.Nil(t, err)
 	action = *actionPtr
 	addUserDto := *(action.GetJsonFormResultPlaceholder().(*action_dtos.AddUserDto))
@@ -260,7 +242,7 @@ func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServicePro
 	time.Sleep(5 * time.Second)
 
 	// show = 2
-	actionPtr, err = get_action(service1Ptr, "User", "cmd_pg_show_users")
+	actionPtr, err = common_test.GetAction(service1Ptr, "User", "cmd_pg_show_users")
 	assert.Nil(t, err)
 	action = *actionPtr
 	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
@@ -269,7 +251,7 @@ func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServicePro
 	assert.Equal(t, 2, len(users))
 
 	// Delete 1
-	actionPtr, err = get_action(service1Ptr, "User", "cmd_pg_remove_user")
+	actionPtr, err = common_test.GetAction(service1Ptr, "User", "cmd_pg_remove_user")
 	assert.Nil(t, err)
 	action = *actionPtr
 	deleteUserDto := *(action.GetJsonFormResultPlaceholder().(*action_dtos.DeleteUserDto))
@@ -279,7 +261,7 @@ func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServicePro
 	time.Sleep(5 * time.Second)
 
 	// show = 1
-	actionPtr, err = get_action(service1Ptr, "User", "cmd_pg_show_users")
+	actionPtr, err = common_test.GetAction(service1Ptr, "User", "cmd_pg_show_users")
 	assert.Nil(t, err)
 	action = *actionPtr
 	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
@@ -287,51 +269,78 @@ func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServicePro
 	users = result.(map[string]string)
 	assert.Equal(t, 1, len(users))
 
-	// Exposure
-	actionPtr, err = get_action(service1Ptr, "Security", "cmd_pg_get_expose_info")
+	// --- Exposure ---
+	// Check if toggle is correct
+	toggleActionPtr, err := common_test.GetToggleAction(service1Ptr, "Security", "cmd_pg_expose_toggle")
 	assert.Nil(t, err)
-	action = *actionPtr
-	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
-	assert.NotNil(t, err) // Not exposed
+	toggleAction := *toggleActionPtr
+	isSet, err := toggleAction.Get()
+	assert.Nil(t, err)
+	assert.False(t, isSet) // Not exposed
 
-	// Expose it
-	actionPtr, err = get_action(service1Ptr, "Security", "cmd_pg_expose")
-	assert.Nil(t, err)
-	action = *actionPtr
-	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
-	assert.Nil(t, err)
-	clusterExposeResult := result.(*action_dtos.ClusterExposeResponseDto)
-	assert.True(t, clusterExposeResult.Port > 1)
-
-	// Check again if it is exposed
-	serviceTemp, err := pgProvider.GetService(user, service1.GetName())
-	assert.Nil(t, err)
-	actionPtr, err = get_action(serviceTemp, "Security", "cmd_pg_get_expose_info")
+	// Check expose details
+	actionPtr, err = common_test.GetAction(service1Ptr, "Security", "cmd_pg_get_expose_info")
 	assert.Nil(t, err)
 	action = *actionPtr
 	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
 	assert.Nil(t, err)
 	clusterExposeInformation := result.(*action_dtos.ClusterExposeResponseDto)
-	assert.Equal(t, clusterExposeResult.Port, clusterExposeInformation.Port)
+	assert.Equal(t, 0, clusterExposeInformation.Port)
+
+	// Expose it
+	toggleActionPtr, err = common_test.GetToggleAction(service1Ptr, "Security", "cmd_pg_expose_toggle")
+	assert.Nil(t, err)
+	toggleAction = *toggleActionPtr
+	result, err = toggleAction.Set()
+	assert.Nil(t, err)
+	assert.Nil(t, result)
+	time.Sleep(5 * time.Second)
+
+	// Check if toggle is correct
+	toggleActionPtr, err = common_test.GetToggleAction(service1Ptr, "Security", "cmd_pg_expose_toggle")
+	assert.Nil(t, err)
+	toggleAction = *toggleActionPtr
+	isSet, err = toggleAction.Get()
+	assert.Nil(t, err)
+	assert.True(t, isSet) // exposed
+
+	// Check expose details
+	actionPtr, err = common_test.GetAction(service1Ptr, "Security", "cmd_pg_get_expose_info")
+	assert.Nil(t, err)
+	action = *actionPtr
+	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
+	assert.Nil(t, err)
+	clusterExposeInformation = result.(*action_dtos.ClusterExposeResponseDto)
+	assert.True(t, clusterExposeInformation.Port > 0)
 
 	// Hide it again
-	actionPtr, err = get_action(service1Ptr, "Security", "cmd_pg_hide")
+	toggleActionPtr, err = common_test.GetToggleAction(service1Ptr, "Security", "cmd_pg_expose_toggle")
 	assert.Nil(t, err)
-	action = *actionPtr
-	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
+	toggleAction = *toggleActionPtr
+	result, err = toggleAction.Unset()
 	assert.Nil(t, err)
+	time.Sleep(5 * time.Second)
 
 	// Check again if it is hidden
-	serviceTemp, err = pgProvider.GetService(user, service1.GetName())
+	// Check if toggle is correct
+	toggleActionPtr, err = common_test.GetToggleAction(service1Ptr, "Security", "cmd_pg_expose_toggle")
 	assert.Nil(t, err)
-	actionPtr, err = get_action(serviceTemp, "Security", "cmd_pg_get_expose_info")
+	toggleAction = *toggleActionPtr
+	isSet, err = toggleAction.Get()
+	assert.Nil(t, err)
+	assert.False(t, isSet) // Not exposed
+
+	// Check expose details
+	actionPtr, err = common_test.GetAction(service1Ptr, "Security", "cmd_pg_get_expose_info")
 	assert.Nil(t, err)
 	action = *actionPtr
 	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
-	assert.NotNil(t, err) // Not exposed
+	assert.Nil(t, err)
+	clusterExposeInformation = result.(*action_dtos.ClusterExposeResponseDto)
+	assert.Equal(t, 0, clusterExposeInformation.Port)
 
-	// Scale the cluster
-	actionPtr, err = get_action(service1Ptr, "Features", "cmd_pg_scale")
+	// --- Scale ---
+	actionPtr, err = common_test.GetAction(service1Ptr, "Features", "cmd_pg_scale")
 	assert.Nil(t, err)
 	action = *actionPtr
 	clusterScale := *(action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto))
@@ -353,9 +362,8 @@ func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServicePro
 	assert.Nil(t, result)
 	time.Sleep(5 * time.Second)
 	// Ensure we have 2 replicas now
-	serviceTemp, err = pgProvider.GetService(user, service1.GetName())
 	assert.Nil(t, err)
-	actionPtr, err = get_action(serviceTemp, "Features", "cmd_pg_scale")
+	actionPtr, err = common_test.GetAction(service1Ptr, "Features", "cmd_pg_scale")
 	assert.Nil(t, err)
 	action = *actionPtr
 	clusterScale = *(action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto))
@@ -367,9 +375,8 @@ func Postgres_Provider_End2End(t *testing.T, pgProviderPtr *provider.IServicePro
 	assert.Nil(t, result)
 	time.Sleep(5 * time.Second)
 	// Ensure we have only 1 replica now
-	serviceTemp, err = pgProvider.GetService(user, service1.GetName())
 	assert.Nil(t, err)
-	actionPtr, err = get_action(serviceTemp, "Features", "cmd_pg_scale")
+	actionPtr, err = common_test.GetAction(service1Ptr, "Features", "cmd_pg_scale")
 	assert.Nil(t, err)
 	action = *actionPtr
 	clusterScale = *(action.GetJsonFormResultPlaceholder().(*action_dtos.ClusterScaleDto))

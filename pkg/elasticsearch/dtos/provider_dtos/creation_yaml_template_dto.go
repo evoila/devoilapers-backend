@@ -1,4 +1,4 @@
-package dtos
+package provider_dtos
 
 type ProviderYamlTemplateDto struct {
 	APIVersion string `yaml:"apiVersion"`

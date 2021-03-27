@@ -6,15 +6,17 @@ import (
 	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
 	"OperatorAutomation/pkg/elasticsearch"
-	esDtos "OperatorAutomation/pkg/elasticsearch/dtos"
+	"OperatorAutomation/pkg/elasticsearch/dtos/provider_dtos"
 	"OperatorAutomation/pkg/kibana"
-	"OperatorAutomation/pkg/kibana/dtos"
+	provider_dtos2 "OperatorAutomation/pkg/kibana/dtos/provider_dtos"
+	"OperatorAutomation/pkg/kibana/dtos/action_dtos"
 	"OperatorAutomation/test/integration_tests/common_test"
 	unit_test "OperatorAutomation/test/unit_tests/common_test"
 	"encoding/base64"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	yamlSerializer "gopkg.in/yaml.v2"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -23,7 +25,11 @@ import (
 func CreateKibanaTestProvider(t *testing.T) (*provider.IServiceProvider, config.RawConfig) {
 	config := common_test.GetConfig(t)
 
+	url, err := url.Parse(config.Kubernetes.Server)
+	assert.Nil(t, err)
+
 	var kbProvider provider.IServiceProvider = kibana.CreateKibanaProvider(
+		url.Hostname(),
 		config.Kubernetes.Server,
 		config.Kubernetes.CertificateAuthority,
 		config.ResourcesTemplatesPath)
@@ -39,6 +45,7 @@ func Test_Kibana_Provider_Create_Panic_Template_Not_Found(t *testing.T) {
 	}()
 
 	kbProvider := kibana.CreateKibanaProvider(
+		"Hostname",
 		"Server",
 		"CaPath",
 		"NotExistingPath")
@@ -80,15 +87,15 @@ func Test_Kibana_Provider_GetAttributes(t *testing.T) {
 	assert.NotNil(t, formDataObj2)
 
 	// Ensure they are not the same (because of the random name)
-	formData1 := formDataObj1.(dtos.ServiceCreationFormDto)
-	formData2 := formDataObj2.(dtos.ServiceCreationFormDto)
+	formData1 := formDataObj1.(provider_dtos2.ServiceCreationFormDto)
+	formData2 := formDataObj2.(provider_dtos2.ServiceCreationFormDto)
 
 	assert.NotEqual(t,
 		formData1.Properties.Common.Properties.ClusterName.Default,
 		formData2.Properties.Common.Properties.ClusterName.Default)
 
 	// Generate yaml from form values and ensure it sets the values from form
-	filledForm := dtos.ServiceCreationFormResponseDto{}
+	filledForm := provider_dtos2.ServiceCreationFormResponseDto{}
 	filledForm.Common.ClusterName = "MyCluster"
 	filledForm.Common.ElasticSearchInstance = "MyElasticSearchInstance"
 
@@ -98,7 +105,7 @@ func Test_Kibana_Provider_GetAttributes(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, yamlTemplate)
 
-	kibanaYaml := yamlTemplate.(dtos.ProviderYamlTemplateDto)
+	kibanaYaml := yamlTemplate.(provider_dtos2.ProviderYamlTemplateDto)
 	assert.Equal(t, "MyCluster", kibanaYaml.Metadata.Name)
 	assert.Equal(t, "MyNamespace", kibanaYaml.Metadata.Namespace)
 	assert.Equal(t, "MyElasticSearchInstance", kibanaYaml.Spec.ElasticsearchRef.Name)
@@ -109,8 +116,12 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	kbProvider := *kbProviderPtr
 	user := config.Users[0]
 
+	url, err := url.Parse(config.Kubernetes.Server)
+	assert.Nil(t, err)
+
 	// Kibana depends on elastic search therefore we need to create it
 	var esProvider provider.IServiceProvider = elasticsearch.CreateElasticSearchProvider(
+		url.Hostname(),
 		config.Kubernetes.Server,
 		config.Kubernetes.CertificateAuthority,
 		config.ResourcesTemplatesPath,
@@ -120,7 +131,7 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 	kbProvider.OnCoreInitialized([]*provider.IServiceProvider{&esProvider})
 
 	// Create a new es instance
-	esFormResponseDto := esDtos.ServiceCreationFormResponseDto{}
+	esFormResponseDto := provider_dtos.ServiceCreationFormResponseDto{}
 	esFormResponseDto.Common.ClusterName = "kibana-es-test"
 	esFormResponseDtoBytes, err := json.Marshal(esFormResponseDto)
 	assert.Nil(t, err)
@@ -143,28 +154,104 @@ func Test_Kibana_Provider_End2End(t *testing.T) {
 
 	// Continue with actual kb provider
 	// Generate a form response that would arrive from the frontent
-	filledForm := dtos.ServiceCreationFormResponseDto{}
+	filledForm := provider_dtos2.ServiceCreationFormResponseDto{}
 	filledForm.Common.ClusterName = "kibana-test"
 	filledForm.Common.ElasticSearchInstance = esFormResponseDto.Common.ClusterName
 
-	service1Ptr := common_test.CommonProviderStart(t, kbProviderPtr, user, filledForm, 1)
+	service1Ptr := common_test.CommonProviderStart(t, kbProviderPtr, user, filledForm, 2)
 	service1 := *service1Ptr
 
+
+	// Actions
+
+	// --- Exposure ---
+	// Check if toggle is correct
+	toggleActionPtr, err := common_test.GetToggleAction(service1Ptr, "Security", "cmd_kb_expose_toggle")
+	assert.Nil(t, err)
+	toggleAction := *toggleActionPtr
+	isSet, err := toggleAction.Get()
+	assert.Nil(t, err)
+	assert.False(t, isSet) // Not exposed
+
+	// Check expose details
+	actionPtr, err := common_test.GetAction(service1Ptr, "Security", "cmd_kb_get_expose_info")
+	assert.Nil(t, err)
+	action := *actionPtr
+	result, err := action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
+	assert.Nil(t, err)
+	clusterExposeInformation := result.(*action_dtos.ExposeInformations)
+	assert.True(t, len(clusterExposeInformation.Host) > 0)
+
+	// Expose it
+	toggleActionPtr, err = common_test.GetToggleAction(service1Ptr, "Security", "cmd_kb_expose_toggle")
+	assert.Nil(t, err)
+	toggleAction = *toggleActionPtr
+	result, err = toggleAction.Set()
+	assert.Nil(t, err)
+	assert.Nil(t, result)
+	time.Sleep(5 * time.Second)
+
+	// Check if toggle is correct
+	toggleActionPtr, err = common_test.GetToggleAction(service1Ptr, "Security", "cmd_kb_expose_toggle")
+	assert.Nil(t, err)
+	toggleAction = *toggleActionPtr
+	isSet, err = toggleAction.Get()
+	assert.Nil(t, err)
+	assert.True(t, isSet) // exposed
+
+	// Check expose details
+	actionPtr, err = common_test.GetAction(service1Ptr, "Security", "cmd_kb_get_expose_info")
+	assert.Nil(t, err)
+	action = *actionPtr
+	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
+	assert.Nil(t, err)
+	clusterExposeInformation = result.(*action_dtos.ExposeInformations)
+	assert.True(t, len(clusterExposeInformation.Host) > 0)
+
+	// Hide it again
+	toggleActionPtr, err = common_test.GetToggleAction(service1Ptr, "Security", "cmd_kb_expose_toggle")
+	assert.Nil(t, err)
+	toggleAction = *toggleActionPtr
+	result, err = toggleAction.Unset()
+	assert.Nil(t, err)
+	time.Sleep(5 * time.Second)
+
+	// Check again if it is hidden
+	// Check if toggle is correct
+	toggleActionPtr, err = common_test.GetToggleAction(service1Ptr, "Security", "cmd_kb_expose_toggle")
+	assert.Nil(t, err)
+	toggleAction = *toggleActionPtr
+	isSet, err = toggleAction.Get()
+	assert.Nil(t, err)
+	assert.False(t, isSet) // Not exposed
+
+	// Check expose details
+	actionPtr, err = common_test.GetAction(service1Ptr, "Security", "cmd_kb_get_expose_info")
+	assert.Nil(t, err)
+	action = *actionPtr
+	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
+	assert.Nil(t, err)
+	clusterExposeInformation = result.(*action_dtos.ExposeInformations)
+	assert.True(t, len(clusterExposeInformation.Host) > 0)
+
+	// --- Certs ---
 	// Check whether service is an Kibana service
 	service2, ok := service1.(kibana.KibanaService)
 	assert.True(t, ok)
 
 	secret, _ := service2.K8sApi.GetSecret(user.KubernetesNamespace, service2.GetName()+"-kb-http-certs-internal")
 
-	// Test set certificate to service
-	certDto := &dtos.CertificateDto{
-		CaCrt:  base64.StdEncoding.EncodeToString(secret.Data["ca.crt"]),
-		TlsCrt: base64.StdEncoding.EncodeToString(secret.Data["tls.crt"]),
-		TlsKey: base64.StdEncoding.EncodeToString(secret.Data["tls.key"]),
-	}
-
-	_, err = service2.SetCertificateToService(certDto)
+	// Set cert
+	actionPtr, err = common_test.GetAction(service1Ptr, "Security", "cmd_kb_set_cert_action")
 	assert.Nil(t, err)
+	action = *actionPtr
+	certDto := action.GetJsonFormResultPlaceholder().(*action_dtos.CertificateDto)
+	certDto.CaCrt = base64.StdEncoding.EncodeToString(secret.Data["ca.crt"])
+	certDto.TlsCrt = base64.StdEncoding.EncodeToString(secret.Data["tls.crt"])
+	certDto.TlsKey = base64.StdEncoding.EncodeToString(secret.Data["tls.key"])
+	result, err = action.GetActionExecuteCallback()(action.GetJsonFormResultPlaceholder())
+	assert.Nil(t, err)
+	assert.Nil(t, result)
 
 	// Check status of service after setting the certificate
 	service3Ptr, err := common_test.WaitForServiceComeUp(kbProvider, user, service1.GetName())

@@ -4,7 +4,8 @@ import (
 	"OperatorAutomation/pkg/core/common"
 	"OperatorAutomation/pkg/core/provider"
 	"OperatorAutomation/pkg/core/service"
-	"OperatorAutomation/pkg/kibana/dtos"
+	kbCommon "OperatorAutomation/pkg/kibana/common"
+	"OperatorAutomation/pkg/kibana/dtos/provider_dtos"
 	"OperatorAutomation/pkg/kubernetes"
 	"OperatorAutomation/pkg/utils"
 	providerUtils "OperatorAutomation/pkg/utils/provider"
@@ -25,18 +26,21 @@ type KibanaProvider struct {
 // Data holder class to overcome interface pointer problems
 type sharedKibanaData struct {
 	esProvider *provider.IServiceProvider
+	hostname string
 }
 
 // Factory method to create an instance of the KibanaProvider
-func CreateKibanaProvider(host string, caPath string, templateDirectoryPath string) KibanaProvider {
-	return KibanaProvider{sharedKibanaData: &sharedKibanaData{}, BasicProvider: providerUtils.CreateCommonProvider(
-		host,
-		caPath,
-		path.Join(templateDirectoryPath, "kibana", "kibana.yaml"),
-		path.Join(templateDirectoryPath, "kibana", "create_form.json"),
-		"Kibana",
-		"Kibana is an open source visualization tool mainly used to analyse logs.",
-		"https://cdn.iconscout.com/icon/free/png-256/elastic-1-283281.png",
+func CreateKibanaProvider(hostname string, kubernetesServer string, caPath string, templateDirectoryPath string) KibanaProvider {
+	return KibanaProvider{
+		sharedKibanaData: &sharedKibanaData{hostname: hostname},
+		BasicProvider: providerUtils.CreateCommonProvider(
+			kubernetesServer,
+			caPath,
+			path.Join(templateDirectoryPath, "kibana", "kibana.yaml"),
+			path.Join(templateDirectoryPath, "kibana", "create_form.json"),
+			"Kibana",
+			"Kibana is an open source visualization tool mainly used to analyse logs.",
+			"https://cdn.iconscout.com/icon/free/png-256/elastic-1-283281.png",
 	)}
 }
 
@@ -54,14 +58,14 @@ func (kb KibanaProvider) OnCoreInitialized(providers []*provider.IServiceProvide
 }
 
 func (kb KibanaProvider) GetYamlTemplate(auth common.IKubernetesAuthInformation, jsonFormResult []byte) (interface{}, error) {
-	form := dtos.ServiceCreationFormResponseDto{}
+	form := provider_dtos.ServiceCreationFormResponseDto{}
 	err := json.Unmarshal(jsonFormResult, &form)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create form with form default values
-	yamlTemplate := dtos.ProviderYamlTemplateDto{}
+	yamlTemplate := provider_dtos.ProviderYamlTemplateDto{}
 	err = yaml.Unmarshal([]byte(kb.YamlTemplate), &yamlTemplate)
 	if err != nil {
 		return nil, err
@@ -77,7 +81,7 @@ func (kb KibanaProvider) GetYamlTemplate(auth common.IKubernetesAuthInformation,
 
 func (kb KibanaProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (interface{}, error) {
 	// Create form with form default values
-	formsQuery := dtos.ServiceCreationFormDto{}
+	formsQuery := provider_dtos.ServiceCreationFormDto{}
 	err := json.Unmarshal([]byte(kb.FormTemplate), &formsQuery)
 	if err != nil {
 		return nil, err
@@ -97,7 +101,7 @@ func (kb KibanaProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (in
 		esService := *esServicePtr
 		formsQuery.Properties.Common.Properties.ElasticSearchInstance.OneOf =
 			append(formsQuery.Properties.Common.Properties.ElasticSearchInstance.OneOf,
-				dtos.OneOfElasticSearchInstance{
+				provider_dtos.OneOfElasticSearchInstance{
 					Description: esService.GetName(),
 					Enum:        []string{esService.GetName()},
 				},
@@ -108,7 +112,7 @@ func (kb KibanaProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (in
 }
 
 func (kb KibanaProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error) {
-	return kubernetes.CreateCommonCrdApi(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
+	return kubernetes.CreateCommonCrdApi(kb.KubernetsServer, kb.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
 }
 
 func (kb KibanaProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
@@ -124,7 +128,7 @@ func (kb KibanaProvider) GetServices(auth common.IKubernetesAuthInformation) ([]
 		return nil, err
 	}
 
-	api, err := kubernetes.GenerateK8sApiFromToken(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken())
+	api, err := kubernetes.GenerateK8sApiFromToken(kb.KubernetsServer, kb.CaPath, auth.GetKubernetesAccessToken())
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +155,7 @@ func (kb KibanaProvider) GetService(auth common.IKubernetesAuthInformation, id s
 		return nil, err
 	}
 
-	api, err := kubernetes.GenerateK8sApiFromToken(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken())
+	api, err := kubernetes.GenerateK8sApiFromToken(kb.KubernetsServer, kb.CaPath, auth.GetKubernetesAccessToken())
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +164,7 @@ func (kb KibanaProvider) GetService(auth common.IKubernetesAuthInformation, id s
 }
 
 func (kb KibanaProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
-	api, err := kubernetes.GenerateK8sApiFromToken(kb.Host, kb.CaPath, auth.GetKubernetesAccessToken())
+	api, err := kubernetes.GenerateK8sApiFromToken(kb.KubernetsServer, kb.CaPath, auth.GetKubernetesAccessToken())
 	if err != nil {
 		return err
 	}
@@ -190,10 +194,13 @@ func (kb KibanaProvider) CrdInstanceToServiceInstance(api *kubernetes.K8sApi, co
 		yamlData = []byte("Unknown")
 	}
 
-	var KibanaService service.IService = KibanaService{
-		K8sApi:       api,
-		crdInstance:  crdInstance,
-		commonCrdApi: commonCrdApi,
+	var kibanaService service.IService = KibanaService{
+		KibanaServiceInformations : kbCommon.KibanaServiceInformations{
+			Hostname: kb.sharedKibanaData.hostname,
+			K8sApi:       api,
+			ClusterInstance:  crdInstance,
+			CrdClient: commonCrdApi,
+		},
 		status:       crdInstance.Status.Health,
 		BasicService: providerUtils.BasicService{
 			Name:         crdInstance.Name,
@@ -202,5 +209,5 @@ func (kb KibanaProvider) CrdInstanceToServiceInstance(api *kubernetes.K8sApi, co
 		},
 	}
 
-	return &KibanaService
+	return &kibanaService
 }

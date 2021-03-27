@@ -8,9 +8,25 @@ import (
 	"context"
 	"errors"
 	coreApiV1 "k8s.io/api/core/v1"
+	kubernetesError "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
 )
+
+func CreateExposeToggleAction(service *pgCommon.PostgresServiceInformations) action.ToggleAction {
+	return action.CreateToggleAction(
+		"Exposed",
+		"cmd_pg_expose_toggle",
+		func() (bool, error) {
+			return IsExposed(service)
+		},
+		func() (interface{}, error) {
+			return nil, Expose(service)
+		},
+		func() (interface{}, error) {
+			return nil, Hide(service)
+		})
+}
 
 // Creates an action to deliver port informations about the service
 func CreateGetExposeInformationAction(service *pgCommon.PostgresServiceInformations) action.IAction {
@@ -24,28 +40,14 @@ func CreateGetExposeInformationAction(service *pgCommon.PostgresServiceInformati
 	}
 }
 
-// Creates an action to expose the service with a random port
-func CreateExposeAction(service *pgCommon.PostgresServiceInformations) action.IAction {
-	return action.FormAction{
-		Name:          "Expose",
-		UniqueCommand: "cmd_pg_expose",
-		Placeholder:   nil,
-		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
-			return Expose(service)
-		},
-	}
-}
+func IsExposed(service *pgCommon.PostgresServiceInformations) (bool, error) {
+	exposeInfos, err := GetExposeInformation(service)
 
-// Creates an action to remove the exposure
-func DeleteExposeAction(service *pgCommon.PostgresServiceInformations) action.IAction {
-	return action.FormAction{
-		Name:          "Hide",
-		UniqueCommand: "cmd_pg_hide",
-		Placeholder:   nil,
-		ActionExecuteCallback: func(placeholder interface{}) (interface{}, error) {
-			return nil, Hide(service)
-		},
+	if err != nil {
+		return false, err
 	}
+
+	return exposeInfos.Port > 0, nil
 }
 
 // Delivers information about the exposed port
@@ -68,9 +70,18 @@ func GetExposeInformation(pg *pgCommon.PostgresServiceInformations) (*action_dto
 		internalPort,
 	)
 
+	if err != nil && (kubernetesError.IsNotFound(err) || err.Error() == "no port found. The service is not exposed") {
+		return &action_dtos.ClusterExposeResponseDto{Status: "Not exposed", Host: "Unknown"}, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &action_dtos.ClusterExposeResponseDto{
+		Status: "Exposed",
 		Port: exposedPort,
-		Hostname: pg.Hostname,
+		Host: pg.Hostname,
 	}, err
 }
 
@@ -132,25 +143,25 @@ func Hide(pg *pgCommon.PostgresServiceInformations) error {
 }
 
 // Open a port to connect to the db from outside
-func Expose(pg *pgCommon.PostgresServiceInformations) (*action_dtos.ClusterExposeResponseDto, error) {
+func Expose(pg *pgCommon.PostgresServiceInformations) error {
 	api, err := kubernetes.GenerateK8sApiFromToken(pg.HostWithPort, pg.CaPath, pg.Auth.GetKubernetesAccessToken())
 	if err != nil {
-		return nil, err
+		return  err
 	}
 
 	// Ensure a service with matching port exists
 	_, err = getService(pg, api)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Get the cluster internal service port
 	internalPort, err := strconv.Atoi(pg.ClusterInstance.Spec.Port)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	exposedPort, err := kubernetes.NginxOpenRandomTcpPort(
+	_, err = kubernetes.NginxOpenRandomTcpPort(
 		api,
 		pg.NginxInformation,
 		pg.ClusterInstance.Namespace,
@@ -158,8 +169,5 @@ func Expose(pg *pgCommon.PostgresServiceInformations) (*action_dtos.ClusterExpos
 		internalPort,
 	)
 
-	return &action_dtos.ClusterExposeResponseDto{
-		Port: exposedPort,
-		Hostname: pg.Hostname,
-	}, err
+	return err
 }

@@ -20,7 +20,6 @@ import (
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"net/url"
 	"path"
 	"strconv"
 	"strings"
@@ -38,6 +37,7 @@ type PostgresProvider struct {
 
 // Factory method to create an instance of the PostgresProvider
 func CreatePostgresProvider(
+	kubernetesHostname string,
 	kubernetesServer string,
 	kubernetesCaPath string,
 	pgoServer string,
@@ -50,14 +50,9 @@ func CreatePostgresProvider(
 
 	logger.RTrace("Creating new postgres provider")
 
-	url, err := url.Parse(kubernetesServer)
-	if err != nil {
-		logger.RError(err, "Could not parse kubernetes server url: " + kubernetesServer)
-	}
-
 	return PostgresProvider{
 		nginxInformation: nginxInformation,
-		hostname: url.Hostname(),
+		hostname: kubernetesHostname,
 		pgoApi: pgo.CreatePgoApi(pgoServer, pgoServerVersion, pgoCaPath, pgoUsername, pgoPassword),
 		BasicProvider: provider.CreateCommonProvider(
 			kubernetesServer,
@@ -218,7 +213,7 @@ func (pg PostgresProvider) GetJsonForm(auth common.IKubernetesAuthInformation) (
 }
 
 func (pg PostgresProvider) createCrdApi(auth common.IKubernetesAuthInformation) (*kubernetes.CommonCrdApi, error) {
-	return kubernetes.CreateCommonCrdApi(pg.Host, pg.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
+	return kubernetes.CreateCommonCrdApi(pg.KubernetsServer, pg.CaPath, auth.GetKubernetesAccessToken(), GroupName, GroupVersion)
 }
 
 func (pg PostgresProvider) GetServices(auth common.IKubernetesAuthInformation) ([]*service.IService, error) {
@@ -262,7 +257,7 @@ func (pg PostgresProvider) GetService(auth common.IKubernetesAuthInformation, id
 func (pg PostgresProvider) CreateService(auth common.IKubernetesAuthInformation, yaml string) error {
 	logger.RInfo("Create new postgres service by yaml")
 
-	api, err := kubernetes.GenerateK8sApiFromToken(pg.Host, pg.CaPath, auth.GetKubernetesAccessToken())
+	api, err := kubernetes.GenerateK8sApiFromToken(pg.KubernetsServer, pg.CaPath, auth.GetKubernetesAccessToken())
 	if err != nil {
 		logger.RError(err, "Could not generate kubernetes api from token")
 		return err
@@ -394,7 +389,7 @@ func (pg PostgresProvider) CrdInstanceToServiceInstance(
 			ClusterInstance:  crdInstance,
 			Auth:             auth,
 			Hostname: 		  pg.hostname,
-			HostWithPort:     pg.Host,
+			HostWithPort:     pg.KubernetsServer,
 			CaPath:           pg.CaPath,
 			CrdClient:        crdClient,
 			NginxInformation: pg.nginxInformation,

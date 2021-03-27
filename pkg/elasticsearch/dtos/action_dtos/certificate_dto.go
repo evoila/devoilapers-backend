@@ -1,4 +1,4 @@
-package dtos
+package action_dtos
 
 import "encoding/base64"
 

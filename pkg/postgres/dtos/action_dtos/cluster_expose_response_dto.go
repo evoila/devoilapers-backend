@@ -1,6 +1,7 @@
 package action_dtos
 
 type ClusterExposeResponseDto struct {
-	Port int
-	Hostname string
+	Status string
+	Port   int
+	Host   string
 }
