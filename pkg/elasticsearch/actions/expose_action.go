@@ -95,7 +95,7 @@ func Hide(es *esCommon.ElasticsearchServiceInformations) error {
 
 // Open a port to connect to the elasticsearch from outside
 func Expose(es *esCommon.ElasticsearchServiceInformations) error {
-	tlsSecretName := es.ClusterInstance.ObjectMeta.Name + "-es-http-certs-public"
+	tlsSecretName := es.ClusterInstance.ObjectMeta.Name + "-tls-cert"
 	serviceName := es.ClusterInstance.ObjectMeta.Name + "-es-http"
 	ingressName := es.ClusterInstance.ObjectMeta.Name + "-es-ingress"
 	hostname := es.ClusterInstance.Name + "." + es.ClusterInstance.Namespace + "." + es.Hostname

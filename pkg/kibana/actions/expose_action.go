@@ -98,7 +98,7 @@ func Hide(kb *kbCommon.KibanaServiceInformations) error {
 
 // Open a port to connect to the elasticsearch from outside
 func Expose(kb *kbCommon.KibanaServiceInformations) error {
-	tlsSecretName := kb.ClusterInstance.ObjectMeta.Name + "-kb-http-certs-public"
+	tlsSecretName := kb.ClusterInstance.ObjectMeta.Name + "-tls-cert"
 	serviceName := kb.ClusterInstance.ObjectMeta.Name + "-kb-http"
 	ingressName := kb.ClusterInstance.ObjectMeta.Name + "-kb-ingress"
 	hostname := kb.ClusterInstance.Name + "." + kb.ClusterInstance.Namespace + "." + kb.Hostname
